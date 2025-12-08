@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/api_service.dart';
 import 'signup_screen.dart';
+import 'dashboard_screen.dart'; // ADD THIS IMPORT
 import '../widgets/animated_background.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -29,22 +29,51 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = true);
       
       try {
+        // For DEMO purposes - remove this when you have real API
+        // Uncomment the real API call when ready
+        /*
         final response = await ApiService.login(
           _emailController.text.trim(),
           _passwordController.text.trim(),
         );
+        */
+        
+        // DEMO: Simulate API call with 1 second delay
+        await Future.delayed(const Duration(seconds: 1));
+        
+        // DEMO: Create mock response
+        final response = {
+          'status': 'ok',
+          'token': 'demo_token_12345',
+          'message': 'Login successful'
+        };
         
         setState(() => _isLoading = false);
         
         if (response['status'] == 'ok') {
+          // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Welcome back!'),
+            const SnackBar(
+              content: Text('Welcome back!'),
               backgroundColor: Colors.green,
+              duration: Duration(seconds: 1),
             ),
           );
+          
           print('Login successful! Token: ${response['token']}');
+          
+          // Navigate to Dashboard after a short delay
+          Future.delayed(const Duration(milliseconds: 1200), () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const DashboardScreen(),
+              ),
+            );
+          });
+          
         } else {
+          // Show error message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(response['message'] ?? 'Login failed'),
@@ -160,8 +189,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         horizontal: 32,
                         vertical: 40,
                       ),
-                      child: Form( // ← ADDED THIS FORM WIDGET
-                        key: _formKey, // ← THIS IS CRITICAL
+                      child: Form(
+                        key: _formKey,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -370,7 +399,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             const SizedBox(height: 32),
 
-                            // log in button
+                            // Log In button
                             SizedBox(
                               width: double.infinity,
                               height: 56,
@@ -406,7 +435,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             ),
                                           ),
                                           const SizedBox(width: 12),
-                                          Icon(
+                                          const Icon(
                                             Icons.arrow_forward,
                                             size: 20,
                                           ),
