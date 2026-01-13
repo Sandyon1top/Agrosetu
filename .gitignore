@@ -83,3 +83,7 @@ fastlane/test_output
 
 # macOS
 .DS_Store
+*.save
+*.backup
+*.tmp
+.DS_Store
