@@ -13,75 +13,31 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
   String _selectedCrop = 'Rice';
   final List<String> _crops = ['Rice', 'Wheat', 'Corn', 'Potato', 'Onion'];
 
-  final List<Map<String, dynamic>> _priceData = [
-    {
-      'year': 2013,
-      'rice': 25,
-      'wheat': 20,
-      'corn': 18,
-    },
-    {
-      'year': 2014,
-      'rice': 28,
-      'wheat': 22,
-      'corn': 19,
-    },
-    {
-      'year': 2015,
-      'rice': 30,
-      'wheat': 24,
-      'corn': 20,
-    },
-    {
-      'year': 2016,
-      'rice': 32,
-      'wheat': 25,
-      'corn': 21,
-    },
-    {
-      'year': 2017,
-      'rice': 35,
-      'wheat': 26,
-      'corn': 22,
-    },
-    {
-      'year': 2018,
-      'rice': 38,
-      'wheat': 28,
-      'corn': 24,
-    },
-    {
-      'year': 2019,
-      'rice': 40,
-      'wheat': 30,
-      'corn': 26,
-    },
-    {
-      'year': 2020,
-      'rice': 42,
-      'wheat': 32,
-      'corn': 28,
-    },
-    {
-      'year': 2021,
-      'rice': 45,
-      'wheat': 34,
-      'corn': 30,
-    },
+  // Current market prices in NPR
+  final Map<String, double> _currentPrices = {
+    'Rice': 2450,
+    'Wheat': 2100,
+    'Corn': 1950,
+    'Potato': 1200,
+    'Onion': 1800,
+  };
+
+  // Historical data for trends
+  final List<Map<String, dynamic>> _priceHistory = [
+    {'year': 2018, 'rice': 1800, 'wheat': 1600, 'corn': 1400},
+    {'year': 2019, 'rice': 1950, 'wheat': 1750, 'corn': 1550},
+    {'year': 2020, 'rice': 2050, 'wheat': 1850, 'corn': 1650},
+    {'year': 2021, 'rice': 2200, 'wheat': 1950, 'corn': 1750},
+    {'year': 2022, 'rice': 2350, 'wheat': 2050, 'corn': 1900},
+    {'year': 2023, 'rice': 2400, 'wheat': 2080, 'corn': 1920},
+    {'year': 2024, 'rice': 2450, 'wheat': 2100, 'corn': 1950},
   ];
 
-  double _getPriceForCrop(String crop) {
-    final lastYearData = _priceData.last;
-    switch (crop.toLowerCase()) {
-      case 'rice':
-        return lastYearData['rice'].toDouble();
-      case 'wheat':
-        return lastYearData['wheat'].toDouble();
-      case 'corn':
-        return lastYearData['corn'].toDouble();
-      default:
-        return 25.0;
-    }
+  // Calculate price change percentage
+  double _getPriceChange(String crop) {
+    final current = _currentPrices[crop] ?? 0;
+    final previous = _priceHistory[_priceHistory.length - 2][crop.toLowerCase()] ?? current;
+    return ((current - previous) / previous * 100);
   }
 
   @override
@@ -114,34 +70,56 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF2E7D32),
+            Color(0xFF1B5E20),
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            'Market Analytics',
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1B5E20),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Iconsax.chart,
+              size: 28,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Historical crop price trends (2013-2021)',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.grey.shade600,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Market Analytics',
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Historical crop price trends (2018-2024)',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.white.withOpacity(0.85),
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -211,25 +189,27 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             ),
           ),
           const SizedBox(height: 20),
+          
+          // Current market stats
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _StatItem(
-                title: 'Current Price',
-                value: 'Rs. ${_getPriceForCrop(_selectedCrop).toInt()}',
-                change: '+8.2%',
-                isPositive: true,
+                title: 'Current',
+                value: 'Rs. ${_currentPrices[_selectedCrop]?.toInt()}',
+                change: '${_getPriceChange(_selectedCrop) >= 0 ? '+' : ''}${_getPriceChange(_selectedCrop).toStringAsFixed(1)}%',
+                isPositive: _getPriceChange(_selectedCrop) >= 0,
               ),
               _StatItem(
-                title: 'Avg Growth',
-                value: '6.5%',
+                title: 'Avg Trend',
+                value: '↑ 8.2%',
                 change: 'per year',
                 isPositive: true,
               ),
               _StatItem(
                 title: 'Best Month',
-                value: 'October',
-                change: '+12%',
+                value: 'November',
+                change: '+15%',
                 isPositive: true,
               ),
             ],
@@ -241,30 +221,33 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
 
   Widget _buildCropSelector() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: _crops.map((crop) {
             return Padding(
               padding: const EdgeInsets.only(right: 10),
-              child: ChoiceChip(
+              child: FilterChip(
                 label: Text(crop),
                 selected: _selectedCrop == crop,
                 onSelected: (selected) {
-                  setState(() {
-                    _selectedCrop = crop;
-                  });
+                  setState(() => _selectedCrop = crop);
                 },
                 backgroundColor: Colors.white,
-                selectedColor: const Color(0xFF2E7D32).withOpacity(0.1),
+                selectedColor: const Color(0xFF2E7D32).withOpacity(0.15),
                 labelStyle: GoogleFonts.poppins(
-                  color: _selectedCrop == crop ? const Color(0xFF2E7D32) : Colors.grey.shade700,
+                  color: _selectedCrop == crop 
+                    ? const Color(0xFF2E7D32) 
+                    : Colors.grey.shade700,
                   fontWeight: FontWeight.w500,
+                  fontSize: 13,
                 ),
-                checkmarkColor: const Color(0xFF2E7D32),
                 side: BorderSide(
-                  color: _selectedCrop == crop ? const Color(0xFF2E7D32) : Colors.grey.shade300,
+                  color: _selectedCrop == crop 
+                    ? const Color(0xFF2E7D32) 
+                    : Colors.grey.shade300,
+                  width: 1.5,
                 ),
               ),
             );
@@ -277,15 +260,15 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
   Widget _buildPriceTable() {
     return Container(
       margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -293,55 +276,93 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Historical Prices (Rs./kg)',
+            'Price History (2018-2024)',
             style: GoogleFonts.poppins(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: const Color(0xFF1B5E20),
             ),
           ),
-          const SizedBox(height: 15),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: const [
-                DataColumn(label: Text('Year')),
-                DataColumn(label: Text('Rice')),
-                DataColumn(label: Text('Wheat')),
-                DataColumn(label: Text('Corn')),
-                DataColumn(label: Text('Change')),
-              ],
-              rows: _priceData.map((data) {
-                final change = data['rice'] - _priceData.first['rice'];
-                return DataRow(
-                  cells: [
-                    DataCell(Text(data['year'].toString())),
-                    DataCell(Text('Rs. ${data['rice']}')),
-                    DataCell(Text('Rs. ${data['wheat']}')),
-                    DataCell(Text('Rs. ${data['corn']}')),
-                    DataCell(
-                      Row(
-                        children: [
-                          Icon(
-                            change >= 0 ? Iconsax.arrow_up_2 : Iconsax.arrow_down_1,
-                            color: change >= 0 ? Colors.green : Colors.red,
-                            size: 14,
+          const SizedBox(height: 16),
+          
+          // Simplified list view instead of table
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _priceHistory.length,
+            separatorBuilder: (_, __) => Divider(
+              color: Colors.grey.shade200,
+              height: 1,
+            ),
+            itemBuilder: (context, index) {
+              final data = _priceHistory[index];
+              final ricePrice = data['rice'] as int;
+              final wheatPrice = data['wheat'] as int;
+              final cornPrice = data['corn'] as int;
+              
+              // Calculate growth from first year
+              final riceGrowth = ((ricePrice - _priceHistory.first['rice']) / _priceHistory.first['rice'] * 100);
+              final isPositive = riceGrowth >= 0;
+              
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${data['year']}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1B5E20),
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${change >= 0 ? '+' : ''}${change.toStringAsFixed(1)}',
-                            style: GoogleFonts.poppins(
-                              color: change >= 0 ? Colors.green : Colors.red,
-                              fontWeight: FontWeight.w500,
+                        ),
+                        Text(
+                          'Rice • Rs. $ricePrice',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              isPositive ? Iconsax.arrow_up_2 : Iconsax.arrow_down_1,
+                              color: isPositive ? Colors.green : Colors.red,
+                              size: 14,
                             ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${isPositive ? '+' : ''}${riceGrowth.toStringAsFixed(1)}%',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isPositive ? Colors.green : Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          'W:$wheatPrice C:$cornPrice',
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            color: Colors.grey.shade500,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
-                );
-              }).toList(),
-            ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -364,45 +385,49 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            color: Colors.grey.shade600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1B5E20),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Icon(
-              isPositive ? Iconsax.arrow_up_2 : Iconsax.arrow_down_1,
-              color: isPositive ? Colors.green : Colors.red,
-              size: 12,
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
             ),
-            const SizedBox(width: 2),
-            Text(
-              change,
-              style: GoogleFonts.poppins(
-                fontSize: 11,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1B5E20),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isPositive ? Iconsax.arrow_up_2 : Iconsax.arrow_down_1,
                 color: isPositive ? Colors.green : Colors.red,
-                fontWeight: FontWeight.w500,
+                size: 11,
               ),
-            ),
-          ],
-        ),
-      ],
+              const SizedBox(width: 2),
+              Text(
+                change,
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                  color: isPositive ? Colors.green : Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
