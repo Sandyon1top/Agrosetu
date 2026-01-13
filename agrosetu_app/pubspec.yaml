@@ -15,8 +15,11 @@ dependencies:
   shared_preferences: ^2.2.2
   google_fonts: ^6.1.0
   lottie: ^2.7.0 
-  iconsax: ^0.0.8  # Changed from ^1.0.1 to ^0.0.8
+  iconsax: ^0.0.8
   intl: ^0.19.0
+  connectivity_plus: ^5.0.0    # Check internet
+  geolocator: ^10.0.0 
+  url_launcher: ^6.1.14  # ADD THIS for Terms & Privacy links
 
 dev_dependencies:
   flutter_test:
@@ -26,6 +29,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   
-  # Add this assets section (fixed indentation)
   assets:
     - assets/images/

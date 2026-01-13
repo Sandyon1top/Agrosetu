@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/custom_textfield.dart';
 import 'login_screen.dart';
@@ -18,40 +20,80 @@ class _SignupScreenState extends State<SignupScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
+  
+  // Email validation regex
+  static final emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+  );
 
   void _signup() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       
-      final response = await ApiService.signup(
-        _nameController.text.trim(),
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
-      
-      setState(() => _isLoading = false);
-      
-      if (response['status'] == 'ok') {
-        // Success - Navigate to login
+      try {
+        final response = await ApiService.signup(
+          _nameController.text.trim(),
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
+        
+        setState(() => _isLoading = false);
+        
+        if (response['status'] == 'ok') {
+          // Save user data if returned
+          if (response['data'] != null && response['data']['user'] != null) {
+            await _saveUserData(response['data']['user']);
+          }
+          
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created successfully!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+          
+          // Navigate to login
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        } else {
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['message'] ?? 'Signup failed'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } catch (e) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Account created successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-        );
-      } else {
-        // Error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response['message'] ?? 'Signup failed'),
+            content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
           ),
         );
       }
+    }
+  }
+  
+  Future<void> _saveUserData(Map<String, dynamic> userData) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (userData['name'] != null) {
+        await prefs.setString('user_name', userData['name']);
+      }
+      if (userData['email'] != null) {
+        await prefs.setString('user_email', userData['email']);
+      }
+      print('User data saved during signup: ${userData['name']}');
+    } catch (e) {
+      print('Error saving user data during signup: $e');
     }
   }
 
@@ -77,7 +119,6 @@ class _SignupScreenState extends State<SignupScreen> {
                 children: [
                   const SizedBox(height: 20),
                   
-                  // Back button and Title
                   Row(
                     children: [
                       IconButton(
@@ -100,7 +141,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   
                   const SizedBox(height: 30),
 
-                  // Logo Section
                   Column(
                     children: [
                       Container(
@@ -155,7 +195,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     ],
                   ),
 
-                  // Signup Form
                   Container(
                     padding: const EdgeInsets.all(30),
                     decoration: BoxDecoration(
@@ -183,6 +222,9 @@ class _SignupScreenState extends State<SignupScreen> {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your name';
                               }
+                              if (value.length < 2) {
+                                return 'Name must be at least 2 characters';
+                              }
                               return null;
                             },
                           ),
@@ -197,8 +239,8 @@ class _SignupScreenState extends State<SignupScreen> {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your email';
                               }
-                              if (!value.contains('@')) {
-                                return 'Please enter a valid email';
+                              if (!emailRegex.hasMatch(value)) {
+                                return 'Please enter a valid email address';
                               }
                               return null;
                             },

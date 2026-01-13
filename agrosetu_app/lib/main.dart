@@ -54,8 +54,6 @@ class AgroSetuApp extends StatelessWidget {
 
 import 'package:flutter/material.dart';
 import 'screens/homepage_screen.dart'; // Add this import
-import 'screens/login_screen.dart';
-import 'screens/signup_screen.dart';
 
 void main() {
   runApp(const AgroSetuApp());
