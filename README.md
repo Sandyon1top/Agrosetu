@@ -1,7 +1,7 @@
-# AgroSetu – Smart Farming Assistant (FYP)
-Student: Sandip Dhakal  
-Student ID: 2408003  
+# AgroSetu
 
-A smart farming assistant mobile application using Flutter, Node.js, and AI models (MobileNetV2 + EfficientNet).  
-Features: AI crop disease detection, weather forecast, market price analytics, Nepali voice assistant, and offline mode.
+Plant Disease Detection using CNN and Flask.
 
+## Setup
+1. Install dependencies: `pip install -r requirements.txt`
+2. Run the app: `python app.py`
