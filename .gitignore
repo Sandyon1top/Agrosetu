@@ -4,3 +4,9 @@ __pycache__/
 venv/
 .DS_Store
 instance/
+
+# Node dependencies
+backend/node_modules/
+
+# Python environments
+Flask/myenv_py10/
