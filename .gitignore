@@ -1,89 +1,72 @@
-# Flutter/Dart
-.dart_tool/
-.packages
-.pub-cache/
-.pub/
-build/
-.fvm/
-.flutter-plugins
-.flutter-plugins-dependencies
-.flutter/
-.symbols
-
-# Android
-*.apk
-*.ap_
-*.aab
-*.aar
-*.keystore
-
-# iOS
-*.ipa
-*.xcuserstate
-*.mode1v3
-*.mode2v3
-*.moved-aside
-*.pbxuser
-*.perspectivev3
-
-# General
-*.class
-*.log
-*.pyc
-*.swp
+# -------------------------------------------------------------------
+# IDE & System Files
+# -------------------------------------------------------------------
 .DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ/IDEA
-*.iml
-*.ipr
-*.iws
 .idea/
-
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-.env
-.venv/
-venv/
-env/
-
-# VS Code
 .vscode/
-
-# Coverage
-coverage/
-*.lcov
-
-# Firebase
-.google/
-firebase-debug.log
-firebase-installations.error.log
-
-# Fastlane
-fastlane/report.xml
-fastlane/Preview.html
-fastlane/screenshots
-fastlane/test_output
-
-# macOS
-.DS_Store
-*.save
-*.backup
+*.log
 *.tmp
-.DS_Store
+*.swp
+
+# -------------------------------------------------------------------
+# Flutter / Dart
+# -------------------------------------------------------------------
+**/android/app/build/
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Runner/GeneratedPluginRegistrant.h
+**/ios/Runner/GeneratedPluginRegistrant.m
+**/lib/generated_plugin_registrant.dart
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/build/
+**/bin/
+**/.packages
+**/.pub-cache/
+**/.pub/
+**/pubspec.lock
+
+# -------------------------------------------------------------------
+# Android Specific
+# -------------------------------------------------------------------
+**/.gradle/
+**/local.properties
+**/gradlew
+**/gradlew.bat
+**/gradle/wrapper/gradle-wrapper.jar
+**/*.apk
+**/*.aab
+
+# -------------------------------------------------------------------
+# Node.js (Backend)
+# -------------------------------------------------------------------
+**/node_modules/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.env
+**/.env.local
+
+# -------------------------------------------------------------------
+# Python & Flask (Virtual Environments & ML)
+# -------------------------------------------------------------------
+**/myenv_py10/
+**/venv/
+**/env/
+**/ENV/
+**/bin/
+**/lib/python*/
+**/include/python*/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+**/.pytest_cache/
+**/.ipynb_checkpoints/
+
+# -------------------------------------------------------------------
+# Large Datasets (If you want to keep them local only)
+# -------------------------------------------------------------------
+# data/*.csv

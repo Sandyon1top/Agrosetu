@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../services/weather_service.dart';
 
 class WeatherDetailPopup extends StatefulWidget {
-  const WeatherDetailPopup({super.key});
+  const WeatherDetailPopup({Key? key}) : super(key: key);
 
   @override
   _WeatherDetailPopupState createState() => _WeatherDetailPopupState();
@@ -20,10 +21,14 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
   }
 
   Future<void> _loadWeatherData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       final weather = await WeatherService.getCurrentWeather();
       final forecast = await WeatherService.getHourlyForecast();
-      
+
       setState(() {
         _weatherData = weather;
         _hourlyForecast = forecast;
@@ -32,30 +37,9 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
     } catch (e) {
       print('Error loading weather: $e');
       setState(() {
+        _weatherData = null;
+        _hourlyForecast = null;
         _isLoading = false;
-        _weatherData = {
-          'location': 'Kathmandu',
-          'temp': 22,
-          'feelsLike': 24,
-          'humidity': '65%',
-          'pressure': '1013 hPa',
-          'windSpeed': '12 km/h',
-          'condition': 'Partly Cloudy',
-          'description': 'Partly cloudy',
-          'rainChance': '0%',
-          'uvIndex': '5',
-          'lastUpdated': DateTime.now().toIso8601String(),
-          'source': 'mock',
-          'farmingTip': 'Good day for farming activities.',
-          'icon': '⛅',
-        };
-        _hourlyForecast = {
-          'hourly': [
-            {'time': 'Now', 'temp': 22, 'condition': 'Clouds'},
-            {'time': '15:00', 'temp': 23, 'condition': 'Clouds'},
-            {'time': '18:00', 'temp': 22, 'condition': 'Clouds'},
-          ]
-        };
       });
     }
   }
@@ -84,7 +68,9 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
           ),
           child: _isLoading
               ? _buildLoading()
-              : _buildWeatherContent(scrollController),
+              : _weatherData == null
+                  ? _buildErrorContent()
+                  : _buildWeatherContent(scrollController),
         );
       },
     );
@@ -106,9 +92,53 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
     );
   }
 
+  Widget _buildErrorContent() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.cloud_off, size: 48, color: Colors.grey[400]),
+          SizedBox(height: 16),
+          Text(
+            'Unable to Load Weather',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[700],
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Please check your internet connection and try again.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildWeatherContent(ScrollController scrollController) {
     final weather = _weatherData!;
     final hourly = _hourlyForecast?['hourly'] ?? [];
+    final rawUpdated = weather['lastUpdated'] ?? DateTime.now().toIso8601String();
+    String updated;
+    try {
+      updated = DateFormat('hh:mm a, MMM d').format(DateTime.parse(rawUpdated));
+    } catch (e) {
+      updated = rawUpdated.toString();
+    }
 
     return Column(
       children: [
@@ -263,7 +293,7 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
                 
                 SizedBox(height: 12),
                 
-                
+                // Horizontal forecast - FIXED FOR MOBILE
                 SizedBox(
                   height: 90,
                   child: ListView.builder(
@@ -377,7 +407,7 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
                           ),
                           SizedBox(height: 2),
                           Text(
-                            'Just now',
+                            updated,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,

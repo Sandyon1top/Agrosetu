@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import '../services/activity_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 
 class DiseaseDetectionPage extends StatefulWidget {
   const DiseaseDetectionPage({super.key});
@@ -10,7 +15,7 @@ class DiseaseDetectionPage extends StatefulWidget {
 }
 
 class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
-  String? _selectedImage;
+  Uint8List? _selectedImage;
   bool _isProcessing = false;
   String? _detectedDisease;
   String? _confidence;
@@ -42,37 +47,113 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
 
   // Simulate AI model processing
   void _detectDisease() async {
-    setState(() {
-      _isProcessing = true;
-      _selectedImage = '📸';
-    });
+    final bool isMobile = !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
+    if (!isMobile) {
+      showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Camera not available'),
+          content: const Text('It looks like your device does not have a camera. Please use the Gallery to upload an image.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
 
-    // Simulate ML model inference (MobileNetV2/EfficientNet)
-    await Future.delayed(const Duration(seconds: 3));
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? captured = await picker.pickImage(source: ImageSource.camera, maxWidth: 1600, imageQuality: 85);
+      if (captured == null) {
+        return;
+      }
 
-    setState(() {
-      _isProcessing = false;
-      _detectedDisease = 'Rice Blast Disease';
-      _confidence = '92%';
-      _remedy = 'Apply fungicide spray. Remove infected leaves. Improve drainage.';
-    });
+      final bytes = await captured.readAsBytes();
+
+      setState(() {
+        _isProcessing = true;
+        _selectedImage = bytes;
+      });
+
+      await Future.delayed(const Duration(seconds: 3));
+
+      setState(() {
+        _isProcessing = false;
+        _detectedDisease = 'Rice Blast Disease';
+        _confidence = '92%';
+        _remedy = 'Apply fungicide spray. Remove infected leaves. Improve drainage.';
+      });
+      await ActivityService.addActivity('detection', 'Rice disease detected');
+    } catch (e) {
+      setState(() {
+        _isProcessing = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to open camera')));
+    }
   }
 
   void _pickFromGallery() async {
-    setState(() {
-      _isProcessing = true;
-      _selectedImage = '📷';
-    });
+    // Use FilePicker on web & desktop for a reliable file explorer prompt
+    final bool isDesktopOrWeb = kIsWeb ||
+        (defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.linux ||
+            defaultTargetPlatform == TargetPlatform.macOS);
 
-    // Simulate gallery pick + processing
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      Uint8List? bytes;
 
-    setState(() {
-      _isProcessing = false;
-      _detectedDisease = 'Early Blight (Tomato)';
-      _confidence = '88%';
-      _remedy = 'Remove lower leaves. Use copper-based fungicide. Ensure air circulation.';
-    });
+      if (isDesktopOrWeb) {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.image,
+          allowMultiple: false,
+          withData: true,
+        );
+        if (result == null || result.files.isEmpty) return;
+        final file = result.files.first;
+        bytes = file.bytes;
+        if (bytes == null) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Selected file cannot be read.')));
+          return;
+        }
+      } else {
+        final ImagePicker picker = ImagePicker();
+        final XFile? picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1600, imageQuality: 85);
+        if (picked == null) return;
+        bytes = await picked.readAsBytes();
+      }
+
+      if (bytes == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not read selected image')));
+        return;
+      }
+
+      setState(() {
+        _isProcessing = true;
+        _selectedImage = bytes;
+      });
+
+      await Future.delayed(const Duration(seconds: 2));
+
+      setState(() {
+        _isProcessing = false;
+        _detectedDisease = 'Early Blight (Tomato)';
+        _confidence = '88%';
+        _remedy = 'Remove lower leaves. Use copper-based fungicide. Ensure air circulation.';
+      });
+      await ActivityService.addActivity('detection', 'Tomato disease detected');
+    } catch (e) {
+      setState(() {
+        _isProcessing = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to pick image from gallery')));
+    }
   }
 
   void _clearResults() {
@@ -214,10 +295,20 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
                         ? const CircularProgressIndicator(
                             color: Color(0xFF2E7D32),
                           )
-                        : Text(
-                            _selectedImage!,
-                            style: const TextStyle(fontSize: 80),
-                          ),
+                        : Builder(builder: (context) {
+                            if (_selectedImage == null) {
+                              return Text(
+                                'Image selected',
+                                style: GoogleFonts.poppins(fontSize: 16),
+                              );
+                            }
+                            return Image.memory(
+                              _selectedImage!,
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: 200,
+                            );
+                          }),
                   ),
           ),
           

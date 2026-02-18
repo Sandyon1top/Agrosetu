@@ -1,12 +1,13 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 import 'signup_screen.dart';
+import 'forgot_password_screen.dart';
 import '../widgets/animated_background.dart';
 import 'dashboard_screen.dart';
-import 'forgot_password_screen.dart';
-import '../services/api_service.dart'; // Import your API service
+import '../services/user_service.dart';
+import '../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,228 +24,165 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _showPassword = false;
   bool _rememberMe = false;
 
-  // Email validation regex
-  static final emailRegex = RegExp(
-    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-  );
-
-  void _login() async {
-    if (_formKey.currentState == null) {
-      print('Form key is null');
-      return;
-    }
-
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      
-      try {
-        // CALL REAL API - Remove demo code
-        final response = await ApiService.login(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-        );
-        
-        setState(() => _isLoading = false);
-        
-        if (response['status'] == 'ok') {
-          // Save remember me preference if checked
-          if (_rememberMe) {
-            await _saveLoginCredentials();
-          }
-          
-          // Save user data if available
-          if (response['data'] != null && response['data']['user'] != null) {
-            await _saveUserData(response['data']['user']);
-          }
-          
-          // Show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response['message'] ?? 'Welcome back!'),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-          
-          print('Login successful! Token received');
-          
-          // Navigate to Dashboard
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const DashboardScreen(),
-            ),
-          );
-          
-        } else {
-          // Show error message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response['message'] ?? 'Login failed'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
-      } catch (e) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Connection Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _saveLoginCredentials() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('saved_email', _emailController.text.trim());
-      await prefs.setBool('remember_me', true);
-      print('Credentials saved for: ${_emailController.text}');
-    } catch (e) {
-      print('Error saving credentials: $e');
-    }
-  }
-
-  Future<void> _saveUserData(Map<String, dynamic> userData) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      if (userData['name'] != null) {
-        await prefs.setString('user_name', userData['name']);
-      }
-      if (userData['email'] != null) {
-        await prefs.setString('user_email', userData['email']);
-      }
-      print('User data saved: ${userData['name']}');
-    } catch (e) {
-      print('Error saving user data: $e');
-    }
-  }
-
-  Future<void> _loadSavedCredentials() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final savedEmail = prefs.getString('saved_email');
-      final rememberMe = prefs.getBool('remember_me') ?? false;
-      
-      if (rememberMe && savedEmail != null) {
-        setState(() {
-          _emailController.text = savedEmail;
-          _rememberMe = true;
-        });
-        print('Loaded saved email: $savedEmail');
-      }
-    } catch (e) {
-      print('Error loading saved credentials: $e');
-    }
-  }
-
-  Future<void> _loginWithGoogle() async {
-    setState(() => _isLoading = true);
-    
-    try {
-      await Future.delayed(const Duration(seconds: 1));
-      
-      // For now, keep as demo - you can implement Google Sign-In later
-      print('Logging in with Google...');
-      
-      setState(() => _isLoading = false);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Google login is not implemented yet'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      
-    } catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Google login failed: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> _loginWithFacebook() async {
-    setState(() => _isLoading = true);
-    
-    try {
-      await Future.delayed(const Duration(seconds: 1));
-      
-      print('Logging in with Facebook...');
-      
-      setState(() => _isLoading = false);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Facebook login is not implemented yet'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      
-    } catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Facebook login failed: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> _loginWithApple() async {
-    setState(() => _isLoading = true);
-    
-    try {
-      await Future.delayed(const Duration(seconds: 1));
-      
-      print('Logging in with Apple...');
-      
-      setState(() => _isLoading = false);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Apple login is not implemented yet'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      
-    } catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Apple login failed: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  void _navigateToForgotPassword() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const ForgotPasswordScreen(),
-      ),
-    );
-  }
-
   @override
   void initState() {
     super.initState();
-    _loadSavedCredentials();
-    // REMOVED DEMO CREDENTIALS - Let users enter their own
+    _loadRememberedCredentials();
+  }
+
+  Future<void> _loadRememberedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rememberMe = prefs.getBool('remember_me') ?? false;
+    
+    if (rememberMe) {
+      final email = prefs.getString('remembered_email') ?? '';
+      final password = prefs.getString('remembered_password') ?? '';
+      
+      setState(() {
+        _emailController.text = email;
+        _passwordController.text = password;
+        _rememberMe = rememberMe;
+      });
+    }
+  }
+
+  Future<void> _saveRememberedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_rememberMe) {
+      await prefs.setBool('remember_me', true);
+      await prefs.setString('remembered_email', _emailController.text.trim());
+      await prefs.setString('remembered_password', _passwordController.text.trim());
+      print('[LoginScreen] 💾 Credentials saved locally');
+    } else {
+      await prefs.setBool('remember_me', false);
+      await prefs.remove('remembered_email');
+      await prefs.remove('remembered_password');
+      print('[LoginScreen] 🗑️ Credentials cleared from local storage');
+    }
+  }
+
+  void _login() async {
+    if (_formKey.currentState == null || !_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    
+    try {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+      if (email.isEmpty || password.isEmpty) {
+        _showErrorDialog('Validation Error', 'Please fill in all fields');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final response = await ApiService.login(email, password);
+      
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      
+      if (response['status'] == 'ok') {
+        try {
+          // Backend returns: { status, token, user: { id, name, email }, message }
+          final userData = response['data']; // This is the full backend response
+          final userInfo = userData['user']; // Extract user object
+          final token = userData['token'];
+          
+          print('[LoginScreen] Response data: $userData');
+          print('[LoginScreen] User info: ${userInfo?['name']}, ID: ${userInfo?['id']}');
+          print('[LoginScreen] Token: $token');
+          
+          if (userInfo == null || userInfo['id'] == null) {
+            _showErrorDialog('Login Error', 'Invalid user data received from server');
+            return;
+          }
+          
+          if (token == null || token.isEmpty) {
+            _showErrorDialog('Login Error', 'No authentication token received');
+            return;
+          }
+          
+          final userToSave = {
+            'id': userInfo['id'].toString(),
+            'name': userInfo['name'] ?? 'User',
+            'email': userInfo['email'] ?? email,
+            'token': token,
+            'phone': '+977 9800000000',
+            'location': 'Kathmandu, Nepal',
+            'farmSize': '2.0 hectares',
+            'mainCrops': ['Rice', 'Wheat'],
+            'joinDate': DateTime.now().toString().split(' ')[0],
+            'detections': 0,
+            'discussions': 0,
+            'marketTips': 0,
+          };
+          
+          print('[LoginScreen] Saving user to UserService: ${userToSave['name']}');
+          await UserService.saveUser(userToSave);
+          
+          // Verify the save was successful by immediately reading back
+          final savedUser = await UserService.getUser();
+          print('[LoginScreen] ✅ Verification - Saved user: ${savedUser?['name']}, Token exists: ${savedUser?['token'] != null}');
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Welcome, ${userInfo['name']}!'),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+          
+          print('[LoginScreen] ✅ Login successful for: ${userInfo['name']}');
+          
+          // Save credentials if "Remember me" is checked
+          await _saveRememberedCredentials();
+          
+          await Future.delayed(const Duration(milliseconds: 800));
+          
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            );
+          }
+          
+        } catch (dataError) {
+          print('[LoginScreen] ❌ Error processing user data: $dataError');
+          print('[LoginScreen] ❌ Stack trace: ${StackTrace.current}');
+          _showErrorDialog('Data Error', 'Failed to process login response: $dataError');
+        }
+      } else {
+        final errorMsg = response['message'] ?? 'Login failed';
+        _showErrorDialog('Login Failed', errorMsg);
+      }
+    } on SocketException {
+      setState(() => _isLoading = false);
+      _showErrorDialog('Network Error', 'No internet connection. Please check your connection.');
+    } catch (e) {
+      setState(() => _isLoading = false);
+      print('Login error: $e');
+      _showErrorDialog('Error', 'An unexpected error occurred');
+    }
+  }
+  
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        content: Text(message, style: GoogleFonts.poppins()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -259,8 +197,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
+          // Animated background WITHOUT logo
           const AnimatedFarmBackground(),
 
+          // Content overlay
           SafeArea(
             child: SingleChildScrollView(
               child: Column(
@@ -287,12 +227,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            // Tree Icon (replacing "ماله")
                             Icon(
-                              Icons.park,
+                              Icons.park, // Tree/plant icon
                               size: 40,
                               color: const Color(0xFF1B5E20),
                             ),
                             const SizedBox(height: 8),
+                            // AGROSETU
                             Text(
                               'AGROSETU',
                               style: TextStyle(
@@ -304,6 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
+                            // HAMRO LAGI
                             Text(
                               'HAMRO LAGI',
                               style: TextStyle(
@@ -350,6 +293,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Welcome section
                             Center(
                               child: Column(
                                 children: [
@@ -377,6 +321,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             const SizedBox(height: 40),
 
+                            // Email field
                             Text(
                               'Email Address',
                               style: GoogleFonts.poppins(
@@ -397,8 +342,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               child: TextFormField(
                                 controller: _emailController,
-                                keyboardType: TextInputType.emailAddress,
-                                textInputAction: TextInputAction.next,
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
                                   color: Colors.grey.shade800,
@@ -422,8 +365,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   if (value == null || value.isEmpty) {
                                     return 'Please enter your email';
                                   }
-                                  if (!emailRegex.hasMatch(value)) {
-                                    return 'Please enter a valid email address';
+                                  if (!value.contains('@')) {
+                                    return 'Please enter a valid email';
                                   }
                                   return null;
                                 },
@@ -432,6 +375,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             const SizedBox(height: 24),
 
+                            // Password field
                             Text(
                               'Password',
                               style: GoogleFonts.poppins(
@@ -453,8 +397,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: TextFormField(
                                 controller: _passwordController,
                                 obscureText: !_showPassword,
-                                textInputAction: TextInputAction.done,
-                                onFieldSubmitted: (_) => _login(),
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
                                   color: Colors.grey.shade800,
@@ -501,6 +443,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             const SizedBox(height: 16),
 
+                            // Remember me & Forgot password
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -512,30 +455,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                   },
                                   child: Row(
                                     children: [
-                                      Container(
-                                        width: 24,
-                                        height: 24,
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: _rememberMe
-                                                ? const Color(0xFF1B5E20)
-                                                : Colors.grey.shade400,
-                                            width: 1.5,
-                                          ),
+                                      Checkbox(
+                                        value: _rememberMe,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _rememberMe = value ?? false;
+                                          });
+                                        },
+                                        activeColor: const Color(0xFF2E7D32),
+                                        shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(4),
-                                          color: _rememberMe
-                                              ? const Color(0xFF1B5E20)
-                                              : Colors.transparent,
                                         ),
-                                        child: _rememberMe
-                                            ? const Icon(
-                                                Icons.check,
-                                                size: 18,
-                                                color: Colors.white,
-                                              )
-                                            : null,
                                       ),
-                                      const SizedBox(width: 12),
                                       Text(
                                         'Remember me',
                                         style: GoogleFonts.poppins(
@@ -547,7 +478,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                                 GestureDetector(
-                                  onTap: _navigateToForgotPassword,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const ForgotPasswordScreen(),
+                                      ),
+                                    );
+                                  },
                                   child: Text(
                                     'Forgot Password?',
                                     style: GoogleFonts.poppins(
@@ -562,6 +500,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             const SizedBox(height: 32),
 
+                            // Log In button
                             SizedBox(
                               width: double.infinity,
                               height: 56,
@@ -582,7 +521,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                         height: 24,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2.5,
-                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(Colors.white),
                                         ),
                                       )
                                     : Row(
@@ -607,6 +547,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             const SizedBox(height: 24),
 
+                            // Divider
                             Row(
                               children: [
                                 Expanded(
@@ -636,40 +577,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             const SizedBox(height: 24),
 
+                            // Social login buttons
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                GestureDetector(
-                                  onTap: _isLoading ? null : _loginWithGoogle,
-                                  child: _buildSocialButton(
-                                    icon: Icons.g_mobiledata,
-                                    color: const Color(0xFFDB4437),
-                                    isLoading: _isLoading,
-                                  ),
+                                _buildSocialButton(
+                                  icon: Icons.g_mobiledata,
+                                  color: const Color(0xFFDB4437),
                                 ),
                                 const SizedBox(width: 16),
-                                GestureDetector(
-                                  onTap: _isLoading ? null : _loginWithFacebook,
-                                  child: _buildSocialButton(
-                                    icon: Icons.facebook,
-                                    color: const Color(0xFF4267B2),
-                                    isLoading: _isLoading,
-                                  ),
+                                _buildSocialButton(
+                                  icon: Icons.facebook,
+                                  color: const Color(0xFF4267B2),
                                 ),
                                 const SizedBox(width: 16),
-                                GestureDetector(
-                                  onTap: _isLoading ? null : _loginWithApple,
-                                  child: _buildSocialButton(
-                                    icon: Icons.apple,
-                                    color: Colors.black,
-                                    isLoading: _isLoading,
-                                  ),
+                                _buildSocialButton(
+                                  icon: Icons.apple,
+                                  color: Colors.black,
                                 ),
                               ],
                             ),
 
                             const SizedBox(height: 32),
 
+                            // Sign up link
                             Center(
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -683,16 +614,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   GestureDetector(
-                                    onTap: _isLoading
-                                        ? null
-                                        : () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => const SignupScreen(),
-                                              ),
-                                            );
-                                          },
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => const SignupScreen(),
+                                        ),
+                                      );
+                                    },
                                     child: Text(
                                       'Sign Up',
                                       style: GoogleFonts.poppins(
@@ -708,6 +637,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             const SizedBox(height: 20),
 
+                            // Privacy text
                             Center(
                               child: Text(
                                 'By signing in, you agree to our Terms & Privacy',
@@ -732,17 +662,13 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildSocialButton({
-    required IconData icon,
-    required Color color,
-    required bool isLoading,
-  }) {
+  Widget _buildSocialButton({required IconData icon, required Color color}) {
     return Container(
       width: 56,
       height: 56,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isLoading ? Colors.grey.shade200 : Colors.white,
+        color: Colors.white,
         border: Border.all(
           color: Colors.grey.shade200,
           width: 1.5,
@@ -755,19 +681,11 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
-      child: isLoading
-          ? const Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          : Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
+      child: Icon(
+        icon,
+        color: color,
+        size: 24,
+      ),
     );
   }
 }

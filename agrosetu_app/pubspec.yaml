@@ -20,6 +20,9 @@ dependencies:
   connectivity_plus: ^5.0.0    # Check internet
   geolocator: ^10.0.0 
   url_launcher: ^6.1.14  # ADD THIS for Terms & Privacy links
+  image_picker: ^1.0.0  # Camera and gallery image picker
+  file_picker: ^5.2.0
+  fl_chart: ^0.65.0  # Charts and graphs
 
 dev_dependencies:
   flutter_test:
@@ -30,4 +33,4 @@ flutter:
   uses-material-design: true
   
   assets:
-    - assets/images/
+    - data/Kalimati_Tarkari_Dataset.csv

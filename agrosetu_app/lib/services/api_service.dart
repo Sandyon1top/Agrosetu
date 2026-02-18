@@ -1,31 +1,59 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ApiService {
-  static const String baseUrl = 'http://localhost:5001';
-  // Android Emulator: http://10.0.2.2:5001
-  // Real device: Use your PC IP address
+/// Backend selection enum for easy switching between targets.
+enum BackendTarget { localhost, emulator, ngrok, custom }
 
-  // =========================
-  // COMMON HEADERS
-  // =========================
+class ApiService {
+  static const String baseUrl = 'http://127.0.0.1:5001';
+
+  // NOTE: `flaskBaseUrl` is configurable at runtime so you can switch
+  // easily between local, emulator and ngrok when testing on devices.
+  // Default (local machine running Flask):
+  static String flaskBaseUrl = 'http://127.0.0.1:8000';
+
+  // Helper to change target backend quickly from code:
+  static void setBackendTarget(BackendTarget target, {String? ngrokUrl, String? customUrl}) {
+    switch (target) {
+      case BackendTarget.localhost:
+        flaskBaseUrl = 'http://127.0.0.1:8000';
+        break;
+      case BackendTarget.emulator:
+        // Android emulator special host mapping
+        flaskBaseUrl = 'http://10.0.2.2:8000';
+        break;
+      case BackendTarget.ngrok:
+        if (ngrokUrl != null && ngrokUrl.isNotEmpty) {
+          flaskBaseUrl = ngrokUrl;
+        }
+        break;
+      case BackendTarget.custom:
+        if (customUrl != null && customUrl.isNotEmpty) {
+          flaskBaseUrl = customUrl;
+        }
+        break;
+    }
+  }
+
+  // Common headers
   static Map<String, String> getHeaders({String? token}) {
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
-
+    
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
-
+    
     return headers;
   }
-
-  // =========================
-  // LOGIN API
-  // =========================
+  
+  // Login API
   static Future<Map<String, dynamic>> login(
       String email, String password) async {
     try {
@@ -37,9 +65,9 @@ class ApiService {
           'password': password,
         }),
       );
-
+      
       final responseData = jsonDecode(response.body);
-
+      
       if (response.statusCode == 200) {
         if (responseData['token'] != null) {
           await _saveToken(responseData['token']);
@@ -63,10 +91,8 @@ class ApiService {
       };
     }
   }
-
-  // =========================
-  // SIGNUP API
-  // =========================
+  
+  // Signup API
   static Future<Map<String, dynamic>> signup(
       String name, String email, String password) async {
     try {
@@ -79,19 +105,23 @@ class ApiService {
           'password': password,
         }),
       );
-
+      
       final responseData = jsonDecode(response.body);
-
+      
       if (response.statusCode == 201 || response.statusCode == 200) {
         return {
           'status': 'ok',
           'data': responseData,
-          'message': 'Registration successful',
+          'message': responseData['message'] ?? 'Registration successful',
         };
       } else {
+        final errorMessage = responseData['message'] ?? 'Registration failed';
+        final errors = responseData['errors'];
+        
         return {
           'status': 'error',
-          'message': responseData['message'] ?? 'Registration failed',
+          'message': errorMessage,
+          'errors': errors,
           'error': responseData,
         };
       }
@@ -102,10 +132,8 @@ class ApiService {
       };
     }
   }
-
-  // =========================
-  // FORGOT PASSWORD
-  // =========================
+  
+  // Forgot Password API
   static Future<Map<String, dynamic>> forgotPassword(String email) async {
     try {
       final response = await http.post(
@@ -115,15 +143,14 @@ class ApiService {
           'email': email,
         }),
       );
-
+      
       final responseData = jsonDecode(response.body);
-
+      
       if (response.statusCode == 200) {
         return {
           'status': 'ok',
           'data': responseData,
-          'message':
-              responseData['message'] ?? 'Password reset link sent to email',
+          'message': responseData['message'] ?? 'Password reset link sent to your email',
         };
       } else {
         return {
@@ -139,88 +166,7 @@ class ApiService {
       };
     }
   }
-
-  // =========================
-  // VERIFY RESET TOKEN
-  // =========================
-  static Future<Map<String, dynamic>> verifyResetToken(String token) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/verify-reset-token'),
-        headers: getHeaders(),
-        body: jsonEncode({
-          'token': token,
-        }),
-      );
-
-      final responseData = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        return {
-          'status': 'ok',
-          'data': responseData,
-          'message': responseData['message'] ?? 'Token verified successfully',
-        };
-      } else {
-        return {
-          'status': 'error',
-          'message': responseData['message'] ?? 'Invalid or expired token',
-          'error': responseData,
-        };
-      }
-    } catch (e) {
-      return {
-        'status': 'error',
-        'message': 'Network error: $e',
-      };
-    }
-  }
-
-  // =========================
-  // RESET PASSWORD WITH TOKEN
-  // =========================
-  static Future<Map<String, dynamic>> resetPassword({
-    required String token,
-    required String newPassword,
-    required String confirmPassword,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/reset-password'),
-        headers: getHeaders(),
-        body: jsonEncode({
-          'token': token,
-          'newPassword': newPassword,
-          'confirmPassword': confirmPassword,
-        }),
-      );
-
-      final responseData = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        return {
-          'status': 'ok',
-          'data': responseData,
-          'message': responseData['message'] ?? 'Password reset successful',
-        };
-      } else {
-        return {
-          'status': 'error',
-          'message': responseData['message'] ?? 'Failed to reset password',
-          'error': responseData,
-        };
-      }
-    } catch (e) {
-      return {
-        'status': 'error',
-        'message': 'Network error: $e',
-      };
-    }
-  }
-
-  // =========================
-  // SAVE TOKEN
-  // =========================
+  
   static Future<void> _saveToken(String token) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -231,10 +177,7 @@ class ApiService {
       print('Error saving token: $e');
     }
   }
-
-  // =========================
-  // GET TOKEN
-  // =========================
+  
   static Future<String?> getToken() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -244,10 +187,7 @@ class ApiService {
       return null;
     }
   }
-
-  // =========================
-  // CHECK LOGIN STATUS
-  // =========================
+  
   static Future<bool> isLoggedIn() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -259,10 +199,7 @@ class ApiService {
       return false;
     }
   }
-
-  // =========================
-  // LOGOUT
-  // =========================
+  
   static Future<void> logout() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -271,6 +208,442 @@ class ApiService {
       print('Logged out successfully');
     } catch (e) {
       print('Error logging out: $e');
+    }
+  }
+
+  // ====== COMMUNITY POST APIS ======
+  
+  static Future<Map<String, dynamic>> getPosts(String category) async {
+    try {
+      final url = category == 'All' 
+          ? '$baseUrl/api/community/posts'
+          : '$baseUrl/api/community/posts?category=$category';
+      
+      final response = await http.get(
+        Uri.parse(url),
+        headers: getHeaders(),
+      );
+      
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {
+          'status': 'ok',
+          'posts': responseData['posts'] ?? [],
+          'message': 'Posts fetched successfully',
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': responseData['message'] ?? 'Failed to fetch posts',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> createPost({
+    required String title,
+    required String description,
+    required String category,
+    required Map<String, dynamic> author,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/community/posts'),
+        headers: getHeaders(),
+        body: jsonEncode({
+          'title': title,
+          'description': description,
+          'category': category,
+          'author': author,
+        }),
+      );
+      
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'status': 'ok',
+          'post': responseData['post'],
+          'message': responseData['message'] ?? 'Post created successfully',
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': responseData['message'] ?? 'Failed to create post',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> likePost({
+    required String postId,
+    required String userId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/community/posts/$postId/like'),
+        headers: getHeaders(),
+        body: jsonEncode({
+          'userId': userId,
+        }),
+      );
+      
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {
+          'status': 'ok',
+          'likes': responseData['likes'],
+          'liked': responseData['liked'],
+          'message': responseData['message'] ?? 'Like toggled',
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': responseData['message'] ?? 'Failed to like post',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> addComment({
+    required String postId,
+    required String userId,
+    required String userName,
+    required String userEmail,
+    required String text,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/community/posts/$postId/comments'),
+        headers: getHeaders(),
+        body: jsonEncode({
+          'userId': userId,
+          'userName': userName,
+          'userEmail': userEmail,
+          'text': text,
+        }),
+      );
+      
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {
+          'status': 'ok',
+          'comment': responseData['comment'],
+          'message': responseData['message'] ?? 'Comment added',
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': responseData['message'] ?? 'Failed to add comment',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> deletePost({
+    required String postId,
+    required String userId,
+  }) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/community/posts/$postId'),
+        headers: getHeaders(),
+        body: jsonEncode({
+          'userId': userId,
+        }),
+      );
+      
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {
+          'status': 'ok',
+          'message': responseData['message'] ?? 'Post deleted',
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': responseData['message'] ?? 'Failed to delete post',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> requestPasswordReset(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/password-reset/request'),
+        headers: getHeaders(),
+        body: jsonEncode({
+          'email': email,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      try {
+        final responseData = jsonDecode(response.body);
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          return {
+            'status': 'ok',
+            'data': responseData,
+            'message': responseData['message'] ?? 'Reset code sent to email',
+          };
+        } else {
+          return {
+            'status': 'error',
+            'message': responseData['message'] ?? 'Failed to send reset code',
+          };
+        }
+      } catch (parseError) {
+        print('[ApiService] JSON Parse Error: $parseError');
+        return {
+          'status': 'error',
+          'message': 'Server error: Invalid response format',
+        };
+      }
+    } on SocketException {
+      return {
+        'status': 'error',
+        'message': 'Network error: No internet connection. Make sure backend server is running on $baseUrl',
+      };
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> resetPassword(
+      String email, String code, String newPassword) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/password-reset/verify'),
+        headers: getHeaders(),
+        body: jsonEncode({
+          'email': email,
+          'code': code,
+          'newPassword': newPassword,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      try {
+        final responseData = jsonDecode(response.body);
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          return {
+            'status': 'ok',
+            'data': responseData,
+            'message': responseData['message'] ?? 'Password reset successfully',
+          };
+        } else {
+          return {
+            'status': 'error',
+            'message': responseData['message'] ?? 'Failed to reset password',
+            'errors': responseData['errors'],
+          };
+        }
+      } catch (parseError) {
+        print('[ApiService] JSON Parse Error: $parseError');
+        return {
+          'status': 'error',
+          'message': 'Server error: Invalid response format',
+        };
+      }
+    } on SocketException {
+      return {
+        'status': 'error',
+        'message': 'Network error: No internet connection. Make sure backend server is running on $baseUrl',
+      };
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // ====== DISEASE DETECTION API ======
+
+  static Future<Map<String, dynamic>> predictDiseaseFromImage(
+      String imagePath) async {
+    try {
+      final imageFile = File(imagePath);
+      if (!imageFile.existsSync()) {
+        return {
+          'status': 'error',
+          'message': 'Image file not found at $imagePath',
+        };
+      }
+
+      final imageBytes = await imageFile.readAsBytes();
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$flaskBaseUrl/predict'),
+      );
+
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image',
+          imageBytes,
+          filename: 'disease_detection.jpg',
+        ),
+      );
+
+      print('[Flutter] Sending prediction request to $flaskBaseUrl/predict');
+
+      final streamResponse = await request.send().timeout(
+        const Duration(seconds: 30),
+      );
+
+      final response = await http.Response.fromStream(streamResponse);
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'status': 'ok',
+          'disease_name': responseData['disease_name'],
+          'confidence': responseData['confidence'],
+          'description': responseData['description'],
+          'solutions': List<String>.from(responseData['solutions'] ?? []),
+          'pesticide': responseData['pesticide'],
+          'dosage': responseData['dosage'],
+          'frequency': responseData['frequency'],
+          'prevention': responseData['prevention'],
+          'stage': responseData['stage'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': responseData['error'] ?? 'Failed to predict disease',
+        };
+      }
+    } on SocketException catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Network error: Flask server not running on $flaskBaseUrl',
+      };
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> predictDiseaseFromImageBytes(
+      Uint8List imageBytes) async {
+    try {
+      if (imageBytes.isEmpty) {
+        return {'status': 'error', 'message': 'Image is empty'};
+      }
+
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$flaskBaseUrl/predict'),
+      );
+
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image',
+          imageBytes,
+          filename: 'disease_detection.jpg',
+        ),
+      );
+
+      print('[Flutter] Sending prediction request to $flaskBaseUrl/predict');
+
+      final streamResponse = await request.send().timeout(
+        const Duration(seconds: 30),
+      );
+
+      final response = await http.Response.fromStream(streamResponse);
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'status': 'ok',
+          'disease_name': responseData['disease_name'],
+          'confidence': responseData['confidence'],
+          'description': responseData['description'],
+          'solutions': List<String>.from(responseData['solutions'] ?? []),
+          'pesticide': responseData['pesticide'],
+          'dosage': responseData['dosage'],
+          'frequency': responseData['frequency'],
+          'prevention': responseData['prevention'],
+          'stage': responseData['stage'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': responseData['error'] ?? 'Failed to predict disease',
+        };
+      }
+    } on SocketException catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Network error: Flask server not running on $flaskBaseUrl',
+      };
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> getFlaskHealthCheck() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$flaskBaseUrl/health'),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'status': 'ok',
+          'server_status': data['status'],
+          'models_loaded': data['models_loaded'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': 'Flask server returned error',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Flask server not reachable: $e',
+      };
     }
   }
 }

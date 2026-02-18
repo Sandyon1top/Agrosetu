@@ -2,9 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
-const nodemailer = require("nodemailer");
-const axios = require("axios");
+const axios = require("axios"); // ADDED for weather API
 require("dotenv").config();
 
 const app = express();
@@ -28,21 +26,29 @@ app.use(express.urlencoded({ extended: true }));
 
 // ====== MONGODB CONNECTION ======
 mongoose
-  .connect(process.env.MONGO_URI || "mongodb://localhost:27017/agrosetu")
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log("❌ MongoDB Error:", err));
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("[DB] MongoDB Connected"))
+  .catch((err) => console.log("[DB ERROR] MongoDB Error:", err));
 
 // ====== USER SCHEMA ======
 const UserSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
-  resetPasswordToken: String,
-  resetPasswordExpires: Date,
-  createdAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model("users", UserSchema);
+
+// ====== PASSWORD RESET SCHEMA ======
+const PasswordResetSchema = new mongoose.Schema({
+  email: String,
+  resetCode: String,
+  expiresAt: Date,
+  used: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const PasswordReset = mongoose.model("password_resets", PasswordResetSchema);
 
 // ====== WEATHER CACHE SCHEMA ======
 const WeatherCacheSchema = new mongoose.Schema({
@@ -56,25 +62,59 @@ const WeatherCacheSchema = new mongoose.Schema({
 
 const WeatherCache = mongoose.model("weather_cache", WeatherCacheSchema);
 
-// ====== EMAIL TRANSPORTER ======
-const createTransporter = () => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-    console.log("⚠️  Email not configured. Running in demo mode.");
-    return null;
-  }
-  
-  return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || "smtp.gmail.com",
-    port: process.env.EMAIL_PORT || 587,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD
-    }
-  });
-};
+// ====== COMMUNITY POST SCHEMA ======
+const PostSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  category: String,
+  author: {
+    id: mongoose.Schema.Types.ObjectId,
+    name: String,
+    email: String,
+  },
+  likes: [mongoose.Schema.Types.ObjectId], // Array of user IDs who liked
+  comments: [
+    {
+      userId: mongoose.Schema.Types.ObjectId,
+      userName: String,
+      userEmail: String,
+      text: String,
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+  solved: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+const Post = mongoose.model("posts", PostSchema);
 
 // ====== HELPER FUNCTIONS ======
+function validatePassword(password) {
+  const errors = [];
+  
+  if (!password || password.length < 8) {
+    errors.push('Password must be at least 8 characters');
+  }
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+  if (!/[0-9]/.test(password)) {
+    errors.push('Password must contain at least one number');
+  }
+  if (!/[!@#$%^&*()_+=\[\]{};:`~<>,./\-]/.test(password)) {
+    errors.push('Password must contain at least one special character');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors: errors
+  };
+}
+
 function mapWeatherCondition(openWeatherCondition) {
   const mapping = {
     'Clear': 'sunny',
@@ -115,8 +155,7 @@ app.get("/", (req, res) => {
       "GET  /api/weather/current - Current weather",
       "GET  /api/weather/hourly - Hourly forecast",
       "POST /signup - User registration",
-      "POST /login - User login",
-      "POST /forgot-password - Request password reset"
+      "POST /login - User login"
     ]
   });
 });
@@ -192,6 +231,9 @@ app.get("/api/weather/current", async (req, res) => {
       icon: response.data.weather[0].icon,
       farmingTip: getFarmingTip(condition),
       lastUpdated: new Date(),
+      sunriseEpoch: response.data.sys ? response.data.sys.sunrise : null,
+      sunsetEpoch: response.data.sys ? response.data.sys.sunset : null,
+      timezoneOffset: response.data.timezone || 0,
       location: response.data.name || 'Kathmandu'
     };
     
@@ -206,7 +248,7 @@ app.get("/api/weather/current", async (req, res) => {
       { upsert: true, new: true }
     );
     
-    console.log('✅ Weather data fetched and cached');
+    console.log('[WEATHER] Weather data fetched and cached');
     res.json({
       ...weatherData,
       source: 'api'
@@ -278,26 +320,55 @@ app.get("/api/weather/hourly", async (req, res) => {
 
 // Signup endpoint
 app.post("/signup", async (req, res) => {
-  console.log("📝 Signup request for:", req.body.email);
+  console.log("[SIGNUP] Request for:", req.body.email);
   
   try {
     const { name, email, password } = req.body;
     
+    // Validate inputs
+    if (!name || !email || !password) {
+      console.log("[SIGNUP ERROR] Missing required fields");
+      return res.json({ 
+        status: "error", 
+        message: "Name, email, and password are required" 
+      });
+    }
+    
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      console.log("[SIGNUP ERROR] Weak password:", passwordValidation.errors);
+      return res.json({ 
+        status: "error", 
+        message: "Password does not meet requirements",
+        errors: passwordValidation.errors
+      });
+    }
+    
+    console.log("[SIGNUP] Checking if user exists:", email);
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      console.log("[SIGNUP ERROR] Email already registered:", email);
       return res.json({ 
         status: "error", 
         message: "Email already registered" 
       });
     }
     
-    // Hash password
+    console.log("[SIGNUP] Hashing password...");
     const hashedPassword = await bcrypt.hash(password, 10);
     
+    console.log("[SIGNUP] Creating user in database...");
     const user = await User.create({
       name,
       email,
       password: hashedPassword
+    });
+    
+    console.log("[SIGNUP SUCCESS] User created:", {
+      id: user._id,
+      name: user.name,
+      email: user.email
     });
     
     res.json({
@@ -311,42 +382,63 @@ app.post("/signup", async (req, res) => {
     });
     
   } catch (error) {
-    console.error("Signup error:", error);
+    console.error("❌ Signup error:", error.message);
+    console.error("Stack:", error.stack);
     res.status(500).json({
       status: "error",
-      message: "Registration failed"
+      message: "Registration failed: " + error.message
     });
   }
 });
 
 // Login endpoint
 app.post("/login", async (req, res) => {
-  console.log("🔑 Login request for:", req.body.email);
+  console.log("[LOGIN] Request for:", req.body.email);
   
   try {
     const { email, password } = req.body;
     
+    if (!email || !password) {
+      console.log("[LOGIN ERROR] Missing email or password");
+      return res.json({
+        status: "error",
+        message: "Email and password are required"
+      });
+    }
+    
+    console.log("[LOGIN] Looking up user:", email);
     const user = await User.findOne({ email });
     if (!user) {
+      console.log("[LOGIN ERROR] User not found:", email);
       return res.json({
         status: "error",
         message: "User not found"
       });
     }
     
+    console.log("[LOGIN] Validating password for:", email);
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
+      console.log("[LOGIN ERROR] Invalid password for:", email);
       return res.json({
         status: "error", 
         message: "Invalid password"
       });
     }
     
+    console.log("[LOGIN] Password valid, generating token...");
     const token = jwt.sign(
       { userId: user._id, email: user.email },
-      process.env.JWT_SECRET || "agrosetu_secret",
+      process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
+    
+    console.log("[LOGIN SUCCESS] Successful for:", {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      token: token.substring(0, 20) + "..."
+    });
     
     res.json({
       status: "ok",
@@ -360,131 +452,465 @@ app.post("/login", async (req, res) => {
     });
     
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("❌ Login error:", error.message);
+    console.error("Stack:", error.stack);
     res.status(500).json({
       status: "error",
-      message: "Login failed"
+      message: "Login failed: " + error.message
     });
   }
 });
 
-// ====== FORGOT PASSWORD ======
-app.post("/forgot-password", async (req, res) => {
-  console.log("📧 Forgot password request for:", req.body.email);
+// ====== COMMUNITY POSTS ROUTES ======
+
+// Get all posts (with filtering)
+app.get("/api/community/posts", async (req, res) => {
+  try {
+    const { category, limit = 50, page = 1 } = req.query;
+    
+    let query = {};
+    if (category && category !== 'All') {
+      query.category = category;
+    }
+    
+    const skip = (page - 1) * limit;
+    
+    const posts = await Post.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+    
+    const total = await Post.countDocuments(query);
+    
+    res.json({
+      status: "ok",
+      posts: posts.map(post => ({
+        id: post._id,
+        title: post.title,
+        description: post.description,
+        category: post.category,
+        author: post.author,
+        likes: post.likes.length,
+        liked: false, // Will be set on client based on user ID
+        comments: post.comments.length,
+        solved: post.solved,
+        createdAt: post.createdAt,
+        timestamp: getTimeAgo(post.createdAt),
+      })),
+      total: total,
+      page: page,
+      hasMore: skip + posts.length < total,
+    });
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to fetch posts"
+    });
+  }
+});
+
+// Get single post with comments
+app.get("/api/community/posts/:postId", async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.json({
+        status: "error",
+        message: "Post not found"
+      });
+    }
+    
+    res.json({
+      status: "ok",
+      post: {
+        id: post._id,
+        title: post.title,
+        description: post.description,
+        category: post.category,
+        author: post.author,
+        likes: post.likes.length,
+        comments: post.comments,
+        solved: post.solved,
+        createdAt: post.createdAt,
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching post:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to fetch post"
+    });
+  }
+});
+
+// Create a new post
+app.post("/api/community/posts", async (req, res) => {
+  console.log("[POST] New post from:", req.body.author?.email);
+  
+  try {
+    const { title, description, category, author } = req.body;
+    
+    if (!title || !description || !category || !author) {
+      return res.json({
+        status: "error",
+        message: "Missing required fields"
+      });
+    }
+    
+    const post = await Post.create({
+      title,
+      description,
+      category,
+      author: {
+        id: author.id,
+        name: author.name,
+        email: author.email,
+      },
+      likes: [],
+      comments: [],
+      solved: false,
+    });
+    
+    res.json({
+      status: "ok",
+      message: "Post created successfully",
+      post: {
+        id: post._id,
+        title: post.title,
+        description: post.description,
+        category: post.category,
+        author: post.author,
+        likes: 0,
+        comments: 0,
+        solved: false,
+        createdAt: post.createdAt,
+      }
+    });
+  } catch (error) {
+    console.error("Post creation error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to create post"
+    });
+  }
+});
+
+// Like a post
+app.post("/api/community/posts/:postId/like", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.json({
+        status: "error",
+        message: "Post not found"
+      });
+    }
+    
+    const likeIndex = post.likes.indexOf(userId);
+    if (likeIndex === -1) {
+      post.likes.push(userId);
+    } else {
+      post.likes.splice(likeIndex, 1);
+    }
+    
+    await post.save();
+    
+    res.json({
+      status: "ok",
+      message: "Post like toggled",
+      likes: post.likes.length,
+      liked: post.likes.includes(userId)
+    });
+  } catch (error) {
+    console.error("Like error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to like post"
+    });
+  }
+});
+
+// Add comment to post
+app.post("/api/community/posts/:postId/comments", async (req, res) => {
+  try {
+    const { userId, userName, userEmail, text } = req.body;
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.json({
+        status: "error",
+        message: "Post not found"
+      });
+    }
+    
+    const comment = {
+      userId,
+      userName,
+      userEmail,
+      text,
+      createdAt: new Date(),
+    };
+    
+    post.comments.push(comment);
+    await post.save();
+    
+    res.json({
+      status: "ok",
+      message: "Comment added successfully",
+      comment: comment
+    });
+  } catch (error) {
+    console.error("Comment error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to add comment"
+    });
+  }
+});
+
+// Delete post
+app.delete("/api/community/posts/:postId", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.json({
+        status: "error",
+        message: "Post not found"
+      });
+    }
+    
+    // Check if user is post author
+    if (post.author.id.toString() !== userId) {
+      return res.json({
+        status: "error",
+        message: "Unauthorized to delete this post"
+      });
+    }
+    
+    await Post.findByIdAndDelete(req.params.postId);
+    
+    res.json({
+      status: "ok",
+      message: "Post deleted successfully"
+    });
+  } catch (error) {
+    console.error("Delete error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to delete post"
+    });
+  }
+});
+
+// ====== PASSWORD RESET ENDPOINTS ======
+
+// Request Password Reset - Generate reset code
+app.post("/api/password-reset/request", async (req, res) => {
+  console.log("[PASSWORD RESET] Request for:", req.body.email);
   
   try {
     const { email } = req.body;
     
     if (!email) {
-      return res.status(400).json({
+      return res.json({
         status: "error",
         message: "Email is required"
       });
     }
     
-    // Find user
+    // Check if user exists
     const user = await User.findOne({ email });
-    
     if (!user) {
-      console.log("❌ Email not found:", email);
+      // Don't reveal if user exists for security, but log it
+      console.log("[PASSWORD RESET ERROR] User does not exist:", email);
+      // Return success even if user doesn't exist (security best practice)
       return res.json({
-        status: "not_found",
-        message: "Email not found in our system",
-        suggestion: "Would you like to create an account with this email?"
+        status: "ok",
+        message: "If this email exists, a reset code has been sent"
       });
     }
     
-    console.log("✅ User found:", user.email);
+    console.log("[PASSWORD RESET] User found:", email);
     
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpiry = Date.now() + 3600000; // 1 hour
+    // Generate 6-digit reset code
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
     
-    // Save token to user
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = new Date(resetTokenExpiry);
-    await user.save();
+    // Clear any existing reset codes for this email
+    await PasswordReset.deleteMany({ email, used: false });
     
-    console.log("✅ Reset token generated for:", email);
+    // Create new reset code
+    const resetRecord = new PasswordReset({
+      email,
+      resetCode,
+      expiresAt,
+      used: false
+    });
     
-    // Try to send email if configured
-    let emailSent = false;
-    const transporter = createTransporter();
+    await resetRecord.save();
     
-    if (transporter) {
-      try {
-        const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
-        
-        const mailOptions = {
-          from: `"AgroSetu" <${process.env.EMAIL_USER}>`,
-          to: email,
-          subject: 'AgroSetu - Password Reset Request',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #1B5E20;">🌱 AgroSetu Password Reset</h2>
-              <p>Hello ${user.name},</p>
-              <p>We received a request to reset your password. Click the link below to create a new password:</p>
-              <p><a href="${resetUrl}" style="color: #1B5E20; font-weight: bold;">${resetUrl}</a></p>
-              <p><strong>This link will expire in 1 hour.</strong></p>
-              <p>If you didn't request this, please ignore this email.</p>
-              <p>Best regards,<br>AgroSetu Team</p>
-            </div>
-          `
-        };
-        
-        await transporter.sendMail(mailOptions);
-        emailSent = true;
-        console.log("✅ Password reset email sent to:", email);
-        
-      } catch (emailError) {
-        console.error("❌ Email sending failed:", emailError.message);
-      }
-    } else {
-      console.log("⚠️  Email not configured. Showing token in response.");
-    }
+    console.log("[PASSWORD RESET SUCCESS] Code generated for:", email);
+    console.log("[PASSWORD RESET] Dev code:", resetCode);
     
+    // In development, return the code in response (remove in production!)
     res.json({
-      status: "success",
-      message: emailSent 
-        ? "Password reset link sent to your email" 
-        : "Password reset would be sent (email not configured)",
-      emailSent: emailSent,
-      name: user.name,
-      email: email,
-      // In development/demo, include token
-      demoToken: process.env.NODE_ENV !== 'production' ? resetToken : undefined
+      status: "ok",
+      message: "Reset code sent to your email",
+      // For testing/development only - remove in production
+      _devCode: resetCode
     });
     
   } catch (error) {
-    console.error("❌ Forgot password error:", error);
+    console.error("Password reset request error:", error);
     res.status(500).json({
       status: "error",
-      message: "Something went wrong. Please try again."
+      message: "Failed to process password reset request"
     });
   }
 });
+
+// Verify reset code and reset password
+app.post("/api/password-reset/verify", async (req, res) => {
+  console.log("[PASSWORD RESET VERIFY] For:", req.body.email);
+  
+  try {
+    const { email, code, newPassword } = req.body;
+    
+    if (!email || !code || !newPassword) {
+      return res.json({
+        status: "error",
+        message: "Email, code, and password are required"
+      });
+    }
+    
+    // Validate password strength
+    const passwordValidation = validatePassword(newPassword);
+    if (passwordValidation.errors.length > 0) {
+      return res.json({
+        status: "error",
+        message: "Password does not meet security requirements",
+        errors: passwordValidation.errors
+      });
+    }
+    
+    // Find valid reset code
+    const resetRecord = await PasswordReset.findOne({
+      email,
+      resetCode: code,
+      used: false
+    });
+    
+    if (!resetRecord) {
+      console.log("[PASSWORD RESET ERROR] Invalid or expired code for:", email);
+      return res.json({
+        status: "error",
+        message: "Invalid or expired reset code"
+      });
+    }
+    
+    // Check if code has expired
+    if (new Date() > resetRecord.expiresAt) {
+      console.log("[PASSWORD RESET ERROR] Code expired for:", email);
+      await PasswordReset.deleteOne({ _id: resetRecord._id });
+      return res.json({
+        status: "error",
+        message: "Reset code has expired. Please request a new one"
+      });
+    }
+    
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    
+    // Update user password
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.json({
+        status: "error",
+        message: "User not found"
+      });
+    }
+    
+    user.password = hashedPassword;
+    await user.save();
+    
+    // Mark reset code as used
+    resetRecord.used = true;
+    await resetRecord.save();
+    
+    console.log("[PASSWORD RESET SUCCESS] Password updated for:", email);
+    
+    res.json({
+      status: "ok",
+      message: "Password reset successfully"
+    });
+    
+  } catch (error) {
+    console.error("Password reset verification error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to reset password"
+    });
+  }
+});
+
+// Helper function to format time
+function getTimeAgo(date) {
+  const now = new Date();
+  const seconds = Math.floor((now - date) / 1000);
+  
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + " years ago";
+  
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + " months ago";
+  
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + " days ago";
+  
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + " hours ago";
+  
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + " minutes ago";
+  
+  return Math.floor(seconds) + " seconds ago";
+}
 
 // ====== START SERVER ======
 const PORT = process.env.PORT || 5001;
 const HOST = '0.0.0.0';
 
 app.listen(PORT, HOST, () => {
-  console.log("=".repeat(60));
-  console.log(`🚀 AgroSetu Backend Server`);
-  console.log(`📡 PORT: ${PORT}`);
+  console.log("=".repeat(50));
+  console.log(`🚀 Server running on PORT: ${PORT}`);
   console.log(`🌐 Accessible on:`);
   console.log(`   http://localhost:${PORT}`);
   console.log(`   http://127.0.0.1:${PORT}`);
   console.log(`   http://${HOST}:${PORT}`);
-  console.log("=".repeat(60));
+  console.log("=".repeat(50));
   console.log("\n📋 Available endpoints:");
-  console.log(`   POST http://localhost:${PORT}/signup          - Register user`);
-  console.log(`   POST http://localhost:${PORT}/login           - Login user`);
-  console.log(`   POST http://localhost:${PORT}/forgot-password - Request password reset`);
-  console.log("=".repeat(60));
-  console.log("\n📧 Email Configuration:");
-  console.log("   To enable email sending, add to .env file:");
-  console.log("   EMAIL_USER=your_email@gmail.com");
-  console.log("   EMAIL_PASSWORD=your_app_password");
-  console.log("=".repeat(60));
+  console.log(`   GET  http://localhost:${PORT}/`);
+  console.log(`   GET  http://localhost:${PORT}/health`);
+  console.log(`   GET  http://localhost:${PORT}/test`);
+  console.log(`   GET  http://localhost:${PORT}/api/weather/current`);
+  console.log(`   GET  http://localhost:${PORT}/api/weather/hourly`);
+  console.log(`   POST http://localhost:${PORT}/signup`);
+  console.log(`   POST http://localhost:${PORT}/login`);  console.log(`   POST http://localhost:${PORT}/api/password-reset/request`);
+  console.log(`   POST http://localhost:${PORT}/api/password-reset/verify`);  console.log(`   GET  http://localhost:${PORT}/api/community/posts`);
+  console.log(`   GET  http://localhost:${PORT}/api/community/posts/:postId`);
+  console.log(`   POST http://localhost:${PORT}/api/community/posts`);
+  console.log(`   POST http://localhost:${PORT}/api/community/posts/:postId/like`);
+  console.log(`   POST http://localhost:${PORT}/api/community/posts/:postId/comments`);
+  console.log(`   DELETE http://localhost:${PORT}/api/community/posts/:postId`);
+  console.log("=".repeat(50));
+  console.log("\n🔑 Weather API configured");
+  console.log("📝 Add to .env: OPENWEATHER_API_KEY=your_key_here");
+  console.log("=".repeat(50));
 });

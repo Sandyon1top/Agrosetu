@@ -1,147 +1,138 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class WeatherService {
-  static const String apiKey = '53831930a3deac460b0e774eaa8b462e'; // Replace with your actual API key
-  static const String baseUrl = 'https://api.openweathermap.org/data/2.5';
-  
-  // For Kathmandu coordinates
+  static const String backendUrl = 'http://localhost:5001';
   static const double lat = 27.7172;
   static const double lon = 85.3240;
 
   static Future<Map<String, dynamic>> getCurrentWeather() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/weather?lat=$lat&lon=$lon&appid=$apiKey&units=metric'),
-      );
+        Uri.parse('$backendUrl/api/weather/current?lat=$lat&lon=$lon'),
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        final condition = data['condition'] ?? 'cloudy';
+        String sunset = '';
+        try {
+          if (data['sunsetEpoch'] != null) {
+            final dt = DateTime.fromMillisecondsSinceEpoch((data['sunsetEpoch'] as int) * 1000);
+            sunset = DateFormat('h:mm a').format(dt);
+          }
+        } catch (e) {
+          sunset = '';
+        }
+
         return {
-          'location': data['name'] ?? 'Kathmandu',
-          'temp': data['main']['temp']?.round() ?? 22,
-          'feelsLike': data['main']['feels_like']?.round() ?? 24,
-          'humidity': '${data['main']['humidity']?.toString() ?? '65'}%',
-          'pressure': '${data['main']['pressure']?.toString() ?? '1013'} hPa',
-          'windSpeed': '${(data['wind']['speed'] ?? 3.3).toStringAsFixed(1)} km/h', // Convert m/s to km/h
-          'condition': data['weather'][0]['main'] ?? 'Partly Cloudy',
-          'description': data['weather'][0]['description'] ?? 'Partly cloudy',
-          'rainChance': '${((data['pop'] ?? 0) * 100).toInt()}%',
-          'uvIndex': '5', // OpenWeather doesn't provide UV in free tier
-          'lastUpdated': DateTime.now().toIso8601String(),
-          'source': 'api',
-          'farmingTip': _getFarmingTip(data['main']['temp'] ?? 22, data['weather'][0]['main'] ?? 'Clear'),
-          'icon': getWeatherIcon(data['weather'][0]['main'] ?? 'Clouds'),
+          'location': data['location'] ?? 'Kathmandu',
+          'temp': data['temp'] ?? 22,
+          'feelsLike': data['feelsLike'] ?? 24,
+          'humidity': '${data['humidity']?.toString() ?? '65'}%',
+          'windSpeed': '${data['windSpeed'] ?? 12} km/h',
+          'condition': condition,
+          'description': getWeatherDescription(condition),
+          'pressure': '${data['pressure']?.toString() ?? '1013'} hPa',
+          'rainChance': '${data['rainChance']?.toString() ?? '0'}%',
+          'uvIndex': '5',
+          'lastUpdated': data['lastUpdated'] ?? DateTime.now().toIso8601String(),
+          'source': data['source'] ?? 'api',
+          'farmingTip': data['farmingTip'] ?? 'Good day for farming activities.',
+          'icon': getWeatherIcon(condition),
+          'sunset': sunset,
         };
       } else {
-        return _getMockData();
+        throw Exception('Failed to fetch weather: ${response.statusCode}');
       }
     } catch (e) {
       print('Weather API Error: $e');
-      return _getMockData();
+      rethrow;
     }
   }
 
   static Future<Map<String, dynamic>> getHourlyForecast() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/forecast?lat=$lat&lon=$lon&appid=$apiKey&units=metric'),
-      );
+        Uri.parse('$backendUrl/api/weather/hourly?lat=$lat&lon=$lon'),
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         List<Map<String, dynamic>> hourly = [];
         
-        // Get next 5 hours forecast
-        for (int i = 0; i < 5 && i < (data['list']?.length ?? 0); i++) {
-          final forecast = data['list'][i];
-          final time = DateTime.fromMillisecondsSinceEpoch(forecast['dt'] * 1000);
-          hourly.add({
-            'time': '${time.hour}:00',
-            'temp': forecast['main']['temp']?.round() ?? 22,
-            'condition': forecast['weather'][0]['main'] ?? 'Clouds',
-          });
+        if (data['hourly'] is List) {
+          for (var forecast in data['hourly']) {
+            hourly.add({
+              'time': forecast['time'] ?? 'N/A',
+              'temp': forecast['temp'] ?? 22,
+              'condition': forecast['condition'] ?? 'cloudy',
+            });
+          }
         }
         
+        if (hourly.isEmpty) {
+          throw Exception('No hourly forecast data received');
+        }
+
         return {'hourly': hourly};
       } else {
-        return _getMockForecast();
+        throw Exception('Failed to fetch forecast: ${response.statusCode}');
       }
     } catch (e) {
       print('Forecast API Error: $e');
-      return _getMockForecast();
+      rethrow;
     }
   }
 
+  @deprecated
   static Map<String, dynamic> _getMockData() {
-    return {
-      'location': 'Kathmandu',
-      'temp': 22,
-      'feelsLike': 24,
-      'humidity': '65%',
-      'pressure': '1013 hPa',
-      'windSpeed': '12 km/h',
-      'condition': 'Partly Cloudy',
-      'description': 'Partly cloudy',
-      'rainChance': '0%',
-      'uvIndex': '5',
-      'lastUpdated': DateTime.now().toIso8601String(),
-      'source': 'mock_fallback',
-      'farmingTip': 'Good day for farming activities. Perfect time for planting seasonal crops.',
-      'icon': '⛅',
-    };
+    throw Exception('Mock data removed');
   }
 
+  @deprecated
   static Map<String, dynamic> _getMockForecast() {
-    return {
-      'hourly': [
-        {'time': 'Now', 'temp': 22, 'condition': 'Partly Cloudy'},
-        {'time': '15:00', 'temp': 23, 'condition': 'Partly Cloudy'},
-        {'time': '16:00', 'temp': 22, 'condition': 'Cloudy'},
-        {'time': '17:00', 'temp': 21, 'condition': 'Cloudy'},
-        {'time': '18:00', 'temp': 20, 'condition': 'Clear'},
-      ]
-    };
+    throw Exception('Mock forecast removed');
   }
 
   static String getWeatherIcon(String condition) {
-    switch (condition.toLowerCase()) {
-      case 'clear':
-        return '☀️';
-      case 'clouds':
-        return '☁️';
-      case 'rain':
-        return '🌧️';
-      case 'drizzle':
-        return '🌦️';
-      case 'thunderstorm':
-        return '⛈️';
-      case 'snow':
-        return '❄️';
-      case 'mist':
-      case 'fog':
-        return '🌫️';
-      default:
-        return '⛅';
+    final cond = condition.toLowerCase();
+    if (cond.contains('clear') || cond.contains('sunny')) {
+      return '☀️';
+    } else if (cond.contains('cloud') || cond.contains('cloudy')) {
+      return '☁️';
+    } else if (cond.contains('rain')) {
+      return '🌧️';
+    } else if (cond.contains('drizzle')) {
+      return '🌦️';
+    } else if (cond.contains('thunder') || cond.contains('storm')) {
+      return '⛈️';
+    } else if (cond.contains('snow')) {
+      return '❄️';
+    } else if (cond.contains('mist') || cond.contains('fog')) {
+      return '🌫️';
+    } else {
+      return '⛅';
     }
   }
 
   static String getWeatherDescription(String condition) {
-    switch (condition.toLowerCase()) {
-      case 'clear':
-        return 'Clear Sky';
-      case 'clouds':
-        return 'Cloudy';
-      case 'rain':
-        return 'Rainy';
-      case 'drizzle':
-        return 'Light Rain';
-      case 'thunderstorm':
-        return 'Thunderstorm';
-      case 'snow':
-        return 'Snowy';
-      default:
-        return 'Partly Cloudy';
+    final cond = condition.toLowerCase();
+    if (cond.contains('clear') || cond.contains('sunny')) {
+      return 'Clear Sky';
+    } else if (cond.contains('cloud')) {
+      return 'Few Clouds';
+    } else if (cond.contains('rain')) {
+      return 'Rainy';
+    } else if (cond.contains('drizzle')) {
+      return 'Light Rain';
+    } else if (cond.contains('thunder') || cond.contains('storm')) {
+      return 'Thunderstorm';
+    } else if (cond.contains('snow')) {
+      return 'Snowy';
+    } else {
+      return 'Partly Cloudy';
     }
   }
 

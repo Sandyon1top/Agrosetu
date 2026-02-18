@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import '../services/api_service.dart';
+import '../services/user_service.dart';
 
 class CommunityPage extends StatefulWidget {
   const CommunityPage({super.key});
@@ -11,55 +13,60 @@ class CommunityPage extends StatefulWidget {
 
 class _CommunityPageState extends State<CommunityPage> {
   int _selectedTab = 0;
-
-  final List<Map<String, dynamic>> _discussions = [
-    {
-      'author': 'Rajesh Sharma',
-      'avatar': '👨‍🌾',
-      'title': 'Best time to plant rice this season?',
-      'description': 'Anyone here growing rice? Looking for tips on planting time.',
-      'replies': 12,
-      'likes': 45,
-      'timestamp': '2 hours ago',
-      'category': 'Rice',
-      'solved': false,
-    },
-    {
-      'author': 'Priya Paudel',
-      'avatar': '👩‍🌾',
-      'title': 'Managing wheat diseases naturally',
-      'description': 'I prefer organic methods. What works best for fungal issues?',
-      'replies': 28,
-      'likes': 89,
-      'timestamp': '5 hours ago',
-      'category': 'Wheat',
-      'solved': true,
-    },
-    {
-      'author': 'Suresh Nepali',
-      'avatar': '👨‍🌾',
-      'title': 'Market price trends for potato',
-      'description': 'Current prices seem low. Are prices expected to rise soon?',
-      'replies': 15,
-      'likes': 34,
-      'timestamp': '1 day ago',
-      'category': 'Market',
-      'solved': false,
-    },
-    {
-      'author': 'Anita Gurung',
-      'avatar': '👩‍🌾',
-      'title': 'Irrigation scheduling for corn',
-      'description': 'How often should I water corn during growth season?',
-      'replies': 19,
-      'likes': 52,
-      'timestamp': '2 days ago',
-      'category': 'Corn',
-      'solved': true,
-    },
-  ];
+  List<Map<String, dynamic>> _discussions = [];
+  bool _isLoading = true;
+  String? _currentUserId;
+  Map<String, dynamic>? _currentUser;
 
   final List<String> _categories = ['All', 'Rice', 'Wheat', 'Corn', 'Market', 'General'];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserAndPosts();
+  }
+
+  Future<void> _loadUserAndPosts() async {
+    try {
+      // Get current user
+      final user = await UserService.getUser();
+      if (user != null) {
+        setState(() => _currentUser = user);
+        _currentUserId = user['id'];
+      }
+      
+      // Load posts
+      await _fetchPosts();
+    } catch (e) {
+      print('Error loading user: $e');
+      _fetchPosts();
+    }
+  }
+
+  Future<void> _fetchPosts() async {
+    try {
+      setState(() => _isLoading = true);
+      
+      final category = _selectedTab == 0 ? 'All' : _categories[_selectedTab];
+      final response = await ApiService.getPosts(category);
+      
+      setState(() {
+        if (response['status'] == 'ok') {
+          _discussions = List<Map<String, dynamic>>.from(response['posts'] ?? []);
+        }
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching posts: $e');
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load posts: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,13 +78,26 @@ class _CommunityPageState extends State<CommunityPage> {
             _buildHeader(),
             _buildCategoryTabs(),
             Expanded(
-              child: _buildDiscussionsList(),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _discussions.isEmpty
+                      ? _buildEmptyState()
+                      : _buildDiscussionsList(),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          if (_currentUser == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please log in to post'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          }
           _showNewPostDialog();
         },
         backgroundColor: const Color(0xFF2E7D32),
@@ -162,6 +182,7 @@ class _CommunityPageState extends State<CommunityPage> {
                 selected: isSelected,
                 onSelected: (_) {
                   setState(() => _selectedTab = index);
+                  _fetchPosts();
                 },
                 backgroundColor: Colors.white,
                 selectedColor: const Color(0xFF2E7D32).withOpacity(0.15),
@@ -185,18 +206,58 @@ class _CommunityPageState extends State<CommunityPage> {
     );
   }
 
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Iconsax.message,
+            size: 64,
+            color: Colors.grey.shade300,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No posts yet',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Be the first to start a discussion!',
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: Colors.grey.shade500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDiscussionsList() {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _discussions.length,
       itemBuilder: (context, index) {
         final discussion = _discussions[index];
-        return _DiscussionCard(discussion: discussion);
+        return _DiscussionCard(
+          discussion: discussion,
+          onRefresh: _fetchPosts,
+          currentUserId: _currentUserId,
+        );
       },
     );
   }
 
   void _showNewPostDialog() {
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+    String selectedCategory = _categories[_selectedTab == 0 ? 1 : _selectedTab];
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -206,52 +267,128 @@ class _CommunityPageState extends State<CommunityPage> {
         ),
         child: Container(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Start a Discussion',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF1B5E20),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'What\'s your question?',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Start a Discussion',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1B5E20),
                   ),
-                  contentPadding: const EdgeInsets.all(12),
                 ),
-                maxLines: 4,
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2E7D32),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
+                const SizedBox(height: 16),
+                TextField(
+                  controller: titleController,
+                  decoration: InputDecoration(
+                    hintText: 'Title',
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    contentPadding: const EdgeInsets.all(12),
                   ),
-                  child: Text(
-                    'Post',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descriptionController,
+                  decoration: InputDecoration(
+                    hintText: 'What\'s your question or thought?',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.all(12),
+                  ),
+                  maxLines: 4,
+                ),
+                const SizedBox(height: 12),
+                DropdownButton<String>(
+                  isExpanded: true,
+                  value: selectedCategory,
+                  items: _categories.skip(1).map((cat) {
+                    return DropdownMenuItem(
+                      value: cat,
+                      child: Text(cat),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    selectedCategory = value ?? 'General';
+                  },
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (titleController.text.isEmpty || descriptionController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fill all fields'),
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                        return;
+                      }
+
+                      try {
+                        final response = await ApiService.createPost(
+                          title: titleController.text,
+                          description: descriptionController.text,
+                          category: selectedCategory,
+                          author: {
+                            'id': _currentUser?['id'],
+                            'name': _currentUser?['name'],
+                            'email': _currentUser?['email'],
+                          },
+                        );
+
+                        if (response['status'] == 'ok') {
+                          Navigator.pop(context);
+                          await _fetchPosts();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Post created successfully!'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(response['message'] ?? 'Failed to create post'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2E7D32),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Post',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -259,10 +396,23 @@ class _CommunityPageState extends State<CommunityPage> {
   }
 }
 
-class _DiscussionCard extends StatelessWidget {
+class _DiscussionCard extends StatefulWidget {
   final Map<String, dynamic> discussion;
+  final VoidCallback onRefresh;
+  final String? currentUserId;
 
-  const _DiscussionCard({required this.discussion});
+  const _DiscussionCard({
+    required this.discussion,
+    required this.onRefresh,
+    this.currentUserId,
+  });
+
+  @override
+  State<_DiscussionCard> createState() => _DiscussionCardState();
+}
+
+class _DiscussionCardState extends State<_DiscussionCard> {
+  bool _isLiked = false;
 
   @override
   Widget build(BuildContext context) {
@@ -286,9 +436,23 @@ class _DiscussionCard extends StatelessWidget {
           // Author info
           Row(
             children: [
-              Text(
-                discussion['avatar'],
-                style: const TextStyle(fontSize: 32),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E7D32),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    (widget.discussion['author']?['name'] ?? 'U')[0].toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -299,12 +463,13 @@ class _DiscussionCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            discussion['author'],
+                            widget.discussion['author']?['name'] ?? 'Anonymous',
                             style: GoogleFonts.poppins(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: const Color(0xFF1B5E20),
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Container(
@@ -317,7 +482,7 @@ class _DiscussionCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            discussion['category'],
+                            widget.discussion['category'] ?? 'General',
                             style: GoogleFonts.poppins(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
@@ -328,7 +493,7 @@ class _DiscussionCard extends StatelessWidget {
                       ],
                     ),
                     Text(
-                      discussion['timestamp'],
+                      widget.discussion['timestamp'] ?? 'Just now',
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         color: Colors.grey.shade600,
@@ -337,7 +502,7 @@ class _DiscussionCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (discussion['solved'])
+              if (widget.discussion['solved'] == true)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -373,7 +538,7 @@ class _DiscussionCard extends StatelessWidget {
           
           // Title
           Text(
-            discussion['title'],
+            widget.discussion['title'] ?? 'No title',
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -385,7 +550,7 @@ class _DiscussionCard extends StatelessWidget {
           
           // Description
           Text(
-            discussion['description'],
+            widget.discussion['description'] ?? 'No description',
             style: GoogleFonts.poppins(
               fontSize: 12,
               color: Colors.grey.shade700,
@@ -409,7 +574,7 @@ class _DiscussionCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '${discussion['replies']}',
+                    '${widget.discussion['comments'] ?? 0}',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       color: Colors.grey.shade600,
@@ -419,23 +584,47 @@ class _DiscussionCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(width: 16),
-              Row(
-                children: [
-                  Icon(
-                    Iconsax.heart,
-                    size: 14,
-                    color: Colors.red.shade400,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${discussion['likes']}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w500,
+              GestureDetector(
+                onTap: () async {
+                  if (widget.currentUserId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please log in to like'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                    return;
+                  }
+                  
+                  setState(() => _isLiked = !_isLiked);
+                  
+                  try {
+                    await ApiService.likePost(
+                      postId: widget.discussion['id'],
+                      userId: widget.currentUserId!,
+                    );
+                  } catch (e) {
+                    print('Error liking post: $e');
+                  }
+                },
+                child: Row(
+                  children: [
+                    Icon(
+                      Iconsax.heart,
+                      size: 14,
+                      color: _isLiked ? Colors.red.shade400 : Colors.grey.shade600,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 4),
+                    Text(
+                      '${widget.discussion['likes'] ?? 0}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const Spacer(),
               Icon(

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../services/activity_service.dart';
 
 class MarketAnalyticsPage extends StatefulWidget {
   const MarketAnalyticsPage({super.key});
@@ -10,38 +15,249 @@ class MarketAnalyticsPage extends StatefulWidget {
 }
 
 class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
-  String _selectedCrop = 'Rice';
-  final List<String> _crops = ['Rice', 'Wheat', 'Corn', 'Potato', 'Onion'];
+  List<Map<String, dynamic>> _commodityData = [];
+  List<String> _commodities = [];
+  String _selectedCrop = '';
+  bool _isLoading = true;
 
-  // Current market prices in NPR
-  final Map<String, double> _currentPrices = {
-    'Rice': 2450,
-    'Wheat': 2100,
-    'Corn': 1950,
-    'Potato': 1200,
-    'Onion': 1800,
-  };
+  @override
+  void initState() {
+    super.initState();
+    ActivityService.addActivity('market', 'Viewed market analytics');
+    _loadCsvData();
+  }
 
-  // Historical data for trends
-  final List<Map<String, dynamic>> _priceHistory = [
-    {'year': 2018, 'rice': 1800, 'wheat': 1600, 'corn': 1400},
-    {'year': 2019, 'rice': 1950, 'wheat': 1750, 'corn': 1550},
-    {'year': 2020, 'rice': 2050, 'wheat': 1850, 'corn': 1650},
-    {'year': 2021, 'rice': 2200, 'wheat': 1950, 'corn': 1750},
-    {'year': 2022, 'rice': 2350, 'wheat': 2050, 'corn': 1900},
-    {'year': 2023, 'rice': 2400, 'wheat': 2080, 'corn': 1920},
-    {'year': 2024, 'rice': 2450, 'wheat': 2100, 'corn': 1950},
-  ];
+  Future<void> _loadCsvData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedData = prefs.getString('commodity_data_cache');
+      
+      // If cached data exists, use it
+      if (cachedData != null) {
+        final Map<String, dynamic> decoded = jsonDecode(cachedData);
+        final List<Map<String, dynamic>> data = (decoded['data'] as List)
+            .map((item) => Map<String, dynamic>.from(item as Map))
+            .toList();
+        final List<String> commodities = List<String>.from(decoded['commodities'] as List);
+        
+        setState(() {
+          _commodityData = data;
+          _commodities = commodities;
+          _selectedCrop = _commodities.isNotEmpty ? _commodities[0] : '';
+          _isLoading = false;
+        });
+        return;
+      }
+      
+      // Load and parse CSV
+      final csvContent = await rootBundle.loadString('data/Kalimati_Tarkari_Dataset.csv');
+      final lines = csvContent.split('\n');
+      
+      final Map<String, List<Map<String, double>>> commodityRecords = {};
+      
+      // Parse CSV (skip header)
+      for (int i = 1; i < lines.length; i++) {
+        if (lines[i].trim().isEmpty) continue;
+        
+        final parts = lines[i].split(',');
+        if (parts.length < 6) continue;
+        
+        final commodity = parts[0].trim();
+        final minimum = double.tryParse(parts[3].trim()) ?? 0;
+        final maximum = double.tryParse(parts[4].trim()) ?? 0;
+        final average = double.tryParse(parts[5].trim()) ?? 0;
+        
+        if (!commodityRecords.containsKey(commodity)) {
+          commodityRecords[commodity] = [];
+        }
+        commodityRecords[commodity]!.add({
+          'minimum': minimum,
+          'maximum': maximum,
+          'average': average,
+        });
+      }
+      
+      // Calculate aggregated data
+      final List<Map<String, dynamic>> aggregatedData = [];
+      final List<String> commodityNames = commodityRecords.keys.toList()..sort();
+      
+      for (final commodity in commodityNames) {
+        final records = commodityRecords[commodity]!;
+        
+        // Calculate averages across all dates
+        double avgMin = 0, avgMax = 0, avgAvg = 0;
+        for (final record in records) {
+          avgMin += record['minimum']!;
+          avgMax += record['maximum']!;
+          avgAvg += record['average']!;
+        }
+        avgMin /= records.length;
+        avgMax /= records.length;
+        avgAvg /= records.length;
+        
+        aggregatedData.add({
+          'commodity': commodity,
+          'minimum': avgMin,
+          'maximum': avgMax,
+          'average': avgAvg,
+        });
+      }
+      
+      // Cache the data
+      await prefs.setString('commodity_data_cache', jsonEncode({
+        'data': aggregatedData,
+        'commodities': commodityNames,
+        'timestamp': DateTime.now().toIso8601String(),
+      }));
+      
+      setState(() {
+        _commodityData = aggregatedData;
+        _commodities = commodityNames;
+        _selectedCrop = _commodities.isNotEmpty ? _commodities[0] : '';
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading CSV: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Map<String, dynamic>? _getSelectedCommodityData() {
+    try {
+      return _commodityData.firstWhere((item) => item['commodity'] == _selectedCrop);
+    } catch (e) {
+      return null;
+    }
+  }
 
   // Calculate price change percentage
   double _getPriceChange(String crop) {
-    final current = _currentPrices[crop] ?? 0;
-    final previous = _priceHistory[_priceHistory.length - 2][crop.toLowerCase()] ?? current;
-    return ((current - previous) / previous * 100);
+    final data = _getSelectedCommodityData();
+    if (data == null) return 0;
+    final change = ((data['maximum'] - data['minimum']) / data['minimum']) * 100;
+    return change;
+  }
+
+  // Get line chart data for the selected crop
+  LineChartData _getLineChartData() {
+    final data = _getSelectedCommodityData();
+    if (data == null) {
+      return LineChartData(
+        lineBarsData: [],
+        titlesData: FlTitlesData(),
+      );
+    }
+
+    final spots = [
+      FlSpot(0, (data['minimum'] as double)),
+      FlSpot(1, (data['average'] as double)),
+      FlSpot(2, (data['maximum'] as double)),
+    ];
+
+    return LineChartData(
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: false,
+        horizontalInterval: 10,
+        getDrawingHorizontalLine: (value) {
+          return FlLine(
+            color: Colors.grey.shade200,
+            strokeWidth: 1,
+          );
+        },
+      ),
+      titlesData: FlTitlesData(
+        show: true,
+        rightTitles: const AxisTitles(),
+        topTitles: const AxisTitles(),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: 10,
+            getTitlesWidget: (value, meta) {
+              return Text(
+                'Rs.${value.toInt()}',
+                style: GoogleFonts.poppins(
+                  color: Colors.grey.shade600,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                ),
+              );
+            },
+          ),
+        ),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: 1,
+            getTitlesWidget: (value, meta) {
+              final labels = ['Min', 'Avg', 'Max'];
+              final index = value.toInt();
+              if (index >= 0 && index < labels.length) {
+                return Text(
+                  labels[index],
+                  style: GoogleFonts.poppins(
+                    color: Colors.grey.shade600,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w400,
+                  ),
+                );
+              }
+              return const SizedBox();
+            },
+          ),
+        ),
+      ),
+      borderData: FlBorderData(
+        show: false,
+      ),
+      minX: 0,
+      maxX: 2,
+      minY: (data['minimum'] as double) - 5,
+      maxY: (data['maximum'] as double) + 5,
+      lineBarsData: [
+        LineChartBarData(
+          spots: spots,
+          isCurved: true,
+          color: const Color(0xFF2E7D32),
+          barWidth: 3,
+          isStrokeCapRound: true,
+          dotData: FlDotData(
+            show: true,
+            getDotPainter: (spot, percent, barData, index) {
+              return FlDotCirclePainter(
+                radius: 5,
+                color: const Color(0xFF2E7D32),
+                strokeWidth: 2,
+                strokeColor: Colors.white,
+              );
+            },
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            color: const Color(0xFF2E7D32).withOpacity(0.1),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.grey.shade50,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_commodities.isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.grey.shade50,
+        body: const Center(child: Text('No commodity data available')),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: SafeArea(
@@ -128,6 +344,11 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
   }
 
   Widget _buildPriceTrends() {
+    final data = _getSelectedCommodityData();
+    if (data == null) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(20),
@@ -146,7 +367,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Price Trends',
+            'Price Trends - ${_selectedCrop}',
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -154,63 +375,55 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             ),
           ),
           const SizedBox(height: 20),
-          Container(
-            height: 200,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Iconsax.chart,
-                    size: 50,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Price Chart Visualization',
-                    style: GoogleFonts.poppins(
-                      color: Colors.grey.shade400,
-                    ),
-                  ),
-                  Text(
-                    'Line/Bar charts showing trends',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: Colors.grey.shade400,
-                    ),
-                  ),
-                ],
+          SizedBox(
+            height: 250,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                child: LineChart(
+                  _getLineChartData(),
+                ),
               ),
             ),
           ),
           const SizedBox(height: 20),
           
-          // Current market stats
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Current market stats - Fixed overflow with Wrap
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
             children: [
-              _StatItem(
-                title: 'Current',
-                value: 'Rs. ${_currentPrices[_selectedCrop]?.toInt()}',
-                change: '${_getPriceChange(_selectedCrop) >= 0 ? '+' : ''}${_getPriceChange(_selectedCrop).toStringAsFixed(1)}%',
-                isPositive: _getPriceChange(_selectedCrop) >= 0,
+              SizedBox(
+                width: (MediaQuery.of(context).size.width - 56) / 3,
+                child: _StatItem(
+                  title: 'Minimum',
+                  value: 'Rs. ${(data['minimum'] as double).toInt()}',
+                  change: '${_getPriceChange(_selectedCrop).toStringAsFixed(1)}% range',
+                  isPositive: true,
+                ),
               ),
-              _StatItem(
-                title: 'Avg Trend',
-                value: '↑ 8.2%',
-                change: 'per year',
-                isPositive: true,
+              SizedBox(
+                width: (MediaQuery.of(context).size.width - 56) / 3,
+                child: _StatItem(
+                  title: 'Average',
+                  value: 'Rs. ${(data['average'] as double).toInt()}',
+                  change: 'per kg',
+                  isPositive: true,
+                ),
               ),
-              _StatItem(
-                title: 'Best Month',
-                value: 'November',
-                change: '+15%',
-                isPositive: true,
+              SizedBox(
+                width: (MediaQuery.of(context).size.width - 56) / 3,
+                child: _StatItem(
+                  title: 'Maximum',
+                  value: 'Rs. ${(data['maximum'] as double).toInt()}',
+                  change: 'peak price',
+                  isPositive: true,
+                ),
               ),
             ],
           ),
@@ -225,11 +438,15 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: _crops.map((crop) {
+          children: _commodities.map((crop) {
             return Padding(
               padding: const EdgeInsets.only(right: 10),
               child: FilterChip(
-                label: Text(crop),
+                label: Text(
+                  crop,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
                 selected: _selectedCrop == crop,
                 onSelected: (selected) {
                   setState(() => _selectedCrop = crop);
@@ -276,7 +493,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Price History (2018-2024)',
+            'All Commodities',
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -285,77 +502,78 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
           ),
           const SizedBox(height: 16),
           
-          // Simplified list view instead of table
+          // Simplified list view with proper constraints
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: _priceHistory.length,
+            itemCount: _commodityData.length,
             separatorBuilder: (_, __) => Divider(
               color: Colors.grey.shade200,
               height: 1,
             ),
             itemBuilder: (context, index) {
-              final data = _priceHistory[index];
-              final ricePrice = data['rice'] as int;
-              final wheatPrice = data['wheat'] as int;
-              final cornPrice = data['corn'] as int;
-              
-              // Calculate growth from first year
-              final riceGrowth = ((ricePrice - _priceHistory.first['rice']) / _priceHistory.first['rice'] * 100);
-              final isPositive = riceGrowth >= 0;
+              final data = _commodityData[index];
+              final commodity = data['commodity'] as String;
+              final average = (data['average'] as double).toInt();
+              final minimum = (data['minimum'] as double).toInt();
+              final maximum = (data['maximum'] as double).toInt();
               
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '${data['year']}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1B5E20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                commodity,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF1B5E20),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Rs. $average/kg avg',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        Text(
-                          'Rice • Rs. $ricePrice',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Row(
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Icon(
-                              isPositive ? Iconsax.arrow_up_2 : Iconsax.arrow_down_1,
-                              color: isPositive ? Colors.green : Colors.red,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 4),
                             Text(
-                              '${isPositive ? '+' : ''}${riceGrowth.toStringAsFixed(1)}%',
+                              'Min: $minimum',
                               style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: isPositive ? Colors.green : Colors.red,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF2E7D32),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Max: $maximum',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.orange.shade700,
                               ),
                             ),
                           ],
-                        ),
-                        Text(
-                          'W:$wheatPrice C:$cornPrice',
-                          style: GoogleFonts.poppins(
-                            fontSize: 10,
-                            color: Colors.grey.shade500,
-                          ),
                         ),
                       ],
                     ),
@@ -385,7 +603,13 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -396,19 +620,24 @@ class _StatItem extends StatelessWidget {
               color: Colors.grey.shade600,
               fontWeight: FontWeight.w500,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
           Text(
             value,
             style: GoogleFonts.poppins(
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
               color: const Color(0xFF1B5E20),
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 isPositive ? Iconsax.arrow_up_2 : Iconsax.arrow_down_1,
@@ -416,12 +645,16 @@ class _StatItem extends StatelessWidget {
                 size: 11,
               ),
               const SizedBox(width: 2),
-              Text(
-                change,
-                style: GoogleFonts.poppins(
-                  fontSize: 10,
-                  color: isPositive ? Colors.green : Colors.red,
-                  fontWeight: FontWeight.w500,
+              Flexible(
+                child: Text(
+                  change,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    color: isPositive ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

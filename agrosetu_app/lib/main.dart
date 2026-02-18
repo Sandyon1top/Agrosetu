@@ -1,7 +1,11 @@
 /*import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
+import 'services/user_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Initialize UserService to load cached user data
+  await UserService.initialize();
   runApp(const AgroSetuApp());
 }
 
@@ -54,6 +58,8 @@ class AgroSetuApp extends StatelessWidget {
 
 import 'package:flutter/material.dart';
 import 'screens/homepage_screen.dart'; // Add this import
+import 'screens/login_screen.dart';
+import 'screens/signup_screen.dart';
 
 void main() {
   runApp(const AgroSetuApp());

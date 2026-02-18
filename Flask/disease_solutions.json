@@ -1,0 +1,97 @@
+{
+  "potato_early": {
+    "disease_name": "Potato Early Blight",
+    "description": "Fungal disease caused by Alternaria solani, characterized by concentric rings on leaves",
+    "solutions": [
+      "Remove and destroy infected leaves immediately",
+      "Apply copper-based fungicide (Mancozeb or Chlorothalonil)",
+      "Avoid overhead watering and ensure good air circulation",
+      "Practice crop rotation - do not plant potatoes in same field for 2-3 years"
+    ],
+    "pesticide": "Mancozeb 75 WP or Chlorothalonil 75 WP",
+    "dosage": "0.2% solution spray",
+    "frequency": "Every 7-10 days starting from first symptom",
+    "prevention": "Use disease-free seed potatoes, mulch soil to prevent spore splash",
+    "stage": "Early"
+  },
+  "potato_late": {
+    "disease_name": "Potato Late Blight",
+    "description": "Oomycete pathogen (Phytophthora infestans), causes water-soaked spots and rapid plant death",
+    "solutions": [
+      "Apply fungicide immediately upon detection",
+      "Remove affected plants and burn them - do not compost",
+      "Ensure proper drainage to reduce humidity",
+      "Space plants adequately for air circulation",
+      "Avoid handling wet plants"
+    ],
+    "pesticide": "Metalaxyl or Cymoxanil with Mancozeb",
+    "dosage": "0.3% solution spray",
+    "frequency": "Every 7 days during wet seasons",
+    "prevention": "Use resistant varieties, avoid overhead irrigation, proper field sanitation",
+    "stage": "Late"
+  },
+  "potato_healthy": {
+    "disease_name": "Healthy Potato",
+    "description": "Plant shows no signs of disease or pest damage",
+    "solutions": [
+      "Continue regular monitoring",
+      "Maintain proper watering schedule",
+      "Ensure adequate fertilization",
+      "Keep field free of weeds",
+      "Scout for pests weekly"
+    ],
+    "pesticide": "None - preventive measures only",
+    "dosage": "N/A",
+    "frequency": "N/A",
+    "prevention": "Regular scouting, good agronomic practices, crop rotation",
+    "stage": "Healthy"
+  },
+  "tomato_early": {
+    "disease_name": "Tomato Early Blight",
+    "description": "Fungal disease (Alternaria tomatophila) on lower leaves, causes target-like lesions",
+    "solutions": [
+      "Prune lower leaves (20-30cm from ground) to improve air flow",
+      "Apply fungicide every 7-10 days",
+      "Remove and destroy infected leaves",
+      "Use drip irrigation instead of overhead spray",
+      "Apply mulch to prevent soil splash"
+    ],
+    "pesticide": "Chlorothalonil 75 WP or Mancozeb 75 WP",
+    "dosage": "0.2% solution spray",
+    "frequency": "Every 7-10 days starting from first symptom",
+    "prevention": "Space plants properly, remove lower leaves, water at soil level only",
+    "stage": "Early"
+  },
+  "tomato_late": {
+    "disease_name": "Tomato Late Blight",
+    "description": "Oomycete pathogen (Phytophthora infestans), causes water-soaked lesions on stems and fruits",
+    "solutions": [
+      "Apply systemic fungicide immediately",
+      "Remove all infected plant parts and destroy them",
+      "Increase ventilation around plants",
+      "Stop overhead irrigation immediately",
+      "Scout entire field for spread"
+    ],
+    "pesticide": "Metalaxyl or Cymoxanil with Mancozeb",
+    "dosage": "0.3% solution spray",
+    "frequency": "Every 5-7 days when conditions favor disease",
+    "prevention": "Use resistant varieties, proper spacing, avoid leaf wetness",
+    "stage": "Late"
+  },
+  "tomato_healthy": {
+    "disease_name": "Healthy Tomato",
+    "description": "Plant appears healthy with no visible disease symptoms",
+    "solutions": [
+      "Maintain regular watering schedule",
+      "Provide adequate support/staking",
+      "Apply balanced fertilizer every 2-3 weeks",
+      "Remove excess lateral branches for better fruit production",
+      "Continue disease monitoring"
+    ],
+    "pesticide": "None - preventive monitoring only",
+    "dosage": "N/A",
+    "frequency": "N/A",
+    "prevention": "Regular inspection, good pruning practices, proper nutrition",
+    "stage": "Healthy"
+  }
+}
