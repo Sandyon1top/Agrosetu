@@ -1,0 +1,110 @@
+[
+  {
+    "crop": "potato",
+    "cropKeywords": ["alu", "aalu", "आलु", "potato"],
+    "problem": "rot",
+    "problemKeywords": ["kuiyeko", "kuhiyeko", "कुहिएको", "गल्ने", "rot", "rotten", "sadno", "sadeko"],
+    "symptomKeywords": ["smell", "gandha", "गन्ध", "brown", "khैरो", "खैरो"],
+    "answer": "आलु कुहिने समस्या बढी चिस्यान, खराब पानी निकास, वा ढुसीका कारण हुन सक्छ। खेतमा पानी जम्न नदिनुहोस्, संक्रमित आलु हटाउनुहोस्, स्वस्थ बीउ प्रयोग गर्नुहोस्, र आवश्यक परे कृषि प्राविधिकको सल्लाह लिनुहोस्।",
+    "urgency": "high"
+  },
+  {
+    "crop": "potato",
+    "cropKeywords": ["alu", "aalu", "आलु", "potato"],
+    "problem": "late blight",
+    "problemKeywords": ["dhadhuwa", "dhane", "ढाढुवा", "pida", "blight", "late blight", "dhusilo", "dhulo"],
+    "symptomKeywords": ["kalo", "काले", "black", "daba", "dabab"],
+    "answer": "आलुमा ढुसी रोग (Late Blight) देखिएमा तुरुन्त Mancozeb वा Metalaxyl जातको ढुसीनाशक छर्नुहोस्। रोगग्रस्त बिरुवा जलाउनुहोस्। पानी सिञ्चन बिहान गर्नुहोस् ताकि पात साँझसम्म सुक्न पाउन्।",
+    "urgency": "high"
+  },
+  {
+    "crop": "rice",
+    "cropKeywords": ["dhaan", "dhan", "धान", "rice", "chamal"],
+    "problem": "yellow leaf",
+    "problemKeywords": ["pahenlo", "pahelo", "पहेंलो", "yellow", "yellow leaf", "paat pahelo", "पात पहेंलो"],
+    "symptomKeywords": ["paat", "पात", "leaf", "weak", "kamjor"],
+    "answer": "धानको पात पहेंलो हुनु मलको कमी, पानी व्यवस्थापन समस्या, वा रोगका कारण हुन सक्छ। नाइट्रोजन मल (युरिया) प्रति रोपनी ५ केजी हाल्नुहोस्। पानी सन्तुलित राख्नुहोस्। रोगका लक्षण बढेमा कृषि प्राविधिकसँग परामर्श गर्नुहोस्।",
+    "urgency": "medium"
+  },
+  {
+    "crop": "rice",
+    "cropKeywords": ["dhaan", "dhan", "धान", "rice"],
+    "problem": "blast",
+    "problemKeywords": ["blast", "ब्लास्ट", "kalo dhabbe", "काले धब्बे", "neck rot", "gadi sadne"],
+    "symptomKeywords": ["dhabbe", "धब्बे", "spot", "neck"],
+    "answer": "धानमा ब्लास्ट रोग देखिएमा Tricyclazole वा Carbendazim जातको ढुसीनाशक प्रयोग गर्नुहोस्। बढी नाइट्रोजन नहाल्नुहोस्। प्रतिरोधी जात जस्तै Sukha-3, Hardinath-3 अर्को मौसममा रोप्नुहोस्।",
+    "urgency": "high"
+  },
+  {
+    "crop": "tomato",
+    "cropKeywords": ["golbheda", "golbeda", "गोलभेडा", "tomato"],
+    "problem": "leaf curl",
+    "problemKeywords": ["paat batarine", "leaf curl", "पात बटारिने", "पात मोडिने", "curl", "morieko"],
+    "symptomKeywords": ["viruses", "jhinga", "झिंगा", "curl"],
+    "answer": "गोलभेडाको पात बटारिने समस्या भाइरस, सेतो झिँगाको आक्रमण, वा पोषण असन्तुलनका कारण हुन सक्छ। प्रभावित बिरुवा अलग गर्नुहोस्। सेतो झिँगा नियन्त्रणका लागि Imidacloprid वा Neem तेल छर्नुहोस्। सन्तुलित मल प्रयोग गर्नुहोस्।",
+    "urgency": "medium"
+  },
+  {
+    "crop": "tomato",
+    "cropKeywords": ["golbheda", "golbeda", "गोलभेडा", "tomato"],
+    "problem": "fruit rot",
+    "problemKeywords": ["fal sadne", "फल सड्ने", "fruit rot", "kuhieko fal", "कुहिएको फल"],
+    "symptomKeywords": ["kalo", "brown", "soft", "naramro"],
+    "answer": "गोलभेडाको फल कुहिने समस्यामा Blossom End Rot हुन सक्छ जुन क्याल्सियमको कमीले हुन्छ। नियमित पानी दिनुहोस् र Calcium foliar spray गर्नुहोस्। Anthracnose रोग भए Mancozeb छर्नुहोस्।",
+    "urgency": "medium"
+  },
+  {
+    "crop": "maize",
+    "cropKeywords": ["makai", "makkai", "मकै", "corn", "maize"],
+    "problem": "fall armyworm",
+    "problemKeywords": ["paat khane kira", "पात खाने किरा", "armyworm", "kira", "किरा", "hole", "prwha"],
+    "symptomKeywords": ["hole", "cut", "khaiyeko", "खाइएको"],
+    "answer": "मकैमा फल आर्मीवर्म (FAW) किरा देखिएमा Emamectin benzoate वा Chlorpyrifos जातको किटनाशक छर्नुहोस्। साँझको समयमा छर्दा बढी प्रभावकारी हुन्छ। पातको माथिल्लो भागमा राखिएको अन्डा समूह हातले हटाउनुहोस्।",
+    "urgency": "high"
+  },
+  {
+    "crop": "maize",
+    "cropKeywords": ["makai", "makkai", "मकै", "corn", "maize"],
+    "problem": "yellow leaf",
+    "problemKeywords": ["pahenlo paat", "पहेंलो पात", "yellow leaf", "nitrogen kam", "mal kam"],
+    "symptomKeywords": ["yellow", "paat", "kamjor"],
+    "answer": "मकैको पात पहेंलो हुनु प्रायः नाइट्रोजनको कमीले हुन्छ। प्रति रोपनी १० केजी युरिया हाल्नुहोस्। माटो परीक्षण गरेर सही मात्रामा मल प्रयोग गर्नुहोस्।",
+    "urgency": "medium"
+  },
+  {
+    "crop": "wheat",
+    "cropKeywords": ["gahu", "गहुँ", "wheat"],
+    "problem": "rust",
+    "problemKeywords": ["rust", "रस्ट", "khaincha", "khaile", "खैले", "narangi dhabbe", "नारंगी धब्बे"],
+    "symptomKeywords": ["orange", "narangi", "powder", "dhulo"],
+    "answer": "गहुँमा रस्ट रोग देखिएमा Propiconazole वा Tebuconazole जातको ढुसीनाशक छर्नुहोस्। रोगप्रतिरोधी जात जस्तै Nepal-297 अर्को मौसममा रोप्नुहोस्। बिरुवा धेरै नजिक नराख्नुहोस्।",
+    "urgency": "high"
+  },
+  {
+    "crop": "cabbage",
+    "cropKeywords": ["banda", "बन्दा", "cabbage", "cauliflower", "cauli", "phulkopi"],
+    "problem": "aphid",
+    "problemKeywords": ["luse", "लुसे", "aphid", "jui", "जुई", "sano kira", "सानो किरा"],
+    "symptomKeywords": ["small", "sticky", "chiplo", "cluster"],
+    "answer": "बन्दा र फूलकोपीमा लुसे किरा देखिएमा Neem तेल वा Imidacloprid छर्नुहोस्। बिरुवाहरूमा पानीको तेज धार राखेर किरा हटाउन सकिन्छ। प्राकृतिक शत्रु जस्तै Ladybird beetle को संरक्षण गर्नुहोस्।",
+    "urgency": "medium"
+  },
+  {
+    "crop": "mustard",
+    "cropKeywords": ["tori", "तोरी", "mustard", "sarson"],
+    "problem": "aphid",
+    "problemKeywords": ["luse", "लुसे", "aphid", "jui", "जुई", "kira"],
+    "symptomKeywords": ["small", "yellow", "pahelo"],
+    "answer": "तोरीमा लुसे किरा नियन्त्रणका लागि Dimethoate वा Malathion छर्नुहोस्। फूल आउने समयमा किटनाशक नछर्नुहोस् किनकि मह माखाहरूलाई असर पर्छ। बाली काट्न नजिक भएमा Neem तेल प्रयोग गर्नुहोस्।",
+    "urgency": "medium"
+  },
+  {
+    "crop": "general",
+    "cropKeywords": ["bali", "बाली", "crop", "khet", "खेत", "plants", "biruba"],
+    "problem": "water",
+    "problemKeywords": ["pani", "पानी", "water", "drought", "sukha", "सुख्खा", "irrigation", "sinchai"],
+    "symptomKeywords": ["dry", "sukeko", "sukha", "wilting"],
+    "answer": "बालीमा पानीको कमी देखिएमा तुरुन्त सिञ्चन गर्नुहोस्। थोपा सिञ्चन (Drip irrigation) प्रयोग गर्दा पानी बचत हुन्छ। बिहान वा साँझ पानी दिनुहोस्। माटोमा जैविक पदार्थ मिसाउँदा पानी धारण क्षमता बढ्छ।",
+    "urgency": "high"
+  }
+]
