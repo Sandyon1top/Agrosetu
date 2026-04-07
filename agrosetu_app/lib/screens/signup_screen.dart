@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
+import 'dart:async'; // Added for Timer
 import '../services/api_service.dart';
 import '../widgets/custom_textfield.dart';
 import 'login_screen.dart';
@@ -14,14 +15,55 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _otpFormKey = GlobalKey<FormState>();
+  
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _otpController = TextEditingController();
+  
   bool _isLoading = false;
+  bool _isVerifying = false; 
   bool _showPassword = false;
   bool _showConfirmPassword = false;
-  
+
+  // Timer variables for Resend OTP
+  Timer? _timer;
+  int _start = 30;
+  bool _canResend = false;
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _otpController.dispose();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    setState(() {
+      _start = 30;
+      _canResend = false;
+    });
+    _timer?.cancel(); // Cancel any existing timer before starting a new one
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_start == 0) {
+        setState(() {
+          _canResend = true;
+          timer.cancel();
+        });
+      } else {
+        setState(() {
+          _start--;
+        });
+      }
+    });
+  }
+
   // Password validation
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
@@ -66,41 +108,31 @@ class _SignupScreenState extends State<SignupScreen> {
         if (!mounted) return;
         setState(() => _isLoading = false);
         
-        if (response['status'] == 'ok') {
-          print('[SignupScreen] ✅ Registration successful for: ${_nameController.text}');
-          
+        // FIX: Server returns status:'pending' when OTP is sent successfully.
+        // Old code checked for 'ok' which never matched, so OTP screen never appeared.
+        if (response['status'] == 'pending' || response['status'] == 'ok') {
+          setState(() {
+            _isVerifying = true; 
+          });
+          _startTimer(); // Start countdown when moving to OTP screen
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Account created successfully! Please log in.'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
+              SnackBar(
+                content: Text('OTP sent to ${_emailController.text.trim()}! Check your inbox.'),
+                backgroundColor: Colors.blue,
+                duration: const Duration(seconds: 4),
               ),
-            );
-          }
-          
-          await Future.delayed(const Duration(milliseconds: 500));
-          
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
             );
           }
         } else {
           final errorMsg = response['message'] ?? 'Signup failed';
-          final backendErrors = response['errors']; // Array of validation errors
-          
-          print('[SignupScreen] ❌ Signup error: $errorMsg');
-          if (backendErrors != null) {
-            print('[SignupScreen] ❌ Backend validation errors: $backendErrors');
-          }
+          final backendErrors = response['errors'];
           
           if (mounted) {
-            // Show detailed error message with backend validation errors
             String fullErrorMsg = errorMsg;
             if (backendErrors is List && backendErrors.isNotEmpty) {
-              fullErrorMsg += '\n\n' + backendErrors.join('\n');
+              fullErrorMsg += '\n\n${backendErrors.join('\n')}';
             }
             _showErrorDialog('Registration Failed', fullErrorMsg);
           }
@@ -108,15 +140,78 @@ class _SignupScreenState extends State<SignupScreen> {
       } on SocketException {
         if (mounted) {
           setState(() => _isLoading = false);
-          _showErrorDialog('Network Error', 'No internet connection. Please check your connection.');
+          _showErrorDialog('Network Error', 'No internet connection.');
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isLoading = false);
-          print('[SignupScreen] ❌ Exception: $e');
           _showErrorDialog('Error', 'An error occurred: $e');
         }
       }
+    }
+  }
+
+  void _verifyOtp() async {
+    if (_otpFormKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+      
+      try {
+        final response = await ApiService.verifyOtp(
+          _emailController.text.trim(),
+          _otpController.text.trim(),
+        );
+        
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        
+        if (response['status'] == 'ok') {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Email verified successfully! Please log in.'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 3),
+              ),
+            );
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
+          }
+        } else {
+          _showErrorDialog('Verification Failed', response['message'] ?? 'Invalid OTP code. Please try again.');
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          _showErrorDialog('Error', 'Verification error: $e');
+        }
+      }
+    }
+  }
+
+  // FIX: _resendCode now correctly calls ApiService.resendOtp instead of
+  // forgotPassword (which is for password resets, not signup verification).
+  void _resendCode() async {
+    if (!_canResend) return;
+    
+    setState(() => _isLoading = true);
+
+    final response = await ApiService.resendOtp(_emailController.text.trim());
+    
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    
+    if (response['status'] == 'ok') {
+      _startTimer();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('A new OTP has been sent to ${_emailController.text.trim()}.'),
+          backgroundColor: Colors.blue,
+        ),
+      );
+    } else {
+      _showErrorDialog('Error', response['message'] ?? 'Failed to resend code. Please try again.');
     }
   }
   
@@ -124,48 +219,24 @@ class _SignupScreenState extends State<SignupScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            const Icon(
-              Icons.error_outline,
-              color: Colors.red,
-              size: 28,
-            ),
+            const Icon(Icons.error_outline, color: Colors.red, size: 28),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 title,
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                ),
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 18),
               ),
             ),
           ],
         ),
-        content: SingleChildScrollView(
-          child: Text(
-            message,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              height: 1.6,
-              color: Colors.grey.shade800,
-            ),
-          ),
-        ),
+        content: Text(message, style: GoogleFonts.poppins(fontSize: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              'OK',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF2E7D32),
-              ),
-            ),
+            child: Text('OK', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32))),
           ),
         ],
       ),
@@ -177,9 +248,7 @@ class _SignupScreenState extends State<SignupScreen> {
     Color strengthColor = Colors.grey;
     String strengthText = 'Strength: Weak';
     
-    if (password.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (password.isEmpty) return const SizedBox.shrink();
     
     final hasUpperCase = RegExp(r'[A-Z]').hasMatch(password);
     final hasLowerCase = RegExp(r'[a-z]').hasMatch(password);
@@ -194,19 +263,10 @@ class _SignupScreenState extends State<SignupScreen> {
     if (hasSpecialChar) strength++;
     if (isLengthEnough) strength++;
     
-    if (strength <= 2) {
-      strengthColor = Colors.red;
-      strengthText = 'Strength: Weak';
-    } else if (strength <= 3) {
-      strengthColor = Colors.orange;
-      strengthText = 'Strength: Fair';
-    } else if (strength <= 4) {
-      strengthColor = Colors.amber;
-      strengthText = 'Strength: Good';
-    } else {
-      strengthColor = Colors.green;
-      strengthText = 'Strength: Strong';
-    }
+    if (strength <= 2) { strengthColor = Colors.red; strengthText = 'Strength: Weak'; }
+    else if (strength <= 3) { strengthColor = Colors.orange; strengthText = 'Strength: Fair'; }
+    else if (strength <= 4) { strengthColor = Colors.amber; strengthText = 'Strength: Good'; }
+    else { strengthColor = Colors.green; strengthText = 'Strength: Strong'; }
     
     return Row(
       children: [
@@ -220,21 +280,13 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
         const SizedBox(width: 12),
-        Text(
-          strengthText,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: strengthColor,
-          ),
-        ),
+        Text(strengthText, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w500, color: strengthColor)),
       ],
     );
   }
   
   Widget _buildPasswordRequirements() {
     final password = _passwordController.text;
-    
     final hasUpperCase = RegExp(r'[A-Z]').hasMatch(password);
     final hasLowerCase = RegExp(r'[a-z]').hasMatch(password);
     final hasNumbers = RegExp(r'[0-9]').hasMatch(password);
@@ -246,22 +298,12 @@ class _SignupScreenState extends State<SignupScreen> {
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Password Requirements:',
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
-            ),
-          ),
+          Text('Password Requirements:', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
           const SizedBox(height: 8),
           _buildRequirementRow('At least 8 characters', isLengthEnough),
           _buildRequirementRow('Uppercase letter (A-Z)', hasUpperCase),
@@ -278,20 +320,9 @@ class _SignupScreenState extends State<SignupScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(
-            isMet ? Icons.check_circle : Icons.circle_outlined,
-            size: 16,
-            color: isMet ? Colors.green : Colors.grey.shade400,
-          ),
+          Icon(isMet ? Icons.check_circle : Icons.circle_outlined, size: 16, color: isMet ? Colors.green : Colors.grey.shade400),
           const SizedBox(width: 8),
-          Text(
-            text,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: isMet ? Colors.green : Colors.grey.shade600,
-              fontWeight: isMet ? FontWeight.w600 : FontWeight.w400,
-            ),
-          ),
+          Text(text, style: GoogleFonts.poppins(fontSize: 12, color: isMet ? Colors.green : Colors.grey.shade600, fontWeight: isMet ? FontWeight.w600 : FontWeight.w400)),
         ],
       ),
     );
@@ -305,10 +336,7 @@ class _SignupScreenState extends State<SignupScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF4CAF50),
-              Color(0xFF2E7D32),
-            ],
+            colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
           ),
         ),
         child: SafeArea(
@@ -318,454 +346,61 @@ class _SignupScreenState extends State<SignupScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-                  
-                  // Back button and Title
                   Row(
                     children: [
                       IconButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () {
+                          if (_isVerifying) {
+                            // Go back to signup form, cancel OTP timer
+                            _timer?.cancel();
+                            setState(() => _isVerifying = false);
+                          } else {
+                            Navigator.pop(context);
+                          }
+                        },
                         icon: const Icon(Icons.arrow_back, color: Colors.white),
                       ),
                       Expanded(
                         child: Text(
-                          'Create Account',
-                          style: GoogleFonts.poppins(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                          _isVerifying ? 'Verify Email' : 'Create Account',
+                          style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                           textAlign: TextAlign.center,
                         ),
                       ),
+                      // Invisible icon to keep title centered
+                      const SizedBox(width: 48),
                     ],
                   ),
-                  
                   const SizedBox(height: 30),
-
                   // Logo Section
-                  Column(
-                    children: [
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(50),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'ماله',
-                                style: GoogleFonts.notoSansArabic(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF2E7D32),
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'AGROSETU',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF2E7D32),
-                                ),
-                              ),
-                              const SizedBox(height: 1),
-                              Text(
-                                'HAMRO LAGI',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 6,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF4CAF50),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-
-                  // Signup Form
                   Container(
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.12),
-                          blurRadius: 25,
-                          spreadRadius: 2,
-                          offset: const Offset(0, 12),
-                        ),
-                      ],
-                    ),
-                    child: Form(
-                      key: _formKey,
+                    width: 100, height: 100,
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(50)),
+                    child: Center(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Title
-                          Text(
-                            'Create Your Account',
-                            style: GoogleFonts.poppins(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF1B5E20),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Join AgroSetu and grow with us',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(height: 28),
-                          
-                          // Full Name Field
-                          Text(
-                            'Full Name',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: Colors.grey.shade200,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: TextFormField(
-                              controller: _nameController,
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Colors.grey.shade800,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: 'Enter your full name',
-                                hintStyle: GoogleFonts.poppins(
-                                  color: Colors.grey.shade400,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 18,
-                                  vertical: 16,
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.person_outline,
-                                  color: Colors.grey.shade500,
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your name';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          
-                          const SizedBox(height: 20),
-                          
-                          // Email Field
-                          Text(
-                            'Email Address',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: Colors.grey.shade200,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: TextFormField(
-                              controller: _emailController,
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Colors.grey.shade800,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: 'you@example.com',
-                                hintStyle: GoogleFonts.poppins(
-                                  color: Colors.grey.shade400,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 18,
-                                  vertical: 16,
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.email_outlined,
-                                  color: Colors.grey.shade500,
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your email';
-                                }
-                                if (!value.contains('@')) {
-                                  return 'Please enter a valid email';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          
-                          const SizedBox(height: 24),
-                          
-                          // Password Field Label
-                          Text(
-                            'Password',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: Colors.grey.shade200,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: TextFormField(
-                              controller: _passwordController,
-                              obscureText: !_showPassword,
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Colors.grey.shade800,
-                              ),
-                              onChanged: (value) {
-                                setState(() {});
-                              },
-                              decoration: InputDecoration(
-                                hintText: 'Create a strong password',
-                                hintStyle: GoogleFonts.poppins(
-                                  color: Colors.grey.shade400,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 18,
-                                  vertical: 16,
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.lock_outline,
-                                  color: Colors.grey.shade500,
-                                ),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _showPassword
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
-                                    color: Colors.grey.shade500,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _showPassword = !_showPassword;
-                                    });
-                                  },
-                                ),
-                              ),
-                              validator: _validatePassword,
-                            ),
-                          ),
-                          
-                          const SizedBox(height: 14),
-                          
-                          // Password Strength Indicator
-                          _buildPasswordStrengthIndicator(),
-                          
-                          const SizedBox(height: 14),
-                          
-                          // Password Requirements
-                          _buildPasswordRequirements(),
-                          
-                          const SizedBox(height: 24),
-                          
-                          // Confirm Password Field Label
-                          Text(
-                            'Confirm Password',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: Colors.grey.shade200,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: TextFormField(
-                              controller: _confirmPasswordController,
-                              obscureText: !_showConfirmPassword,
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Colors.grey.shade800,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: 'Re-enter your password',
-                                hintStyle: GoogleFonts.poppins(
-                                  color: Colors.grey.shade400,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 18,
-                                  vertical: 16,
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.lock_outline,
-                                  color: Colors.grey.shade500,
-                                ),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _showConfirmPassword
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
-                                    color: Colors.grey.shade500,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _showConfirmPassword = !_showConfirmPassword;
-                                    });
-                                  },
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please confirm your password';
-                                }
-                                if (value != _passwordController.text) {
-                                  return 'Passwords do not match';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          
-                          // Create Account Button
-                          SizedBox(
-                            width: double.infinity,
-                            height: 58,
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _signup,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2E7D32),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                elevation: 6,
-                                disabledBackgroundColor: Colors.grey.shade400,
-                              ),
-                              child: _isLoading
-                                  ? Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        const SizedBox(
-                                          width: 24,
-                                          height: 24,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2.5,
-                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          'Creating Account...',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  : Text(
-                                      'Create Account',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                          
-                          const SizedBox(height: 24),
-                          
-                          // Sign In Link
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "Already have an account? ",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const LoginScreen(),
-                                    ),
-                                  );
-                                },
-                                child: Text(
-                                  'Sign In',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    color: const Color(0xFF2E7D32),
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                          Text('ماله', style: GoogleFonts.notoSansArabic(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF2E7D32))),
+                          Text('AGROSETU', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF2E7D32))),
                         ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Dynamic Form Container — switches between signup and OTP
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 350),
+                    transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+                    child: Container(
+                      key: ValueKey(_isVerifying), // Key forces AnimatedSwitcher to animate between states
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 25, offset: const Offset(0, 12))],
+                      ),
+                      child: _isVerifying ? _buildOtpForm() : _buildSignupForm(),
                     ),
                   ),
                 ],
@@ -774,6 +409,295 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  // ======= OTP FORM VIEW =======
+  Widget _buildOtpForm() {
+    return Form(
+      key: _otpFormKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Enter OTP Code', style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: const Color(0xFF1B5E20))),
+          const SizedBox(height: 8),
+          RichText(
+            text: TextSpan(
+              style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600),
+              children: [
+                const TextSpan(text: 'We sent a 6-digit code to\n'),
+                TextSpan(
+                  text: _emailController.text.trim(),
+                  style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.grey.shade200, width: 1.5),
+            ),
+            child: TextFormField(
+              controller: _otpController,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              maxLength: 6,
+              autofocus: true,
+              style: GoogleFonts.poppins(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF2E7D32),
+                letterSpacing: 10,
+              ),
+              decoration: InputDecoration(
+                hintText: '000000',
+                hintStyle: GoogleFonts.poppins(letterSpacing: 10, color: Colors.grey.shade300, fontSize: 28),
+                border: InputBorder.none,
+                counterText: '', // Hide the maxLength counter
+                contentPadding: const EdgeInsets.symmetric(vertical: 18),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) return 'Please enter the OTP';
+                if (value.trim().length < 6) return 'OTP must be 6 digits';
+                return null;
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Resend Timer Section
+          Center(
+            child: _canResend
+              ? TextButton.icon(
+                  onPressed: _isLoading ? null : _resendCode,
+                  icon: const Icon(Icons.refresh, color: Color(0xFF2E7D32)),
+                  label: Text(
+                    'Resend Code',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF2E7D32)),
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.timer_outlined, size: 16, color: Colors.grey),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Resend code in $_start seconds',
+                      style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+          ),
+
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 58,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _verifyOtp,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 2,
+              ),
+              child: _isLoading
+                ? const SizedBox(
+                    height: 24, width: 24,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                  )
+                : Text('Verify & Continue', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: TextButton(
+              onPressed: _isLoading ? null : () {
+                _timer?.cancel();
+                setState(() => _isVerifying = false);
+              },
+              child: Text(
+                'Wrong email? Go back',
+                style: GoogleFonts.poppins(color: Colors.grey.shade600, fontSize: 13),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ======= SIGNUP FORM VIEW =======
+  Widget _buildSignupForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Create Your Account', style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: const Color(0xFF1B5E20))),
+          const SizedBox(height: 8),
+          Text('Join AgroSetu and grow with us', style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600)),
+          const SizedBox(height: 28),
+          
+          Text('Full Name', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
+          const SizedBox(height: 8),
+          _buildTextField(_nameController, 'Enter your full name', Icons.person_outline),
+          
+          const SizedBox(height: 20),
+          
+          Text('Email Address', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
+          const SizedBox(height: 8),
+          _buildTextField(_emailController, 'you@example.com', Icons.email_outlined, isEmail: true),
+          
+          const SizedBox(height: 24),
+          
+          Text('Password', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
+          const SizedBox(height: 8),
+          _buildPasswordField(
+            _passwordController,
+            'Create a strong password',
+            _showPassword,
+            (val) => setState(() => _showPassword = !_showPassword),
+          ),
+          
+          const SizedBox(height: 14),
+          _buildPasswordStrengthIndicator(),
+          const SizedBox(height: 14),
+          _buildPasswordRequirements(),
+          
+          const SizedBox(height: 24),
+          
+          Text('Confirm Password', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
+          const SizedBox(height: 8),
+          _buildPasswordField(
+            _confirmPasswordController,
+            'Re-enter your password',
+            _showConfirmPassword,
+            (val) => setState(() => _showConfirmPassword = !_showConfirmPassword),
+            isConfirm: true,
+          ),
+          
+          const SizedBox(height: 32),
+          
+          SizedBox(
+            width: double.infinity,
+            height: 58,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _signup,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 2,
+              ),
+              child: _isLoading
+                ? const SizedBox(
+                    height: 24, width: 24,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                  )
+                : Text('Create Account', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          _buildSignInLink(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+    TextEditingController controller,
+    String hint,
+    IconData icon, {
+    bool isEmail = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200, width: 1.5),
+      ),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: isEmail ? TextInputType.emailAddress : TextInputType.text,
+        style: GoogleFonts.poppins(fontSize: 16),
+        decoration: InputDecoration(
+          hintText: hint,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          prefixIcon: Icon(icon, color: Colors.grey.shade500),
+        ),
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) return 'This field is required';
+          if (isEmail && !value.contains('@')) return 'Please enter a valid email';
+          return null;
+        },
+      ),
+    );
+  }
+
+  Widget _buildPasswordField(
+    TextEditingController controller,
+    String hint,
+    bool isVisible,
+    Function(bool) toggle, {
+    bool isConfirm = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200, width: 1.5),
+      ),
+      child: TextFormField(
+        controller: controller,
+        obscureText: !isVisible,
+        onChanged: isConfirm ? null : (_) => setState(() {}), // Rebuild for strength indicator
+        style: GoogleFonts.poppins(fontSize: 16),
+        decoration: InputDecoration(
+          hintText: hint,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          prefixIcon: Icon(Icons.lock_outline, color: Colors.grey.shade500),
+          suffixIcon: IconButton(
+            icon: Icon(
+              isVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              color: Colors.grey.shade500,
+            ),
+            onPressed: () => toggle(isVisible),
+          ),
+        ),
+        validator: isConfirm
+          ? (value) {
+              if (value == null || value.isEmpty) return 'Please confirm your password';
+              if (value != _passwordController.text) return 'Passwords do not match';
+              return null;
+            }
+          : _validatePassword,
+      ),
+    );
+  }
+
+  Widget _buildSignInLink() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text("Already have an account? ", style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600)),
+        GestureDetector(
+          onTap: () => Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          ),
+          child: Text(
+            'Sign In',
+            style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF2E7D32), fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
     );
   }
 }

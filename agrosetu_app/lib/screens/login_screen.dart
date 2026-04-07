@@ -82,17 +82,22 @@ class _LoginScreenState extends State<LoginScreen> {
       
       if (!mounted) return;
       setState(() => _isLoading = false);
+
+      print('[LoginScreen] Full response: $response');
       
       if (response['status'] == 'ok') {
         try {
-          // Backend returns: { status, token, user: { id, name, email }, message }
-          final userData = response['data']; // This is the full backend response
-          final userInfo = userData['user']; // Extract user object
-          final token = userData['token'];
-          
-          print('[LoginScreen] Response data: $userData');
-          print('[LoginScreen] User info: ${userInfo?['name']}, ID: ${userInfo?['id']}');
-          print('[LoginScreen] Token: $token');
+          // FIX: ApiService.login wraps backend response inside 'data' key.
+          // Backend returns: { status, token, user: { id, name, email } }
+          // ApiService returns: { status:'ok', data: <backend response>, message }
+          // So we read token and user directly from response['data']
+          final backendData = response['data'] as Map<String, dynamic>;
+          final userInfo = backendData['user'] as Map<String, dynamic>?;
+          final token = backendData['token'] as String?;
+
+          print('[LoginScreen] backendData: $backendData');
+          print('[LoginScreen] userInfo: $userInfo');
+          print('[LoginScreen] token: $token');
           
           if (userInfo == null || userInfo['id'] == null) {
             _showErrorDialog('Login Error', 'Invalid user data received from server');
@@ -119,28 +124,29 @@ class _LoginScreenState extends State<LoginScreen> {
             'marketTips': 0,
           };
           
-          print('[LoginScreen] Saving user to UserService: ${userToSave['name']}');
+          print('[LoginScreen] Saving user: ${userToSave['name']}');
           await UserService.saveUser(userToSave);
           
-          // Verify the save was successful by immediately reading back
           final savedUser = await UserService.getUser();
-          print('[LoginScreen] ✅ Verification - Saved user: ${savedUser?['name']}, Token exists: ${savedUser?['token'] != null}');
+          print('[LoginScreen] ✅ Saved user verified: ${savedUser?['name']}, token exists: ${savedUser?['token'] != null}');
 
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Welcome, ${userInfo['name']}!'),
+                content: Text('Welcome, ${userInfo['name']}! 🌱'),
                 backgroundColor: Colors.green,
                 duration: const Duration(seconds: 2),
               ),
             );
           }
           
-          print('[LoginScreen] ✅ Login successful for: ${userInfo['name']}');
-          
-          // Save credentials if "Remember me" is checked
           await _saveRememberedCredentials();
-          
+
+          // Save explicitly for offline fallback regardless of remember me
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('offline_email', email.toLowerCase());
+          await prefs.setString('offline_password', password); // We store it explicitly for offline check
+
           await Future.delayed(const Duration(milliseconds: 800));
           
           if (mounted) {
@@ -152,20 +158,95 @@ class _LoginScreenState extends State<LoginScreen> {
           
         } catch (dataError) {
           print('[LoginScreen] ❌ Error processing user data: $dataError');
-          print('[LoginScreen] ❌ Stack trace: ${StackTrace.current}');
           _showErrorDialog('Data Error', 'Failed to process login response: $dataError');
         }
+
+      } else if (response['status'] == 'unverified') {
+        // FIX: Handle unverified accounts — show message and go to OTP screen
+        // instead of showing generic "Login Failed"
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Text(
+                'Account Not Verified',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.orange),
+              ),
+              content: Text(
+                'Your account is not verified yet. Please check your email for the OTP code and verify your account.',
+                style: GoogleFonts.poppins(fontSize: 14),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SignupScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32)),
+                  child: Text('Verify Now', style: GoogleFonts.poppins(color: Colors.white)),
+                ),
+              ],
+            ),
+          );
+        }
+
       } else {
         final errorMsg = response['message'] ?? 'Login failed';
         _showErrorDialog('Login Failed', errorMsg);
       }
+
     } on SocketException {
+      // OFFLINE LOGIN FALLBACK
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final savedEmail = prefs.getString('offline_email');
+        final savedPassword = prefs.getString('offline_password');
+        
+        final inputEmail = _emailController.text.trim().toLowerCase();
+        final inputPassword = _passwordController.text.trim();
+
+        if (savedEmail != null && savedPassword != null && 
+            savedEmail == inputEmail && savedPassword == inputPassword) {
+          
+          final savedUser = await UserService.getUser();
+          if (savedUser != null) {
+            // Treat as successful login
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Offline Login Successful 🌱'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            
+            await Future.delayed(const Duration(milliseconds: 800));
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const DashboardScreen()),
+              );
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        print("Offline logic fallback failed: $e");
+      }
+      
       setState(() => _isLoading = false);
-      _showErrorDialog('Network Error', 'No internet connection. Please check your connection.');
+      _showErrorDialog('Network Error', 'No internet connection and no offline profile found. Please check your connection.');
     } catch (e) {
       setState(() => _isLoading = false);
       print('Login error: $e');
-      _showErrorDialog('Error', 'An unexpected error occurred');
+      _showErrorDialog('Error', 'An unexpected error occurred: $e');
     }
   }
   
@@ -173,6 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
         content: Text(message, style: GoogleFonts.poppins()),
         actions: [
@@ -197,7 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Animated background WITHOUT logo
+          // Animated background
           const AnimatedFarmBackground(),
 
           // Content overlay
@@ -207,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   SizedBox(height: MediaQuery.of(context).size.height * 0.08),
                   
-                  // Logo with Tree Icon
+                  // Logo
                   Center(
                     child: Container(
                       width: 140,
@@ -227,14 +309,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Tree Icon (replacing "ماله")
-                            Icon(
-                              Icons.park, // Tree/plant icon
+                            const Icon(
+                              Icons.park,
                               size: 40,
-                              color: const Color(0xFF1B5E20),
+                              color: Color(0xFF1B5E20),
                             ),
                             const SizedBox(height: 8),
-                            // AGROSETU
                             Text(
                               'AGROSETU',
                               style: TextStyle(
@@ -246,7 +326,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            // HAMRO LAGI
                             Text(
                               'HAMRO LAGI',
                               style: TextStyle(
@@ -342,6 +421,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               child: TextFormField(
                                 controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
                                   color: Colors.grey.shade800,
@@ -521,8 +601,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         height: 24,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2.5,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(Colors.white),
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                         ),
                                       )
                                     : Row(
@@ -536,10 +615,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             ),
                                           ),
                                           const SizedBox(width: 12),
-                                          const Icon(
-                                            Icons.arrow_forward,
-                                            size: 20,
-                                          ),
+                                          const Icon(Icons.arrow_forward, size: 20),
                                         ],
                                       ),
                               ),
@@ -550,28 +626,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             // Divider
                             Row(
                               children: [
-                                Expanded(
-                                  child: Divider(
-                                    color: Colors.grey.shade300,
-                                    thickness: 1,
-                                  ),
-                                ),
+                                Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 16),
                                   child: Text(
                                     'or',
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.grey.shade500,
-                                      fontSize: 14,
-                                    ),
+                                    style: GoogleFonts.poppins(color: Colors.grey.shade500, fontSize: 14),
                                   ),
                                 ),
-                                Expanded(
-                                  child: Divider(
-                                    color: Colors.grey.shade300,
-                                    thickness: 1,
-                                  ),
-                                ),
+                                Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
                               ],
                             ),
 
@@ -581,20 +644,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                _buildSocialButton(
-                                  icon: Icons.g_mobiledata,
-                                  color: const Color(0xFFDB4437),
-                                ),
+                                _buildSocialButton(icon: Icons.g_mobiledata, color: const Color(0xFFDB4437)),
                                 const SizedBox(width: 16),
-                                _buildSocialButton(
-                                  icon: Icons.facebook,
-                                  color: const Color(0xFF4267B2),
-                                ),
+                                _buildSocialButton(icon: Icons.facebook, color: const Color(0xFF4267B2)),
                                 const SizedBox(width: 16),
-                                _buildSocialButton(
-                                  icon: Icons.apple,
-                                  color: Colors.black,
-                                ),
+                                _buildSocialButton(icon: Icons.apple, color: Colors.black),
                               ],
                             ),
 
@@ -669,10 +723,7 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1.5,
-        ),
+        border: Border.all(color: Colors.grey.shade200, width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -681,11 +732,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
-      child: Icon(
-        icon,
-        color: color,
-        size: 24,
-      ),
+      child: Icon(icon, color: color, size: 24),
     );
   }
 }
