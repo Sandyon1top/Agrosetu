@@ -1,87 +1,156 @@
-import tensorflow as tf
-from tensorflow import keras
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import cv2
 import numpy as np
+from PIL import Image
+from torchvision import models as tv_models, transforms
 from pathlib import Path
-import json
 
-# Grad-CAM implementation for model interpretability
+# PyTorch Grad-CAM implementation for model interpretability 
 class GradCAM:
-    def __init__(self, model, layer_name):
+    def __init__(self, model, target_layer):
         self.model = model
-        self.layer_name = layer_name
-        self.grad_model = keras.models.Model(
-            [model.inputs],
-            [model.get_layer(layer_name).output, model.output]
-        )
-    
-    def compute_heatmap(self, image, pred_index=None):
-        with tf.GradientTape() as tape:
-            conv_outputs, predictions = self.grad_model(image)
-            if pred_index is None:
-                pred_index = tf.argmax(predictions[0])
-            class_channel = predictions[:, pred_index]
+        self.target_layer = target_layer
+        self.gradients = None
+        self.activations = None
         
-        grads = tape.gradient(class_channel, conv_outputs)
-        pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-        
-        conv_outputs = conv_outputs[0]
-        heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
-        heatmap = tf.squeeze(heatmap)
-        
-        heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
-        return heatmap.numpy()
+        # Register hooks
+        self.target_layer.register_forward_hook(self.save_activation)
+        self.target_layer.register_full_backward_hook(self.save_gradient)
 
-def generate_gradcam_heatmap(model_path, image_path, output_path, layer_name='conv_pw_13'):
-    # layer_name for MobileNetV2 final conv layer
-    
-    model = keras.models.load_model(model_path)
-    gradcam = GradCAM(model, layer_name)
-    
+    def save_activation(self, module, input, output):
+        self.activations = output
+
+    def save_gradient(self, module, grad_input, grad_output):
+        self.gradients = grad_output[0]
+
+    def generate_heatmap(self, input_tensor, class_idx=None):
+        # Forward pass
+        output = self.model(input_tensor)
+        
+        if class_idx is None:
+            class_idx = torch.argmax(output, dim=1).item()
+            
+        # Backward pass
+        self.model.zero_grad()
+        loss = output[0, class_idx]
+        loss.backward()
+        
+        # Calculate weights (Global Average Pooling of gradients)
+        weights = torch.mean(self.gradients, dim=(2, 3), keepdim=True)
+        
+        # Weighted sum of activations
+        cam = torch.sum(weights * self.activations, dim=1, keepdim=True)
+        cam = F.relu(cam) # Apply ReLU
+        
+        # Normalize to [0, 1]
+        cam = cam.detach().cpu().numpy()[0, 0]
+        cam = (cam - cam.min()) / (cam.max() - cam.min() + 1e-8)
+        
+        return cam
+
+def overlay_heatmap(image_path, heatmap, alpha=0.5):
+    # Load original image
     img = cv2.imread(image_path)
-    img_resized = cv2.resize(img, (224, 224))
-    img_array = np.array(img_resized, dtype='float32') / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    height, width, _ = img.shape
     
-    heatmap = gradcam.compute_heatmap(img_array)
-    heatmap = cv2.resize(heatmap, (224, 224))
+    # Resize heatmap to match image size
+    heatmap = cv2.resize(heatmap, (width, height))
+    heatmap = np.uint8(255 * heatmap)
+    heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
     
-    heatmap_colored = cv2.applyColorMap(
-        np.uint8(255 * heatmap),
-        cv2.COLORMAP_JET
-    )
-    
-    superimposed = cv2.addWeighted(img_resized, 0.6, heatmap_colored, 0.4, 0)
-    
-    cv2.imwrite(output_path, superimposed)
-    print(f"Heatmap saved: {output_path}")
-    
+    # Overlay
+    superimposed = cv2.addWeighted(img, 1 - alpha, heatmap, alpha, 0)
     return superimposed
 
-def batch_generate_heatmaps(model_path, image_dir, output_dir, num_images=5):
-    # Generate sample Grad-CAM heatmaps for report evidence
+def generate_visual_report(model_path, image_path, output_path, model_type="mobilenet"):
+    # 1. Setup transform (Standard PyTorch normalize)
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
     
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+    # 2. Load model architecture
+    # Assuming class size is 38 (PlantVillage) or 91 (Agrosetu)
+    # This logic detects number of classes from model weight size if possible
+    # For now we use the architecture code from train_models.py
     
-    image_files = list(Path(image_dir).glob("*.jpg")) + list(Path(image_dir).glob("*.png"))
-    sample_images = image_files[:num_images]
+    device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
+    checkpoint = torch.load(model_path, map_location=device)
     
-    for idx, image_file in enumerate(sample_images):
-        output_file = output_path / f"heatmap_{idx}.jpg"
-        try:
-            generate_gradcam_heatmap(model_path, str(image_file), str(output_file))
-        except Exception as e:
-            print(f"Error processing {image_file}: {str(e)}")
+    # Detect num_classes from classifier weight size
+    if "classifier.1.weight" in checkpoint:
+        num_classes = checkpoint["classifier.1.weight"].shape[0]
+    elif "classifier.3.weight" in checkpoint: # some old models might have different layer index
+        num_classes = checkpoint["classifier.3.weight"].shape[0]
+    else:
+        num_classes = 38 # Fallback to 38 if not found
+    
+    if model_type == "mobilenet":
+        model = tv_models.mobilenet_v2(weights=None)
+        model.classifier[1] = nn.Linear(model.last_channel, num_classes)
+        target_layer = model.features[18]
+    elif model_type == "efficientnet":
+        model = tv_models.efficientnet_b0(weights=None)
+        in_features = model.classifier[1].in_features
+        model.classifier[1] = nn.Linear(in_features, num_classes)
+        target_layer = model.features[8]
+    else: # Custom CNN
+        class SimpleCNN(nn.Module):
+            def __init__(self, n):
+                super().__init__()
+                self.features = nn.Sequential(
+                    nn.Conv2d(3,32,3,padding=1), nn.ReLU(True), nn.MaxPool2d(2,2),
+                    nn.Conv2d(32,64,3,padding=1), nn.ReLU(True), nn.MaxPool2d(2,2),
+                    nn.AdaptiveAvgPool2d((4,4)))
+                self.classifier = nn.Sequential(nn.Flatten(), nn.Linear(64*4*4, 512), nn.ReLU(True), nn.Linear(512, n))
+            def forward(self, x): return self.classifier(self.features(x))
+        model = SimpleCNN(num_classes)
+        target_layer = model.features[3] # Second conv layer
+
+    model.load_state_dict(checkpoint)
+    model.eval()
+    
+    # 3. Process image
+    img = Image.open(image_path).convert("RGB")
+    input_tensor = transform(img).unsqueeze(0)
+    
+    # 4. Generate Grad-CAM
+    cam_generator = GradCAM(model, target_layer)
+    heatmap = cam_generator.generate_heatmap(input_tensor)
+    
+    # 5. Save report image
+    result = overlay_heatmap(image_path, heatmap)
+    cv2.imwrite(output_path, cv2.cvtColor(result, cv2.COLOR_RGB2BGR))
+    print(f"✅ Grad-CAM report saved to: {output_path}")
 
 if __name__ == "__main__":
-    model_path = Path(__file__).parent / "models" / "mobilenet_scratch.h5"
-    image_dir = Path(__file__).parent / "data" / "valid" / "potato_early"
-    output_dir = Path(__file__).parent / "heatmaps"
+    # Create output directory
+    heatmaps_dir = Path("heatmaps")
+    heatmaps_dir.mkdir(parents=True, exist_ok=True)
     
-    if model_path.exists() and image_dir.exists():
-        batch_generate_heatmaps(str(model_path), str(image_dir), str(output_dir), num_images=5)
+    # Example paths (adjust to your local setup)
+    MODELS_DIR = Path("models")
+    DATA_DIR = Path("data/valid")
+    
+    # Check for existing models
+    model_file = list(MODELS_DIR.glob("*.pt"))
+    if model_file:
+        best_model = model_file[0]
+        # Find first image in validation set
+        image_file = list(DATA_DIR.rglob("*.jpg")) + list(DATA_DIR.rglob("*.png"))
+        if image_file:
+            print(f"🚀 Running Grad-CAM on {image_file[0].name} using {best_model.name}")
+            generate_visual_report(
+                str(best_model), 
+                str(image_file[0]), 
+                str(heatmaps_dir / "viva_demo_heatmap.jpg"),
+                model_type="mobilenet" if "mobilenet" in best_model.name.lower() else "efficientnet"
+            )
+        else:
+            print("❌ No images found in data/valid. Please add sample images to test.")
     else:
-        print("Model or image directory not found")
-        print(f"Model exists: {model_path.exists()}")
-        print(f"Image dir exists: {image_dir.exists()}")
+        print("❌ No .pt models found in models/ directory. Train models first.")
