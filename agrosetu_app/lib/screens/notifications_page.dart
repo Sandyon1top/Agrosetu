@@ -56,6 +56,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
         return Iconsax.cloud;
       case 'activity':
         return Iconsax.activity;
+      case 'like': // ADDED
+        return Iconsax.heart;
+      case 'comment': // ADDED
+        return Iconsax.message_text;
       default:
         return Iconsax.notification;
     }
@@ -71,6 +75,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
         return Colors.blue;
       case 'activity':
         return Colors.green;
+      case 'like': // ADDED
+        return Colors.red;
+      case 'comment': // ADDED
+        return Colors.blueAccent;
       default:
         return Colors.grey;
     }
@@ -101,6 +109,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
           ),
         ),
         actions: [
+          // ADDED: Refresh Button to manually trigger sync
+          IconButton(
+            icon: const Icon(Iconsax.refresh, color: Color(0xFF2E7D32), size: 20),
+            onPressed: () {
+              setState(() => _isLoading = true);
+              _loadNotifications();
+            },
+          ),
           if (_notifications.isNotEmpty)
             TextButton.icon(
               onPressed: () {
@@ -137,121 +153,131 @@ class _NotificationsPageState extends State<NotificationsPage> {
             ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _notifications.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Iconsax.notification_bing,
-                        size: 64,
-                        color: Colors.grey.shade300,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No notifications yet',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _notifications.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final notif = _notifications[index];
-                    final isRead = notif['read'] == true;
-
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isRead
-                              ? Colors.transparent
-                              : const Color(0xFF2E7D32).withOpacity(0.2),
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+      body: RefreshIndicator( // ADDED: Pull to refresh
+        onRefresh: _loadNotifications,
+        color: const Color(0xFF2E7D32),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _notifications.isEmpty
+                ? SingleChildScrollView( // Changed to scrollable for RefreshIndicator
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Container(
+                      height: MediaQuery.of(context).size.height * 0.7,
+                      alignment: Alignment.center,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Iconsax.notification_bing,
+                            size: 64,
+                            color: Colors.grey.shade300,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No notifications yet',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade600,
+                            ),
                           ),
                         ],
                       ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(12),
-                        leading: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: _getNotificationColor(notif['type'])
-                                .withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(12),
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: _notifications.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final notif = _notifications[index];
+                      final isRead = notif['read'] == true;
+
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isRead
+                                ? Colors.transparent
+                                : const Color(0xFF2E7D32).withOpacity(0.2),
+                            width: 2,
                           ),
-                          child: Icon(
-                            _getNotificationIcon(notif['type']),
-                            color:
-                                _getNotificationColor(notif['type']),
-                            size: 24,
-                          ),
-                        ),
-                        title: Text(
-                          notif['title'] ?? 'Notification',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 4),
-                            Text(
-                              notif['body'] ?? '',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              _formatTime(notif['timestamp'] ?? ''),
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                color: Colors.grey.shade500,
-                              ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
                           ],
                         ),
-                        trailing: isRead
-                            ? null
-                            : GestureDetector(
-                                onTap: () => _markAsRead(notif['id']),
-                                child: Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Color(0xFF2E7D32),
-                                  ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(12),
+                          leading: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: _getNotificationColor(notif['type'])
+                                  .withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              _getNotificationIcon(notif['type']),
+                              color:
+                                  _getNotificationColor(notif['type']),
+                              size: 24,
+                            ),
+                          ),
+                          title: Text(
+                            notif['title'] ?? 'Notification',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              Text(
+                                notif['body'] ?? '',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
                                 ),
                               ),
-                      ),
-                    );
-                  },
-                ),
+                              const SizedBox(height: 6),
+                              Text(
+                                _formatTime(notif['timestamp'] ?? ''),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          trailing: isRead
+                              ? null
+                              : GestureDetector(
+                                  onTap: () => _markAsRead(notif['id']),
+                                  child: Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Color(0xFF2E7D32),
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      );
+                    },
+                  ),
+      ),
     );
   }
-}
+} 
