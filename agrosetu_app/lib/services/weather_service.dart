@@ -1,152 +1,134 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WeatherService {
+  // Update this to your machine's IP if testing on a real device
   static const String backendUrl = 'http://localhost:5001';
-  static const double lat = 27.7172;
-  static const double lon = 85.3240;
+  static const String _cacheKey = 'agro_weather_cache';
+  static const String _forecastKey = 'agro_forecast_cache';
 
-  static Future<Map<String, dynamic>> getCurrentWeather() async {
+  /// Fetches current weather. 
+  /// Priority: API -> If fails, returns Local Cache.
+  static Future<Map<String, dynamic>> getWeather({String? query}) async {
     try {
-      final response = await http.get(
-        Uri.parse('$backendUrl/api/weather/current?lat=$lat&lon=$lon'),
-      ).timeout(const Duration(seconds: 10));
+      final url = query != null 
+          ? '$backendUrl/api/weather/current?city=${Uri.encodeComponent(query)}'
+          : '$backendUrl/api/weather/current?lat=27.7172&lon=85.3240';
+
+      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final condition = data['condition'] ?? 'cloudy';
-        String sunset = '';
-        try {
-          if (data['sunsetEpoch'] != null) {
-            final dt = DateTime.fromMillisecondsSinceEpoch((data['sunsetEpoch'] as int) * 1000);
-            sunset = DateFormat('h:mm a').format(dt);
-          }
-        } catch (e) {
-          sunset = '';
-        }
-
-        return {
-          'location': data['location'] ?? 'Kathmandu',
-          'temp': data['temp'] ?? 22,
-          'feelsLike': data['feelsLike'] ?? 24,
-          'humidity': '${data['humidity']?.toString() ?? '65'}%',
-          'windSpeed': '${data['windSpeed'] ?? 12} km/h',
-          'condition': condition,
-          'description': getWeatherDescription(condition),
-          'pressure': '${data['pressure']?.toString() ?? '1013'} hPa',
-          'rainChance': '${data['rainChance']?.toString() ?? '0'}%',
-          'uvIndex': '5',
-          'lastUpdated': data['lastUpdated'] ?? DateTime.now().toIso8601String(),
-          'source': data['source'] ?? 'api',
-          'farmingTip': data['farmingTip'] ?? 'Good day for farming activities.',
-          'icon': getWeatherIcon(condition),
-          'sunset': sunset,
-        };
+        final formattedData = _formatWeatherResponse(data, source: 'api');
+        
+        // Save to cache for offline use
+        await _saveToCache(_cacheKey, formattedData);
+        return formattedData;
       } else {
-        throw Exception('Failed to fetch weather: ${response.statusCode}');
+        return await getCachedWeather();
       }
     } catch (e) {
-      print('Weather API Error: $e');
-      rethrow;
+      print('Weather Service Error: $e');
+      return await getCachedWeather();
     }
   }
 
-  static Future<Map<String, dynamic>> getHourlyForecast() async {
+  /// Fetches 7-Day Forecast
+  static Future<List<dynamic>> get7DayForecast({String? query}) async {
     try {
-      final response = await http.get(
-        Uri.parse('$backendUrl/api/weather/hourly?lat=$lat&lon=$lon'),
-      ).timeout(const Duration(seconds: 10));
+      final url = query != null 
+          ? '$backendUrl/api/weather/forecast?city=${Uri.encodeComponent(query)}&days=7'
+          : '$backendUrl/api/weather/forecast?lat=27.7172&lon=85.3240&days=7';
+
+      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        List<Map<String, dynamic>> hourly = [];
+        final List forecastList = json.decode(response.body) as List;
         
-        if (data['hourly'] is List) {
-          for (var forecast in data['hourly']) {
-            hourly.add({
-              'time': forecast['time'] ?? 'N/A',
-              'temp': forecast['temp'] ?? 22,
-              'condition': forecast['condition'] ?? 'cloudy',
-            });
-          }
-        }
-        
-        if (hourly.isEmpty) {
-          throw Exception('No hourly forecast data received');
-        }
-
-        return {'hourly': hourly};
+        // Cache the list
+        await _saveToCache(_forecastKey, {'list': forecastList});
+        return forecastList;
       } else {
-        throw Exception('Failed to fetch forecast: ${response.statusCode}');
+        final cached = await _getCache(_forecastKey);
+        return cached?['list'] ?? [];
       }
     } catch (e) {
-      print('Forecast API Error: $e');
-      rethrow;
+      final cached = await _getCache(_forecastKey);
+      return cached?['list'] ?? [];
     }
   }
 
-  @deprecated
-  static Map<String, dynamic> _getMockData() {
-    throw Exception('Mock data removed');
+  /// Formats raw API data into the UI-friendly Map used in your Popup
+  static Map<String, dynamic> _formatWeatherResponse(Map<String, dynamic> data, {required String source}) {
+    final condition = data['condition'] ?? 'cloudy';
+    return {
+      'location': data['location'] ?? 'Kathmandu',
+      'temp': data['temp'] ?? 22,
+      'feelsLike': data['feelsLike'] ?? 24,
+      'humidity': '${data['humidity']?.toString() ?? '65'}%',
+      'windSpeed': '${data['windSpeed'] ?? 12} km/h',
+      'condition': condition,
+      'description': getWeatherDescription(condition),
+      'pressure': '${data['pressure']?.toString() ?? '1013'} hPa',
+      'rainChance': '${data['rainChance']?.toString() ?? '0'}%',
+      'uvIndex': data['uvIndex']?.toString() ?? '5',
+      'lastUpdated': DateTime.now().toIso8601String(),
+      'source': source,
+      'farmingTip': data['farmingTip'] ?? 'Good day for farming activities.',
+      'icon': getWeatherIcon(condition),
+    };
   }
 
-  @deprecated
-  static Map<String, dynamic> _getMockForecast() {
-    throw Exception('Mock forecast removed');
+  // --- Persistence Logic ---
+
+  static Future<void> _saveToCache(String key, Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(key, json.encode(data));
   }
+
+  static Future<Map<String, dynamic>?> _getCache(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(key);
+    if (raw == null) return null;
+    return json.decode(raw);
+  }
+
+  static Future<Map<String, dynamic>> getCachedWeather() async {
+    final cached = await _getCache(_cacheKey);
+    if (cached != null) {
+      cached['source'] = 'offline'; // Mark as offline for UI indicator
+      return cached;
+    }
+    // Final fallback if no cache exists
+    return {
+      'location': 'No Connection',
+      'temp': '--',
+      'description': 'Offline Mode',
+      'source': 'offline',
+      'icon': '❓',
+      'farmingTip': 'Connect to internet to get latest updates.',
+      'humidity': '0%', 'windSpeed': '0', 'rainChance': '0%', 'feelsLike': '--', 'pressure': '--', 'uvIndex': '--'
+    };
+  }
+
+  // --- UI Helpers ---
 
   static String getWeatherIcon(String condition) {
     final cond = condition.toLowerCase();
-    if (cond.contains('clear') || cond.contains('sunny')) {
-      return '☀️';
-    } else if (cond.contains('cloud') || cond.contains('cloudy')) {
-      return '☁️';
-    } else if (cond.contains('rain')) {
-      return '🌧️';
-    } else if (cond.contains('drizzle')) {
-      return '🌦️';
-    } else if (cond.contains('thunder') || cond.contains('storm')) {
-      return '⛈️';
-    } else if (cond.contains('snow')) {
-      return '❄️';
-    } else if (cond.contains('mist') || cond.contains('fog')) {
-      return '🌫️';
-    } else {
-      return '⛅';
-    }
+    if (cond.contains('clear') || cond.contains('sunny')) return '☀️';
+    if (cond.contains('cloud')) return '☁️';
+    if (cond.contains('rain')) return '🌧️';
+    if (cond.contains('thunder')) return '⛈️';
+    if (cond.contains('snow')) return '❄️';
+    return '⛅';
   }
 
   static String getWeatherDescription(String condition) {
     final cond = condition.toLowerCase();
-    if (cond.contains('clear') || cond.contains('sunny')) {
-      return 'Clear Sky';
-    } else if (cond.contains('cloud')) {
-      return 'Few Clouds';
-    } else if (cond.contains('rain')) {
-      return 'Rainy';
-    } else if (cond.contains('drizzle')) {
-      return 'Light Rain';
-    } else if (cond.contains('thunder') || cond.contains('storm')) {
-      return 'Thunderstorm';
-    } else if (cond.contains('snow')) {
-      return 'Snowy';
-    } else {
-      return 'Partly Cloudy';
-    }
-  }
-
-  static String _getFarmingTip(double temp, String condition) {
-    if (temp > 30) {
-      return 'Hot day! Water crops in early morning or late evening to avoid evaporation.';
-    } else if (temp < 10) {
-      return 'Cold weather. Protect sensitive plants with covers or move them indoors.';
-    } else if (condition.toLowerCase().contains('rain')) {
-      return 'Rainy day. Good for natural irrigation. Check drainage to prevent waterlogging.';
-    } else if (condition.toLowerCase().contains('clear')) {
-      return 'Perfect sunny day for harvesting and outdoor farm activities.';
-    } else {
-      return 'Good day for farming activities. Perfect time for planting seasonal crops.';
-    }
+    if (cond.contains('clear')) return 'Clear Sky';
+    if (cond.contains('cloud')) return 'Partly Cloudy';
+    if (cond.contains('rain')) return 'Rainy';
+    return 'Partly Cloudy';
   }
 }
