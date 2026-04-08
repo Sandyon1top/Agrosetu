@@ -199,7 +199,8 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
         Switch.adaptive(
           value: value,
           onChanged: onChanged,
-          activeColor: const Color(0xFF2E7D32),
+          activeThumbColor: const Color(0xFF2E7D32),
+          activeTrackColor: const Color(0xFF2E7D32).withValues(alpha: 0.5),
         ),
       ],
     );

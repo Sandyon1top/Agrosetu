@@ -45,7 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
       
       if (user == null) {
         // User not logged in - redirect to login
-        print('[ProfilePage] No user data, redirecting to login');
+        debugPrint('[ProfilePage] No user data, redirecting to login');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -53,7 +53,7 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
       
-      print('[ProfilePage] User data loaded: ${user['name']}');
+      debugPrint('[ProfilePage] User data loaded: ${user['name']}');
       setState(() {
         _userData = {
           'id': user['id'] ?? 'N/A',
@@ -71,7 +71,7 @@ class _ProfilePageState extends State<ProfilePage> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading user data: $e');
+      debugPrint('Error loading user data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -87,7 +87,7 @@ class _ProfilePageState extends State<ProfilePage> {
           _profileImage = bytes;
         });
       } catch (e) {
-        print('Error decoding image: $e');
+        debugPrint('Error decoding image: $e');
       }
     }
   }
@@ -157,11 +157,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  final List<Map<String, dynamic>> _stats = [
-    {'label': 'Detections', 'value': '24', 'icon': Iconsax.camera},
-    {'label': 'Discussions', 'value': '12', 'icon': Iconsax.message},
-    {'label': 'Market Tips', 'value': '8', 'icon': Iconsax.chart},
-  ];
 
   final List<Map<String, dynamic>> _menuItems = [
     {'icon': Iconsax.setting, 'label': 'Settings', 'action': 'settings'},
@@ -549,7 +544,8 @@ class _ProfilePageState extends State<ProfilePage> {
           Switch.adaptive(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF2E7D32),
+            activeThumbColor: const Color(0xFF2E7D32),
+            activeTrackColor: const Color(0xFF2E7D32).withValues(alpha: 0.5),
             activeThumbImage: null,
             inactiveThumbColor: Colors.grey.shade400,
             inactiveTrackColor: Colors.grey.shade300,
