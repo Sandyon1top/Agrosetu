@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -559,7 +559,7 @@ class ApiService {
   // ====== DISEASE DETECTION API ======
 
   static Future<Map<String, dynamic>> predictDiseaseFromImage(
-      String imagePath) async {
+      String imagePath, {String endpoint = '/predict'}) async {
     try {
       final imageFile = File(imagePath);
       if (!imageFile.existsSync()) {
@@ -572,7 +572,7 @@ class ApiService {
       final imageBytes = await imageFile.readAsBytes();
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('$flaskBaseUrl/predict'),
+        Uri.parse('$flaskBaseUrl$endpoint'),
       );
 
       request.files.add(
@@ -583,27 +583,20 @@ class ApiService {
         ),
       );
 
-      print('[Flutter] Sending prediction request to $flaskBaseUrl/predict');
+      print('[Flutter] Sending prediction request to $flaskBaseUrl$endpoint');
 
       final streamResponse = await request.send().timeout(
-        const Duration(seconds: 30),
+        const Duration(seconds: 45),
       );
 
       final response = await http.Response.fromStream(streamResponse);
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        // Handle both simple prediction and compare prediction results
         return {
           'status': 'ok',
-          'disease_name': responseData['disease_name'],
-          'confidence': responseData['confidence'],
-          'description': responseData['description'],
-          'solutions': List<String>.from(responseData['solutions'] ?? []),
-          'pesticide': responseData['pesticide'],
-          'dosage': responseData['dosage'],
-          'frequency': responseData['frequency'],
-          'prevention': responseData['prevention'],
-          'stage': responseData['stage'],
+          ...responseData 
         };
       } else {
         return {
@@ -611,7 +604,7 @@ class ApiService {
           'message': responseData['error'] ?? 'Failed to predict disease',
         };
       }
-    } on SocketException catch (e) {
+    } on SocketException {
       return {
         'status': 'error',
         'message': 'Network error: Flask server not running on $flaskBaseUrl',
@@ -625,7 +618,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> predictDiseaseFromImageBytes(
-      Uint8List imageBytes) async {
+      Uint8List imageBytes, {String endpoint = '/predict'}) async {
     try {
       if (imageBytes.isEmpty) {
         return {'status': 'error', 'message': 'Image is empty'};
@@ -633,7 +626,7 @@ class ApiService {
 
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('$flaskBaseUrl/predict'),
+        Uri.parse('$flaskBaseUrl$endpoint'),
       );
 
       request.files.add(
@@ -644,10 +637,10 @@ class ApiService {
         ),
       );
 
-      print('[Flutter] Sending prediction request to $flaskBaseUrl/predict');
+      print('[Flutter] Sending prediction request to $flaskBaseUrl$endpoint');
 
       final streamResponse = await request.send().timeout(
-        const Duration(seconds: 30),
+        const Duration(seconds: 45),
       );
 
       final response = await http.Response.fromStream(streamResponse);
@@ -656,15 +649,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return {
           'status': 'ok',
-          'disease_name': responseData['disease_name'],
-          'confidence': responseData['confidence'],
-          'description': responseData['description'],
-          'solutions': List<String>.from(responseData['solutions'] ?? []),
-          'pesticide': responseData['pesticide'],
-          'dosage': responseData['dosage'],
-          'frequency': responseData['frequency'],
-          'prevention': responseData['prevention'],
-          'stage': responseData['stage'],
+          ...responseData
         };
       } else {
         return {
@@ -672,7 +657,7 @@ class ApiService {
           'message': responseData['error'] ?? 'Failed to predict disease',
         };
       }
-    } on SocketException catch (e) {
+    } on SocketException {
       return {
         'status': 'error',
         'message': 'Network error: Flask server not running on $flaskBaseUrl',
@@ -709,6 +694,55 @@ class ApiService {
         'status': 'error',
         'message': 'Flask server not reachable: $e',
       };
+    }
+  }
+
+  // Get dynamic AI advice for a specific disease
+  static Future<Map<String, dynamic>> getDynamicAdvice(String disease, String confidence) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$flaskBaseUrl/predict/advice'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'disease_name': disease,
+          'confidence': confidence,
+        }),
+      ).timeout(const Duration(seconds: 30));
+
+      final responseData = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'groq_advice': responseData['groq_advice']
+        };
+      } else {
+        return {'success': false, 'message': responseData['error'] ?? 'Failed to fetch advice'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Sync disease history to MongoDB
+  static Future<Map<String, dynamic>> syncDiseaseHistory(String userId, List<dynamic> detections) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/disease-history/sync'),
+        headers: getHeaders(),
+        body: jsonEncode({
+          'userId': userId,
+          'detections': detections,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      final responseData = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'status': 'ok', 'message': 'History synced'};
+      } else {
+        return {'status': 'error', 'message': responseData['message'] ?? 'Sync failed'};
+      }
+    } catch (e) {
+      return {'status': 'error', 'message': 'Sync error: $e'};
     }
   }
 }
