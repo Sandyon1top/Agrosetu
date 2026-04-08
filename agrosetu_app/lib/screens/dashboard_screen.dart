@@ -462,6 +462,8 @@ class _HomeDashboardState extends State<HomeDashboard> {
         );
       },
     );
+  }
+
    // ========== 3. MODERN WEATHER CARD ==========
   Widget _buildCompactWeatherCard() {
     if (_isLoadingWeather) {
