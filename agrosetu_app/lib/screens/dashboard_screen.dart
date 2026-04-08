@@ -187,9 +187,6 @@ class _HomeDashboardState extends State<HomeDashboard> {
               // 3. MODERN WEATHER CARD
               _buildCompactWeatherCard(),
               const SizedBox(height: 24),
-              
-              // 4. QUICK ACTIONS GRID
-              _buildQuickActionsGrid(),
               const SizedBox(height: 24),
               
               // 5. MARKET PREVIEW
@@ -814,122 +811,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
     );
   }
 
-   // ========== 4. QUICK ACTIONS GRID ==========
-  Widget _buildQuickActionsGrid() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quick Actions',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF1B5E20),
-          ),
-        ),
-        const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-          childAspectRatio: 1.4,
-          children: [
-            _buildActionCard(
-              title: 'Voice Assist',
-              subtitle: 'Talk to AI',
-              icon: Iconsax.microphone,
-              color: Colors.blue,
-              onTap: () {},
-            ),
-            _buildActionCard(
-              title: 'Smart Cam',
-              subtitle: 'Scan Crop',
-              icon: Iconsax.camera,
-              color: Colors.orange,
-              onTap: () {},
-            ),
-            _buildActionCard(
-              title: 'Insights',
-              subtitle: 'Market Analysis',
-              icon: Iconsax.chart_2,
-              color: const Color(0xFF2E7D32),
-              onTap: () {},
-            ),
-            _buildActionCard(
-              title: 'Forum',
-              subtitle: 'Ask Community',
-              icon: Iconsax.messages_1,
-              color: Colors.purple,
-              onTap: () {},
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
-  Widget _buildActionCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.08),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            ),
-          ],
-          border: Border.all(color: color.withOpacity(0.1)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1B5E20),
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // ========== 5. MARKET INSIGHTS PREVIEW ==========
   Widget _buildMarketPreview() {
