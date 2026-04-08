@@ -26,7 +26,7 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
 
     try {
       // 1. Fetch current weather and 7-day forecast from updated WeatherService
-      final weather = await WeatherService.getWeather(query: query);
+      final weather = await WeatherService.getCurrentWeather(query: query);
       final forecast = await WeatherService.get7DayForecast(query: query ?? weather['location']);
 
       setState(() {
