@@ -6,7 +6,6 @@ import '../services/api_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'dart:typed_data';
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
@@ -23,7 +22,6 @@ class DiseaseDetectionPage extends StatefulWidget {
 
 class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
   Uint8List? _selectedImage;
-  String? _selectedImagePath;
   bool _isProcessing = false;
   String? _detectedDisease;
   double? _confidence;
@@ -56,7 +54,7 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
           _recentDetections.add({
             'disease': item['disease'],
             'confidence': item['confidence'],
-            'date': DateTime.tryParse(item['date'] ?? '') ?? DateTime.now(),
+            'date': DateTime.tryParse(item['date']) ?? DateTime.now(),
           });
         }
       });
@@ -88,7 +86,6 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
       final bytes = await captured.readAsBytes();
       setState(() {
         _selectedImage = bytes;
-        _selectedImagePath = captured.path;
         _isProcessing = true;
         _errorMessage = null;
       });
@@ -141,7 +138,6 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
 
       setState(() {
         _selectedImage = bytes;
-        _selectedImagePath = imagePath;
         _isProcessing = true;
         _errorMessage = null;
       });
@@ -162,21 +158,21 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
       // On web, we have bytes; on mobile, we have file path
       final bool isWeb = kIsWeb;
       
-      print('[Disease Detection] Sending image to Flask (isWeb=$isWeb)');
-      print('[Disease Detection] Image path: $imagePath');
-      print('[Disease Detection] Image bytes: ${bytes.length}');
+      debugPrint('[Disease Detection] Sending image to Flask (isWeb=$isWeb)');
+      debugPrint('[Disease Detection] Image path: $imagePath');
+      debugPrint('[Disease Detection] Image bytes: ${bytes.length}');
       
       late Map<String, dynamic> result;
       
       if (isWeb) {
-        print('[Disease Detection] Using bytes method for web (${bytes.length} bytes)');
+        debugPrint('[Disease Detection] Using bytes method for web (${bytes.length} bytes)');
         result = await ApiService.predictDiseaseFromImageBytes(bytes, endpoint: '/predict/compare');
       } else {
-        print('[Disease Detection] Using file path method for mobile: $imagePath');
+        debugPrint('[Disease Detection] Using file path method for mobile: $imagePath');
         result = await ApiService.predictDiseaseFromImage(imagePath, endpoint: '/predict/compare');
       }
 
-      print('[Disease Detection] Result: $result');
+      debugPrint('[Disease Detection] Result: $result');
 
       if (result['status'] == 'ok') {
         setState(() {
@@ -255,7 +251,6 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
   void _clearResults() {
     setState(() {
       _selectedImage = null;
-      _selectedImagePath = null;
       _detectedDisease = null;
       _confidence = null;
       _solutions = null;

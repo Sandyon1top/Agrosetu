@@ -6,7 +6,6 @@ import '../services/api_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'dart:typed_data';
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 
 class DiseaseDetectionPageNew extends StatefulWidget {
@@ -19,7 +18,6 @@ class DiseaseDetectionPageNew extends StatefulWidget {
 
 class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
   Uint8List? _selectedImage;
-  String? _selectedImagePath;
   bool _isProcessing = false;
   String? _detectedDisease;
   double? _confidence;
@@ -57,7 +55,6 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
       final bytes = await captured.readAsBytes();
       setState(() {
         _selectedImage = bytes;
-        _selectedImagePath = captured.path;
         _isProcessing = true;
         _errorMessage = null;
       });
@@ -115,7 +112,6 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
 
       setState(() {
         _selectedImage = bytes;
-        _selectedImagePath = imagePath;
         _isProcessing = true;
         _errorMessage = null;
       });
@@ -209,7 +205,6 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
   void _clearResults() {
     setState(() {
       _selectedImage = null;
-      _selectedImagePath = null;
       _detectedDisease = null;
       _confidence = null;
       _solutions = null;
