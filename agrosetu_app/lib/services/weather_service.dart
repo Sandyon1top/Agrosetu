@@ -10,7 +10,7 @@ class WeatherService {
 
   /// Fetches current weather. 
   /// Priority: API -> If fails, returns Local Cache.
-  static Future<Map<String, dynamic>> getWeather({String? query}) async {
+  static Future<Map<String, dynamic>> getCurrentWeather({String? query}) async {
     try {
       final url = query != null 
           ? '$backendUrl/api/weather/current?city=${Uri.encodeComponent(query)}'
