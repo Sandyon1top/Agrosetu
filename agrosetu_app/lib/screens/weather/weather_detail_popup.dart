@@ -220,7 +220,7 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('${weather['temp']}°C', style: TextStyle(fontSize: 35, color: Colors.white, fontWeight: FontWeight.bold)),
-                  Text(weather['description'], style: TextStyle(color: Colors.white.withOpacity(0.8))),
+                  Text(weather['description'], style: TextStyle(color: Colors.white.withValues(alpha: 0.8))),
                 ],
               )
             ],

@@ -410,7 +410,7 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
         border: Border.all(color: const Color(0xFFB0BEC5), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -595,7 +595,7 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 6,
                   offset: const Offset(0, 3),
                 ),
@@ -731,7 +731,7 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
         border: Border.all(color: const Color(0xFFA5D6A7), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.08),
+            color: Colors.green.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),

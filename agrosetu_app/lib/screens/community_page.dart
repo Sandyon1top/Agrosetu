@@ -125,7 +125,7 @@ class _CommunityPageState extends State<CommunityPage> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(
@@ -153,7 +153,7 @@ class _CommunityPageState extends State<CommunityPage> {
                   'Share knowledge & discuss farming tips',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -185,7 +185,7 @@ class _CommunityPageState extends State<CommunityPage> {
                   _fetchPosts();
                 },
                 backgroundColor: Colors.white,
-                selectedColor: const Color(0xFF2E7D32).withOpacity(0.15),
+                selectedColor: const Color(0xFF2E7D32).withValues(alpha: 0.15),
                 labelStyle: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -424,7 +424,7 @@ class _DiscussionCardState extends State<_DiscussionCard> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

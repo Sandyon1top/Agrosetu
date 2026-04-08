@@ -51,7 +51,7 @@ class HomepageScreen extends StatelessWidget {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.green.withOpacity(0.2),
+                  color: Colors.green.withValues(alpha: 0.2),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),
@@ -139,7 +139,7 @@ class HomepageScreen extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF2E7D32).withOpacity(0.1),
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
                 ),
                 child: const Icon(
                   Icons.park,
@@ -365,7 +365,7 @@ class HomepageScreen extends StatelessWidget {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -389,7 +389,7 @@ class HomepageScreen extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.green.withOpacity(0.2),
+                          color: Colors.green.withValues(alpha: 0.2),
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),
@@ -415,7 +415,7 @@ class HomepageScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(15),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(alpha: 0.05),
                                   blurRadius: 5,
                                 ),
                               ],
@@ -747,10 +747,10 @@ class HomepageScreen extends StatelessWidget {
                 height: 50,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.green.withOpacity(0.2),
+                      color: Colors.green.withValues(alpha: 0.2),
                       blurRadius: 10,
                     ),
                   ],
@@ -797,7 +797,7 @@ class HomepageScreen extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontSize: 10,
                       fontWeight: FontWeight.w400,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -816,7 +816,7 @@ class HomepageScreen extends StatelessWidget {
                   'Home',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -827,7 +827,7 @@ class HomepageScreen extends StatelessWidget {
                   'Features',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -840,7 +840,7 @@ class HomepageScreen extends StatelessWidget {
                   'About Us',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -851,7 +851,7 @@ class HomepageScreen extends StatelessWidget {
                   'Contact',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -862,7 +862,7 @@ class HomepageScreen extends StatelessWidget {
                   'Privacy',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -873,7 +873,7 @@ class HomepageScreen extends StatelessWidget {
                   'Terms',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -885,7 +885,7 @@ class HomepageScreen extends StatelessWidget {
             '© 2025 Agrosetu. All rights reserved.',
             style: GoogleFonts.poppins(
               fontSize: 12,
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -936,7 +936,7 @@ class _FeatureCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -951,7 +951,7 @@ class _FeatureCard extends StatelessWidget {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: feature.color.withOpacity(0.1),
+              color: feature.color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(feature.icon, color: feature.color, size: 30),
@@ -990,7 +990,7 @@ class _TestimonialCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -1038,9 +1038,9 @@ class _TestimonialCard extends StatelessWidget {
                 height: 45,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF2E7D32).withOpacity(0.1),
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
                   border: Border.all(
-                    color: const Color(0xFF2E7D32).withOpacity(0.3),
+                    color: const Color(0xFF2E7D32).withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -1145,7 +1145,7 @@ class HomepageScreen extends StatelessWidget {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.green.withOpacity(0.2),
+                  color: Colors.green.withValues(alpha: 0.2),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),
@@ -1236,7 +1236,7 @@ class HomepageScreen extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF2E7D32).withOpacity(0.1),
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
                 ),
                 child: const Icon(
                   Icons.park,
@@ -1500,7 +1500,7 @@ class HomepageScreen extends StatelessWidget {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -1524,7 +1524,7 @@ class HomepageScreen extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.green.withOpacity(0.2),
+                          color: Colors.green.withValues(alpha: 0.2),
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),
@@ -1550,7 +1550,7 @@ class HomepageScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(15),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(alpha: 0.05),
                                   blurRadius: 5,
                                 ),
                               ],
@@ -2359,10 +2359,10 @@ class HomepageScreen extends StatelessWidget {
                 height: 50,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.green.withOpacity(0.2),
+                      color: Colors.green.withValues(alpha: 0.2),
                       blurRadius: 10,
                     ),
                   ],
@@ -2408,7 +2408,7 @@ class HomepageScreen extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontSize: 10,
                       fontWeight: FontWeight.w400,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -2427,7 +2427,7 @@ class HomepageScreen extends StatelessWidget {
                   'Home',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -2438,7 +2438,7 @@ class HomepageScreen extends StatelessWidget {
                   'Features',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -2451,7 +2451,7 @@ class HomepageScreen extends StatelessWidget {
                   'About Us',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -2462,7 +2462,7 @@ class HomepageScreen extends StatelessWidget {
                   'Contact',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -2473,7 +2473,7 @@ class HomepageScreen extends StatelessWidget {
                   'Privacy',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -2484,7 +2484,7 @@ class HomepageScreen extends StatelessWidget {
                   'Terms',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -2496,7 +2496,7 @@ class HomepageScreen extends StatelessWidget {
             '© 2025 Agrosetu. All rights reserved.',
             style: GoogleFonts.poppins(
               fontSize: 12,
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -2551,7 +2551,7 @@ class _FeatureCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -2565,7 +2565,7 @@ class _FeatureCard extends StatelessWidget {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: feature.color.withOpacity(0.1),
+                color: feature.color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(feature.icon, color: feature.color, size: 30),
@@ -2604,7 +2604,7 @@ class _TestimonialCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -2649,9 +2649,9 @@ class _TestimonialCard extends StatelessWidget {
                 height: 45,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF2E7D32).withOpacity(0.1),
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
                   border: Border.all(
-                    color: const Color(0xFF2E7D32).withOpacity(0.3),
+                    color: const Color(0xFF2E7D32).withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),

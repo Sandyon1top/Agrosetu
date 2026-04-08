@@ -201,12 +201,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           border: Border.all(
                             color: isRead
                                 ? Colors.transparent
-                                : const Color(0xFF2E7D32).withOpacity(0.2),
+                                : const Color(0xFF2E7D32).withValues(alpha: 0.2),
                             width: 2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -219,7 +219,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                             height: 48,
                             decoration: BoxDecoration(
                               color: _getNotificationColor(notif['type'])
-                                  .withOpacity(0.15),
+                                  .withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(

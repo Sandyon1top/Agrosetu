@@ -150,9 +150,9 @@ class _AnimatedFarmBackgroundState extends State<AnimatedFarmBackground>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                const Color(0xFF2E7D32).withOpacity(0.9),
-                const Color(0xFF1B5E20).withOpacity(0.95),
-                const Color(0xFF0D4112).withOpacity(0.9),
+                const Color(0xFF2E7D32).withValues(alpha: 0.9),
+                const Color(0xFF1B5E20).withValues(alpha: 0.95),
+                const Color(0xFF0D4112).withValues(alpha: 0.9),
               ],
               stops: const [0.0, 0.5, 1.0],
             ),
@@ -189,15 +189,15 @@ class _AnimatedFarmBackgroundState extends State<AnimatedFarmBackground>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    bubble.color.withOpacity(0.9),
-                    bubble.color.withOpacity(0.5),
+                    bubble.color.withValues(alpha: 0.9),
+                    bubble.color.withValues(alpha: 0.5),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.7, 1.0],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: bubble.color.withOpacity(0.4),
+                    color: bubble.color.withValues(alpha: 0.4),
                     blurRadius: 10,
                     spreadRadius: 2,
                   ),
@@ -238,8 +238,8 @@ class _AnimatedFarmBackgroundState extends State<AnimatedFarmBackground>
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFF4CAF50).withOpacity(0.9),
-                          const Color(0xFF81C784).withOpacity(0.6),
+                          const Color(0xFF4CAF50).withValues(alpha: 0.9),
+                          const Color(0xFF81C784).withValues(alpha: 0.6),
                           Colors.transparent,
                         ],
                         stops: const [0.0, 0.5, 1.0],

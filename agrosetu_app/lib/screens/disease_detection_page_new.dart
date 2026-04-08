@@ -280,7 +280,7 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(
@@ -308,7 +308,7 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
                   'AI-powered crop analysis',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -329,7 +329,7 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -508,7 +508,7 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
         border: Border.all(color: Colors.green.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.1),
+            color: Colors.green.withValues(alpha: 0.1),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -684,7 +684,7 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),

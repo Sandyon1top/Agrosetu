@@ -58,7 +58,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             spreadRadius: 2,
           ),
@@ -212,12 +212,12 @@ class _HomeDashboardState extends State<HomeDashboard> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.3)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -260,7 +260,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                         style: GoogleFonts.poppins(
                           fontSize: 10,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF2E7D32).withOpacity(0.7),
+                          color: const Color(0xFF2E7D32).withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -313,7 +313,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 5,
                   offset: const Offset(0, 2),
                 ),
@@ -363,7 +363,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -490,7 +490,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1B5E20).withOpacity(0.3),
+            color: const Color(0xFF1B5E20).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -533,7 +533,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       Text(
                         'Monday, 12 Oct',
                         style: GoogleFonts.poppins(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -544,7 +544,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Iconsax.arrow_right_3, color: Colors.white, size: 16),
@@ -580,7 +580,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       Text(
                         'H:28° L:16°',
                         style: GoogleFonts.poppins(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 14,
                         ),
                       ),
@@ -610,7 +610,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -623,7 +623,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
           ),
           Text(
             label,
-            style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.6), fontSize: 9),
+            style: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.6), fontSize: 9),
           ),
         ],
       ),
@@ -670,7 +670,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -746,7 +746,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                   boxShadow: [
-                    BoxShadow(color: color.withOpacity(0.3), blurRadius: 4, spreadRadius: 1),
+                    BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 4, spreadRadius: 1),
                   ],
                 ),
               ),
@@ -789,14 +789,14 @@ class _HomeDashboardState extends State<HomeDashboard> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(icon, size: 12, color: color.withOpacity(0.7)),
+                      Icon(icon, size: 12, color: color.withValues(alpha: 0.7)),
                       const SizedBox(width: 4),
                       Text(
                         type.toUpperCase(),
                         style: GoogleFonts.poppins(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          color: color.withOpacity(0.7),
+                          color: color.withValues(alpha: 0.7),
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -823,7 +823,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -858,7 +858,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       'Top: Big Tomato',
                       style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -908,7 +908,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                           dotData: const FlDotData(show: false),
                           belowBarData: BarAreaData(
                             show: true,
-                            color: const Color(0xFF4CAF50).withOpacity(0.2),
+                            color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
                           ),
                         ),
                       ],

@@ -576,7 +576,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.insights_rounded,
@@ -608,9 +608,9 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             child: Container(
               height: 44,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withOpacity(0.25)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
               ),
               child: TextField(
                 controller: _searchController,
@@ -672,12 +672,12 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? Colors.white
-                            : Colors.white.withOpacity(0.15),
+                            : Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
                               ? Colors.white
-                              : Colors.white.withOpacity(0.3),
+                              : Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
@@ -879,8 +879,8 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF2E7D32).withOpacity(0.2)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        border: Border.all(color: const Color(0xFF2E7D32).withValues(alpha: 0.2)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -938,7 +938,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: color.withOpacity(0.12),
+                              color: color.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text('BEST SELL',
@@ -961,7 +961,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                       child: LinearProgressIndicator(
                         value: barFraction.toDouble(),
                         minHeight: 10,
-                        backgroundColor: color.withOpacity(0.1),
+                        backgroundColor: color.withValues(alpha: 0.1),
                         valueColor: AlwaysStoppedAnimation<Color>(color),
                       ),
                     ),
@@ -1016,9 +1016,9 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1115,7 +1115,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.blue.shade100),
                 boxShadow: [BoxShadow(
-                    color: Colors.black.withOpacity(0.04), blurRadius: 10)],
+                    color: Colors.black.withValues(alpha: 0.04), blurRadius: 10)],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1139,10 +1139,10 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: climateColor.withOpacity(0.1),
+                            color: climateColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                                color: climateColor.withOpacity(0.3)),
+                                color: climateColor.withValues(alpha: 0.3)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -1215,7 +1215,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                                         color: isHighPrice
                                             ? const Color(0xFF2E7D32)
                                             : const Color(0xFF2E7D32)
-                                                .withOpacity(0.35),
+                                                .withValues(alpha: 0.35),
                                         borderRadius: const BorderRadius.vertical(
                                             top: Radius.circular(4)),
                                       ),
@@ -1230,7 +1230,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                                         height: 3,
                                         color: isHighClimate
                                             ? climateColor
-                                            : climateColor.withOpacity(0.6),
+                                            : climateColor.withValues(alpha: 0.6),
                                       ),
                                     ),
                                   ],
@@ -1358,9 +1358,9 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: riskColor.withOpacity(0.25)),
+        border: Border.all(color: riskColor.withValues(alpha: 0.25)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10)
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10)
         ],
       ),
       child: Column(
@@ -1382,9 +1382,9 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: riskColor.withOpacity(0.1),
+                  color: riskColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: riskColor.withOpacity(0.3)),
+                  border: Border.all(color: riskColor.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1411,7 +1411,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: riskColor.withOpacity(0.07),
+              color: riskColor.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -1564,10 +1564,10 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.08) : Colors.grey.shade50,
+          color: isSelected ? color.withValues(alpha: 0.08) : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-              color: isSelected ? color.withOpacity(0.3) : Colors.transparent),
+              color: isSelected ? color.withValues(alpha: 0.3) : Colors.transparent),
         ),
         child: Row(
           children: [
@@ -1591,7 +1591,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(risk,
@@ -1656,7 +1656,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.green.shade100),
         boxShadow: [BoxShadow(
-            color: Colors.black.withOpacity(0.04), blurRadius: 10)],
+            color: Colors.black.withValues(alpha: 0.04), blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1673,7 +1673,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: riskColor.withOpacity(0.1),
+                color: riskColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text('$riskLevel Risk',
@@ -1702,9 +1702,9 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                   Container(
                     width: 36, height: 36,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
+                      color: color.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
-                      border: Border.all(color: color.withOpacity(0.3)),
+                      border: Border.all(color: color.withValues(alpha: 0.3)),
                     ),
                     child: Icon(step['icon'] as IconData,
                         size: 18, color: color),
@@ -1809,7 +1809,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.purple.shade100),
         boxShadow: [BoxShadow(
-            color: Colors.black.withOpacity(0.04), blurRadius: 10)],
+            color: Colors.black.withValues(alpha: 0.04), blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1827,7 +1827,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: trendColor.withOpacity(0.1),
+                color: trendColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
