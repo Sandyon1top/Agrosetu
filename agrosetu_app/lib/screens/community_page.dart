@@ -38,7 +38,7 @@ class _CommunityPageState extends State<CommunityPage> {
       // Load posts
       await _fetchPosts();
     } catch (e) {
-      print('Error loading user: $e');
+      debugPrint('Error loading user: $e');
       _fetchPosts();
     }
   }
@@ -57,7 +57,8 @@ class _CommunityPageState extends State<CommunityPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error fetching posts: $e');
+      debugPrint('Error fetching posts: $e');
+      if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -323,6 +324,7 @@ class _CommunityPageState extends State<CommunityPage> {
                   child: ElevatedButton(
                     onPressed: () async {
                       if (titleController.text.isEmpty || descriptionController.text.isEmpty) {
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Please fill all fields'),
@@ -345,8 +347,10 @@ class _CommunityPageState extends State<CommunityPage> {
                         );
 
                         if (response['status'] == 'ok') {
+                          if (!mounted) return;
                           Navigator.pop(context);
                           await _fetchPosts();
+                          if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Post created successfully!'),
@@ -354,6 +358,7 @@ class _CommunityPageState extends State<CommunityPage> {
                             ),
                           );
                         } else {
+                          if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(response['message'] ?? 'Failed to create post'),
@@ -362,6 +367,7 @@ class _CommunityPageState extends State<CommunityPage> {
                           );
                         }
                       } catch (e) {
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Error: $e'),
@@ -587,6 +593,7 @@ class _DiscussionCardState extends State<_DiscussionCard> {
               GestureDetector(
                 onTap: () async {
                   if (widget.currentUserId == null) {
+                    if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Please log in to like'),
@@ -604,7 +611,7 @@ class _DiscussionCardState extends State<_DiscussionCard> {
                       userId: widget.currentUserId!,
                     );
                   } catch (e) {
-                    print('Error liking post: $e');
+                    debugPrint('Error liking post: $e');
                   }
                 },
                 child: Row(
