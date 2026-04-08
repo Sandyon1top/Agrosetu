@@ -237,9 +237,9 @@ class ApiService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('auth_token', token);
       await prefs.setBool('is_logged_in', true);
-      print('Token saved successfully');
+      debugPrint('Token saved successfully');
     } catch (e) {
-      print('Error saving token: $e');
+      debugPrint('Error saving token: $e');
     }
   }
   
@@ -248,7 +248,7 @@ class ApiService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString('auth_token');
     } catch (e) {
-      print('Error getting token: $e');
+      debugPrint('Error getting token: $e');
       return null;
     }
   }
@@ -260,7 +260,7 @@ class ApiService {
       final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
       return token != null && isLoggedIn;
     } catch (e) {
-      print('Error checking login status: $e');
+      debugPrint('Error checking login status: $e');
       return false;
     }
   }
@@ -270,9 +270,9 @@ class ApiService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_token');
       await prefs.remove('is_logged_in');
-      print('Logged out successfully');
+      debugPrint('Logged out successfully');
     } catch (e) {
-      print('Error logging out: $e');
+      debugPrint('Error logging out: $e');
     }
   }
 
@@ -488,7 +488,7 @@ class ApiService {
           };
         }
       } catch (parseError) {
-        print('[ApiService] JSON Parse Error: $parseError');
+        debugPrint('[ApiService] JSON Parse Error: $parseError');
         return {
           'status': 'error',
           'message': 'Server error: Invalid response format',
@@ -537,7 +537,7 @@ class ApiService {
           };
         }
       } catch (parseError) {
-        print('[ApiService] JSON Parse Error: $parseError');
+        debugPrint('[ApiService] JSON Parse Error: $parseError');
         return {
           'status': 'error',
           'message': 'Server error: Invalid response format',
@@ -583,7 +583,7 @@ class ApiService {
         ),
       );
 
-      print('[Flutter] Sending prediction request to $flaskBaseUrl$endpoint');
+      debugPrint('[Flutter] Sending prediction request to $flaskBaseUrl$endpoint');
 
       final streamResponse = await request.send().timeout(
         const Duration(seconds: 45),
@@ -637,7 +637,7 @@ class ApiService {
         ),
       );
 
-      print('[Flutter] Sending prediction request to $flaskBaseUrl$endpoint');
+      debugPrint('[Flutter] Sending prediction request to $flaskBaseUrl$endpoint');
 
       final streamResponse = await request.send().timeout(
         const Duration(seconds: 45),

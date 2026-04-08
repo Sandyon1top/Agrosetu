@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
@@ -32,7 +33,7 @@ class DiseaseHistoryService {
       // Attempt to sync immediately
       _trySync(history);
     } catch (e) {
-      print('Error saving detection history: $e');
+      debugPrint('Error saving detection history: $e');
     }
   }
 
@@ -47,7 +48,7 @@ class DiseaseHistoryService {
         return decoded.map((e) => e as Map<String, dynamic>).toList();
       }
     } catch (e) {
-      print('Error reading detection history: $e');
+      debugPrint('Error reading detection history: $e');
     }
     return [];
   }
@@ -73,10 +74,10 @@ class DiseaseHistoryService {
         }).toList();
 
         await prefs.setString(_key, json.encode(updatedHistory));
-        print('✅ Offline detections synced dynamically to MongoDB');
+        debugPrint('✅ Offline detections synced dynamically to MongoDB');
       }
     } catch (e) {
-      print('Sync skipped: offline or error ($e)');
+      debugPrint('Sync skipped: offline or error ($e)');
     }
   }
 
@@ -90,7 +91,7 @@ class DiseaseHistoryService {
         await _trySync(history);
       }
     } catch (e) {
-      print('Manual sync error: $e');
+      debugPrint('Manual sync error: $e');
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http; // ADDED
@@ -76,7 +77,7 @@ class NotificationService {
         await prefs.setString(_notificationsKey, jsonEncode(localList));
       }
     } catch (e) {
-      print('Sync Error: $e');
+      debugPrint('Sync Error: $e');
       // If server is down, app continues using local cached data (Offline Mode)
     }
   }
@@ -98,7 +99,7 @@ class NotificationService {
         );
       }
     } catch (e) {
-      print('Mark as read backend error: $e');
+      debugPrint('Mark as read backend error: $e');
     }
 
     final prefs = await SharedPreferences.getInstance();

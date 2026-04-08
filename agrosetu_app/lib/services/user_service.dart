@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -12,9 +13,9 @@ class UserService {
   static Future<void> initialize() async {
     final user = await getUser();
     if (user != null) {
-      print('[UserService] Initialized with cached user: ${user['name']}');
+      debugPrint('[UserService] Initialized with cached user: ${user['name']}');
     } else {
-      print('[UserService] No cached user found');
+      debugPrint('[UserService] No cached user found');
     }
   }
 
@@ -23,13 +24,13 @@ class UserService {
     await prefs.setString(_userKey, jsonEncode(userData));
     // Update cache immediately
     _cachedUser = userData;
-    print('[UserService] User saved: ${userData['name'] ?? 'Unknown'}');
+    debugPrint('[UserService] User saved: ${userData['name'] ?? 'Unknown'}');
   }
 
   static Future<Map<String, dynamic>?> getUser() async {
     // Return cached user if available
     if (_cachedUser != null) {
-      print('[UserService] Returning cached user: ${_cachedUser!['name'] ?? 'Unknown'}');
+      debugPrint('[UserService] Returning cached user: ${_cachedUser!['name'] ?? 'Unknown'}');
       return _cachedUser;
     }
     
@@ -37,16 +38,16 @@ class UserService {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString(_userKey);
     if (userJson == null) {
-      print('[UserService] No user data found in storage');
+      debugPrint('[UserService] No user data found in storage');
       return null;
     }
     try {
       final user = jsonDecode(userJson) as Map<String, dynamic>;
       _cachedUser = user; // Update cache
-      print('[UserService] User loaded from storage: ${user['name'] ?? 'Unknown'}');
+      debugPrint('[UserService] User loaded from storage: ${user['name'] ?? 'Unknown'}');
       return user;
     } catch (e) {
-      print('[UserService] Error decoding user: $e');
+      debugPrint('[UserService] Error decoding user: $e');
       return null;
     }
   }
@@ -73,13 +74,13 @@ class UserService {
     await prefs.remove(_userKey);
     await prefs.remove(_profileImageKey);
     _cachedUser = null; // Clear cache
-    print('[UserService] User logged out, cache cleared');
+    debugPrint('[UserService] User logged out, cache cleared');
   }
 
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     _cachedUser = null; // Clear cache
-    print('[UserService] All data cleared');
+    debugPrint('[UserService] All data cleared');
   }
 }

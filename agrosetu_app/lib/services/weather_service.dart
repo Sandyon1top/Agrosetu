@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,7 +30,7 @@ class WeatherService {
         return await getCachedWeather();
       }
     } catch (e) {
-      print('Weather Service Error: $e');
+      debugPrint('Weather Service Error: $e');
       return await getCachedWeather();
     }
   }
