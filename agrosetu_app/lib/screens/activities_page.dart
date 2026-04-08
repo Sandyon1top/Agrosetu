@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/activity_service.dart';
 
 class ActivitiesPage extends StatefulWidget {
-  const ActivitiesPage({Key? key}) : super(key: key);
+  const ActivitiesPage({super.key});
 
   @override
   State<ActivitiesPage> createState() => _ActivitiesPageState();
