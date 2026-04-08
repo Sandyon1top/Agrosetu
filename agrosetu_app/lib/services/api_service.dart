@@ -132,6 +132,71 @@ class ApiService {
       };
     }
   }
+
+  // Verify OTP API
+  static Future<Map<String, dynamic>> verifyOtp(String email, String otp) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/verify-otp'),
+        headers: getHeaders(),
+        body: jsonEncode({
+          'identity': email,
+          'otp': otp,
+        }),
+      );
+      
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'status': 'ok',
+          'message': responseData['message'] ?? 'OTP verified successfully',
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': responseData['message'] ?? 'Verification failed',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Resend OTP API
+  static Future<Map<String, dynamic>> resendOtp(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/resend-otp'),
+        headers: getHeaders(),
+        body: jsonEncode({
+          'identity': email,
+        }),
+      );
+      
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'status': 'ok',
+          'message': responseData['message'] ?? 'OTP resent successfully',
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': responseData['message'] ?? 'Failed to resend OTP',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Network error: $e',
+      };
+    }
+  }
   
   // Forgot Password API
   static Future<Map<String, dynamic>> forgotPassword(String email) async {
