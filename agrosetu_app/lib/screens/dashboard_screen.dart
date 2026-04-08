@@ -159,7 +159,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
         _isLoadingWeather = false;
       });
     } catch (e) {
-      print('Error loading weather: $e');
+      debugPrint('Error loading weather: $e');
       setState(() {
         _isLoadingWeather = false;
       });
@@ -709,9 +709,13 @@ class _HomeDashboardState extends State<HomeDashboard> {
     final diff = DateTime.now().difference(dt);
     
     String timeLabel;
-    if (diff.inMinutes < 60) timeLabel = '${diff.inMinutes}m ago';
-    else if (diff.inHours < 24) timeLabel = '${diff.inHours}h ago';
-    else timeLabel = '${diff.inDays}d ago';
+    if (diff.inMinutes < 60) {
+      timeLabel = '${diff.inMinutes}m ago';
+    } else if (diff.inHours < 24) {
+      timeLabel = '${diff.inHours}h ago';
+    } else {
+      timeLabel = '${diff.inDays}d ago';
+    }
 
     IconData icon;
     Color color;
