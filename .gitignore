@@ -10,3 +10,6 @@ backend/node_modules/
 
 # Python environments
 Flask/myenv_py10/
+
+# IDE
+.vscode/
