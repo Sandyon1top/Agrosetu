@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -175,10 +174,12 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
     await _speechToText.listen(
       onResult: _onSpeechResult,
       localeId: 'ne_NP',
-      listenMode: ListenMode.dictation,
+      listenOptions: SpeechListenOptions(
+        listenMode: ListenMode.dictation,
+        cancelOnError: false,
+        partialResults: true,
+      ),
       pauseFor: const Duration(seconds: 3),
-      cancelOnError: false,
-      partialResults: true,
     );
     setState(() => _isListening = true);
   }
@@ -329,9 +330,9 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF2E7D32).withOpacity(0.08),
+                color: const Color(0xFF2E7D32).withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF2E7D32).withOpacity(0.2)),
+                border: Border.all(color: const Color(0xFF2E7D32).withValues(alpha: 0.2)),
               ),
               child: Row(
                 children: [
@@ -368,7 +369,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
                     color: _isListening ? Colors.red : _isLoading ? Colors.grey : const Color(0xFF2E7D32),
                     boxShadow: [
                       BoxShadow(
-                        color: (_isListening ? Colors.red : const Color(0xFF2E7D32)).withOpacity(0.4),
+                        color: (_isListening ? Colors.red : const Color(0xFF2E7D32)).withValues(alpha: 0.4),
                         blurRadius: 20, spreadRadius: 4,
                       ),
                     ],
@@ -435,7 +436,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
                 const SizedBox(height: 16),
               ],
               if (_answerText.isNotEmpty) ...[
-                _buildResultCard(title: '🌱 उत्तर:', content: _answerText, color: const Color(0xFF2E7D32).withOpacity(0.06), borderColor: const Color(0xFF2E7D32).withOpacity(0.3), textColor: const Color(0xFF1B5E20)),
+                _buildResultCard(title: '🌱 उत्तर:', content: _answerText, color: const Color(0xFF2E7D32).withValues(alpha: 0.06), borderColor: const Color(0xFF2E7D32).withValues(alpha: 0.3), textColor: const Color(0xFF1B5E20)),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity, height: 52,
@@ -467,7 +468,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF2E7D32).withOpacity(0.4))),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF2E7D32).withValues(alpha: 0.4))),
         child: Text(text, style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF2E7D32), fontWeight: FontWeight.w500)),
       ),
     );
