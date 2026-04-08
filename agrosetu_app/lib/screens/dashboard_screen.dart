@@ -12,6 +12,8 @@ import '../services/notification_service.dart';
 import '../services/user_service.dart';
 import 'activities_page.dart';
 import 'package:iconsax/iconsax.dart';
+import 'dart:ui'; // For BackdropFilter
+import 'package:fl_chart/fl_chart.dart'; // For Market mini-chart
 
 // Main Dashboard with Navigation
 class DashboardScreen extends StatefulWidget {
@@ -182,15 +184,19 @@ class _HomeDashboardState extends State<HomeDashboard> {
               _buildWelcomeSection(),
               const SizedBox(height: 20),
               
-              // 3. COMPACT WEATHER CARD
+              // 3. MODERN WEATHER CARD
               _buildCompactWeatherCard(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               
-              // 4. VOICE ASSISTANT
-              _buildVoiceAssistant(),
-              const SizedBox(height: 20),
+              // 4. QUICK ACTIONS GRID
+              _buildQuickActionsGrid(),
+              const SizedBox(height: 24),
               
-              // 5. RECENT ACTIVITIES
+              // 5. MARKET PREVIEW
+              _buildMarketPreview(),
+              const SizedBox(height: 24),
+              
+              // 6. RECENT ACTIVITIES
               _buildRecentActivities(),
               const SizedBox(height: 20),
             ],
@@ -200,541 +206,432 @@ class _HomeDashboardState extends State<HomeDashboard> {
     );
   }
 
-  // ========== 1. TOP BAR WITH APP NAME & PROFILE ==========
+  // ========== 1. PREMIUM TOP BAR ==========
   Widget _buildTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Agrosetu App Name on very top left (only one)
-          Row(
-            children: [
-              Icon(
-                Icons.agriculture,
-                color: Color(0xFF2E7D32),
-                size: 28,
-              ),
-              SizedBox(width: 8),
-              Text(
-                'Agrosetu',
-                style: GoogleFonts.poppins(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1B5E20),
-                  letterSpacing: 0.5,
-                ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          
-          // Notification and Profile icons
-          Row(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Notification bell
-              Stack(
+              Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(
-                      Iconsax.notification,
-                      size: 24,
-                      color: Color(0xFF2E7D32),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const NotificationsPage(),
-                        ),
-                      ).then((_) {
-                        _loadNotificationCount();
-                      });
-                    },
+                    child: const Icon(
+                      Icons.agriculture,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
-                  if (_unreadNotifications > 0)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade500,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          _unreadNotifications > 9 ? '9+' : '$_unreadNotifications',
-                          style: GoogleFonts.poppins(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Agrosetu',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF1B5E20),
+                          letterSpacing: -0.5,
                         ),
                       ),
-                    ),
+                      Text(
+                        'Smart Farming',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF2E7D32).withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-              const SizedBox(width: 8),
-              // Profile icon
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                  border: Border.all(
-                    color: const Color(0xFF2E7D32),
-                    width: 1.5,
+              Row(
+                children: [
+                  _buildTopBarAction(
+                    icon: Iconsax.notification,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const NotificationsPage()),
+                      ).then((_) => _loadNotificationCount());
+                    },
+                    hasBadge: _unreadNotifications > 0,
+                    badgeCount: _unreadNotifications,
                   ),
-                ),
-                child: IconButton(
-                  icon: const Icon(
-                    Iconsax.profile_circle,
-                    size: 22,
-                    color: Color(0xFF2E7D32),
+                  const SizedBox(width: 8),
+                  _buildTopBarAction(
+                    icon: Iconsax.profile_circle,
+                    onTap: () {
+                      // Handled by bottom nav index
+                    },
                   ),
-                  onPressed: () {
-                    // Profile is accessible via bottom nav
-                  },
-                  padding: EdgeInsets.zero,
-                ),
+                ],
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopBarAction({
+    required IconData icon,
+    required VoidCallback onTap,
+    bool hasBadge = false,
+    int badgeCount = 0,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(icon, size: 20, color: const Color(0xFF2E7D32)),
+          ),
+          if (hasBadge)
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  badgeCount > 9 ? '9+' : '$badgeCount',
+                  style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  // ========== 2. WELCOME SECTION ==========
+  // ========== 2. DYNAMIC WELCOME SECTION ==========
   Widget _buildWelcomeSection() {
     return FutureBuilder<Map<String, dynamic>?>(
       future: UserService.getUser(),
       builder: (context, snapshot) {
         String userName = 'Farmer';
-        
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          // Show loading state
-          userName = 'Farmer';
-        } else if (snapshot.hasData && snapshot.data != null) {
-          // Show actual user name
+        if (snapshot.hasData && snapshot.data != null) {
           userName = snapshot.data!['name'] ?? 'Farmer';
-          print('[Dashboard] Welcome section - User: $userName');
-        } else if (snapshot.hasError) {
-          print('[Dashboard] Error loading user: ${snapshot.error}');
         }
         
         final hour = DateTime.now().hour;
         final greeting = hour < 12 ? 'Good Morning' : (hour < 18 ? 'Good Afternoon' : 'Good Evening');
         
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$greeting,',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                color: Colors.grey.shade600,
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '$userName! 👋',
-              style: GoogleFonts.poppins(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF1B5E20),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Here\'s your farming summary today',
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // ========== 3. COMPACT WEATHER CARD ==========
-  Widget _buildCompactWeatherCard() {
-    if (_isLoadingWeather) {
-      return Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF2E7D32),
-              Color(0xFF1B5E20),
             ],
           ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF1B5E20).withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Row(
             children: [
-              const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Loading weather...',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.white.withOpacity(0.8),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_weatherData == null) {
-      return Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF2E7D32),
-              Color(0xFF1B5E20),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF1B5E20).withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Text(
-            'Unable to load weather',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.8),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return GestureDetector(
-      onTap: () => _showWeatherPopup(context),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF2E7D32),
-              Color(0xFF1B5E20),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF1B5E20).withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Location row (NO Agrosetu here)
-            Row(
-              children: [
-                Icon(Iconsax.location, size: 16, color: Colors.white.withOpacity(0.9)),
-                const SizedBox(width: 6),
-                Text(
-                  _weatherData?['location'] ?? 'Kathmandu',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.white.withOpacity(0.9),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  'Tap for details',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Main weather info
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Temperature (big)
-                Column(
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${_weatherData?['temperature'] ?? 22}°',
+                      '$greeting, ✨',
                       style: GoogleFonts.poppins(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        height: 0.9,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade500,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'H:${_weatherData?['high'] ?? 24}° L:${_weatherData?['low'] ?? 18}°',
+                      '$userName!',
                       style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF1B5E20),
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5E9),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.stars, color: Color(0xFF2E7D32), size: 14),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Gold Level Farmer',
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1B5E20),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                
-                const SizedBox(width: 20),
-                
-                // Weather icon and condition
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 70,
+                    height: 70,
+                    child: CircularProgressIndicator(
+                      value: 0.75,
+                      strokeWidth: 8,
+                      backgroundColor: Colors.grey.shade100,
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2E7D32)),
+                    ),
+                  ),
+                  Column(
                     children: [
                       Text(
-                        _weatherData?['icon'] ?? '⛅',
-                        style: const TextStyle(fontSize: 40),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _weatherData?['condition'] ?? 'Loading...',
+                        '75%',
                         style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1B5E20),
                         ),
                       ),
                       Text(
-                        'Feels like ${((_weatherData?['temperature'] ?? 22) + 2)}°',
+                        'Tasks',
                         style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 8,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade500,
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 20),
-            
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildWeatherMetric('Wind', _weatherData?['windSpeed'] ?? '12 km/h', Iconsax.wind),
-                  Container(
-                    height: 30,
-                    width: 1,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
-                  _buildWeatherMetric('Humidity', _weatherData?['humidity'] ?? '65%', Iconsax.drop),
-                  Container(
-                    height: 30,
-                    width: 1,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
-                  _buildWeatherMetric('Sunset', _weatherData?['sunset'] ?? '6:45 PM', Iconsax.moon),
                 ],
               ),
-            ),
+            ],
+          ),
+        );
+      },
+    );
+   // ========== 3. MODERN WEATHER CARD ==========
+  Widget _buildCompactWeatherCard() {
+    if (_isLoadingWeather) {
+      return Container(
+        height: 180,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          color: Colors.grey.shade100,
+        ),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
-            const SizedBox(height: 12),
-
-            if (_weatherData?['farmingTip'] != null)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.06),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  _weatherData?['farmingTip'] ?? '',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.9),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF2E7D32),
+            const Color(0xFF1B5E20),
+            const Color(0xFF0D2D0F),
           ],
         ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1B5E20).withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -20,
+            top: -20,
+            child: Opacity(
+              opacity: 0.1,
+              child: Icon(Icons.cloud, size: 200, color: Colors.white),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Iconsax.location5, color: Colors.white, size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            _weatherData?['location'] ?? 'Kathmandu',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Monday, 12 Oct',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  GestureDetector(
+                    onTap: () => _showWeatherPopup(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Iconsax.arrow_right_3, color: Colors.white, size: 16),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '${_weatherData?['temperature'] ?? 22}°',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 64,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -2,
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _weatherData?['condition'] ?? 'Mostly Sunny',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        'H:28° L:16°',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  const Text('☀️', style: TextStyle(fontSize: 48)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildModernWeatherMetric(Iconsax.wind, '12 km/h', 'Wind'),
+                  _buildModernWeatherMetric(Iconsax.drop, '65%', 'Humidity'),
+                  _buildModernWeatherMetric(Iconsax.sun_1, 'Low', 'UV Index'),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildWeatherMetric(String label, String value, IconData icon) {
-    return Expanded(
+  Widget _buildModernWeatherMetric(IconData icon, String value, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 18, color: Colors.white),
+          Icon(icon, color: Colors.white, size: 20),
           const SizedBox(height: 4),
           Text(
             value,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
+            style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
           ),
           Text(
             label,
-            style: GoogleFonts.poppins(
-              fontSize: 9,
-              color: Colors.white.withOpacity(0.8),
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
+            style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.6), fontSize: 9),
           ),
         ],
       ),
     );
   }
 
-  // ========== 4. VOICE ASSISTANT ==========
-  Widget _buildVoiceAssistant() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Quick Action',
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1B5E20),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.blue,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Iconsax.microphone,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Voice Assistant',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        'Ask for farming advice',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Iconsax.arrow_right_3),
-                  onPressed: () async {
-                    await ActivityService.addActivity('voice', 'Voice advice taken');
-                    await _loadActivities();
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: Text('Voice Assistant', style: GoogleFonts.poppins()),
-                        content: Text('Voice assistant launched', style: GoogleFonts.poppins()),
-                        actions: [
-                          TextButton(onPressed: () => Navigator.pop(context), child: Text('Close')),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ========== 5. RECENT ACTIVITIES ==========
+  // ========== 6. TIMELINE RECENT ACTIVITIES ==========
   Widget _buildRecentActivities() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -746,7 +643,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
               'Recent Activities',
               style: GoogleFonts.poppins(
                 fontSize: 18,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: const Color(0xFF1B5E20),
               ),
             ),
@@ -758,6 +655,8 @@ class _HomeDashboardState extends State<HomeDashboard> {
               child: Text(
                 'See all',
                 style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                   color: const Color(0xFF2E7D32),
                 ),
               ),
@@ -766,89 +665,380 @@ class _HomeDashboardState extends State<HomeDashboard> {
         ),
         const SizedBox(height: 12),
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: Column(
-            children: _recentActivities.isEmpty
-                ? [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12.0),
-                      child: Text('No recent activity', style: GoogleFonts.poppins()),
-                    )
-                  ]
-                : _recentActivities.map((activity) {
-                    final title = activity['title'] ?? '';
-                    final iso = activity['timestamp'] ?? DateTime.now().toIso8601String();
-                    final dt = DateTime.parse(iso);
-                    final diff = DateTime.now().difference(dt);
-                    String timeLabel;
-                    if (diff.inMinutes < 60) timeLabel = '${diff.inMinutes} min ago';
-                    else if (diff.inHours < 24) timeLabel = '${diff.inHours} hour(s) ago';
-                    else timeLabel = '${diff.inDays} day(s) ago';
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Iconsax.timer_1,
-                              size: 18,
-                              color: const Color(0xFF2E7D32),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  title,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Text(
-                                  timeLabel,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(
-                            Iconsax.arrow_right_3,
-                            size: 16,
-                            color: Colors.grey,
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-          ),
+          child: _recentActivities.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      'No recent activity yet',
+                      style: GoogleFonts.poppins(color: Colors.grey.shade400),
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _recentActivities.length,
+                  itemBuilder: (context, index) {
+                    final activity = _recentActivities[index];
+                    final isLast = index == _recentActivities.length - 1;
+                    return _buildTimelineItem(activity, isLast);
+                  },
+                ),
         ),
       ],
     );
   }
+
+  Widget _buildTimelineItem(Map<String, dynamic> activity, bool isLast) {
+    final title = activity['title'] ?? '';
+    final type = activity['type'] ?? 'default';
+    final iso = activity['timestamp'] ?? DateTime.now().toIso8601String();
+    final dt = DateTime.parse(iso);
+    final diff = DateTime.now().difference(dt);
+    
+    String timeLabel;
+    if (diff.inMinutes < 60) timeLabel = '${diff.inMinutes}m ago';
+    else if (diff.inHours < 24) timeLabel = '${diff.inHours}h ago';
+    else timeLabel = '${diff.inDays}d ago';
+
+    IconData icon;
+    Color color;
+    switch (type) {
+      case 'voice':
+        icon = Iconsax.microphone;
+        color = Colors.blue;
+        break;
+      case 'market':
+        icon = Iconsax.chart_2;
+        color = const Color(0xFF2E7D32);
+        break;
+      case 'disease':
+        icon = Iconsax.camera;
+        color = Colors.orange;
+        break;
+      default:
+        icon = Iconsax.activity;
+        color = Colors.grey;
+    }
+
+    return IntrinsicHeight(
+      child: Row(
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(color: color.withOpacity(0.3), blurRadius: 4, spreadRadius: 1),
+                  ],
+                ),
+              ),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: Colors.grey.shade100,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1B5E20),
+                        ),
+                      ),
+                      Text(
+                        timeLabel,
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(icon, size: 12, color: color.withOpacity(0.7)),
+                      const SizedBox(width: 4),
+                      Text(
+                        type.toUpperCase(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: color.withOpacity(0.7),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+   // ========== 4. QUICK ACTIONS GRID ==========
+  Widget _buildQuickActionsGrid() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Actions',
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF1B5E20),
+          ),
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          childAspectRatio: 1.4,
+          children: [
+            _buildActionCard(
+              title: 'Voice Assist',
+              subtitle: 'Talk to AI',
+              icon: Iconsax.microphone,
+              color: Colors.blue,
+              onTap: () {},
+            ),
+            _buildActionCard(
+              title: 'Smart Cam',
+              subtitle: 'Scan Crop',
+              icon: Iconsax.camera,
+              color: Colors.orange,
+              onTap: () {},
+            ),
+            _buildActionCard(
+              title: 'Insights',
+              subtitle: 'Market Analysis',
+              icon: Iconsax.chart_2,
+              color: const Color(0xFF2E7D32),
+              onTap: () {},
+            ),
+            _buildActionCard(
+              title: 'Forum',
+              subtitle: 'Ask Community',
+              icon: Iconsax.messages_1,
+              color: Colors.purple,
+              onTap: () {},
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.08),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+          border: Border.all(color: color.withOpacity(0.1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1B5E20),
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ========== 5. MARKET INSIGHTS PREVIEW ==========
+  Widget _buildMarketPreview() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D2D0F),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Market Trends',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const Icon(Iconsax.trend_up, color: Color(0xFF4CAF50), size: 18),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Top: Big Tomato',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.6),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Rs. 120/kg',
+                      style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '+4.2% today',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF4CAF50),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: SizedBox(
+                  height: 60,
+                  child: LineChart(
+                    LineChartData(
+                      gridData: const FlGridData(show: false),
+                      titlesData: const FlTitlesData(show: false),
+                      borderData: FlBorderData(show: false),
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: const [
+                            FlSpot(0, 3),
+                            FlSpot(1, 4),
+                            FlSpot(2, 3.5),
+                            FlSpot(3, 5),
+                            FlSpot(4, 4.5),
+                            FlSpot(5, 6),
+                          ],
+                          isCurved: true,
+                          color: const Color(0xFF4CAF50),
+                          barWidth: 3,
+                          isStrokeCapRound: true,
+                          dotData: const FlDotData(show: false),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: const Color(0xFF4CAF50).withOpacity(0.2),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
 
   void _showWeatherPopup(BuildContext context) {
     showModalBottomSheet(
