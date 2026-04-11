@@ -94,11 +94,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
           currentIndex: _selectedIndex,
-          selectedItemColor: const Color(0xFF2E7D32),
+          selectedItemColor: const Color(0xFF5A9E36),
           unselectedItemColor: Colors.grey.shade600,
           showUnselectedLabels: true,
           type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0xFFF7F3EC),
           onTap: _onItemTapped,
         ),
       ),
@@ -170,7 +170,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAF8),
+      backgroundColor: const Color(0xFFF7F3EC),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -207,7 +207,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
             MaterialPageRoute(builder: (context) => const VoiceAssistantScreen()),
           );
         },
-        backgroundColor: const Color(0xFF2E7D32),
+        backgroundColor: const Color(0xFF5A9E36),
         icon: const Icon(Iconsax.microphone, color: Colors.white),
         label: Text(
           'AI Voice',
@@ -230,7 +230,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.7),
+            color: const Color(0xFFF7F3EC).withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             boxShadow: [
@@ -250,7 +250,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
+                        colors: [Color(0xFF2D6A1F), Color(0xFF1B5E20)],
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -267,9 +267,9 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       Text(
                         'Agrosetu',
                         style: GoogleFonts.poppins(
-                          fontSize: 20,
+                          fontSize: 26,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF1B5E20),
+                          color: const Color(0xFF2D6A1F),
                           letterSpacing: -0.5,
                         ),
                       ),
@@ -278,7 +278,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                         style: GoogleFonts.poppins(
                           fontSize: 10,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF2E7D32).withValues(alpha: 0.7),
+                          color: const Color(0xFF2D6A1F).withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -327,7 +327,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFFF7F3EC),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -337,7 +337,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                 ),
               ],
             ),
-            child: Icon(icon, size: 20, color: const Color(0xFF2E7D32)),
+            child: Icon(icon, size: 20, color: const Color(0xFF5A9E36)),
           ),
           if (hasBadge)
             Positioned(
@@ -377,7 +377,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color(0xFFF7F3EC),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -415,20 +415,20 @@ class _HomeDashboardState extends State<HomeDashboard> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE8F5E9),
+                        color: const Color(0xFF2D6A1F).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.stars, color: Color(0xFF2E7D32), size: 14),
+                          const Icon(Icons.stars, color: Color(0xFF2D6A1F), size: 14),
                           const SizedBox(width: 6),
                           Text(
                             'Gold Level Farmer',
                             style: GoogleFonts.poppins(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1B5E20),
+                              color: const Color(0xFF2D6A1F),
                             ),
                           ),
                         ],
@@ -446,8 +446,8 @@ class _HomeDashboardState extends State<HomeDashboard> {
                     child: CircularProgressIndicator(
                       value: 0.75,
                       strokeWidth: 8,
-                      backgroundColor: Colors.grey.shade100,
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2E7D32)),
+                      backgroundColor: Colors.grey.shade200,
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFD4831A)),
                     ),
                   ),
                   Column(
@@ -457,7 +457,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1B5E20),
+                          color: const Color(0xFFD4831A),
                         ),
                       ),
                       Text(
@@ -496,19 +496,11 @@ class _HomeDashboardState extends State<HomeDashboard> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF2E7D32),
-            const Color(0xFF1B5E20),
-            const Color(0xFF0D2D0F),
-          ],
-        ),
+        color: const Color(0xFFF7F3EC),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1B5E20).withValues(alpha: 0.3),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -521,7 +513,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
             top: -20,
             child: Opacity(
               opacity: 0.1,
-              child: Icon(Icons.cloud, size: 200, color: Colors.white),
+              child: Icon(Icons.cloud, size: 200, color: Color(0xFF3A7FC1)),
             ),
           ),
           Column(
@@ -535,12 +527,12 @@ class _HomeDashboardState extends State<HomeDashboard> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Iconsax.location5, color: Colors.white, size: 16),
+                          const Icon(Iconsax.location5, color: Colors.black87, size: 16),
                           const SizedBox(width: 6),
                           Text(
                             _weatherData?['location'] ?? 'Kathmandu',
                             style: GoogleFonts.poppins(
-                              color: Colors.white,
+                              color: Colors.black87,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
@@ -551,7 +543,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       Text(
                         'Monday, 12 Oct',
                         style: GoogleFonts.poppins(
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: Colors.grey.shade600,
                           fontSize: 12,
                         ),
                       ),
@@ -562,10 +554,10 @@ class _HomeDashboardState extends State<HomeDashboard> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: const Color(0xFF3A7FC1).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Iconsax.arrow_right_3, color: Colors.white, size: 16),
+                      child: const Icon(Iconsax.arrow_right_3, color: Color(0xFF3A7FC1), size: 16),
                     ),
                   ),
                 ],
@@ -577,7 +569,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                   Text(
                     '${_weatherData?['temperature'] ?? 22}°',
                     style: GoogleFonts.poppins(
-                      color: Colors.white,
+                      color: const Color(0xFF3A7FC1),
                       fontSize: 64,
                       fontWeight: FontWeight.bold,
                       letterSpacing: -2,
@@ -590,7 +582,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       Text(
                         _weatherData?['condition'] ?? 'Mostly Sunny',
                         style: GoogleFonts.poppins(
-                          color: Colors.white,
+                          color: Colors.black87,
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                         ),
@@ -598,7 +590,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       Text(
                         'H:28° L:16°',
                         style: GoogleFonts.poppins(
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: const Color(0xFF3A7FC1),
                           fontSize: 14,
                         ),
                       ),
@@ -628,20 +620,20 @@ class _HomeDashboardState extends State<HomeDashboard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color: const Color(0xFF3A7FC1).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
-          Icon(icon, color: Colors.white, size: 20),
+          Icon(icon, color: const Color(0xFF3A7FC1), size: 20),
           const SizedBox(height: 4),
           Text(
             value,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+            style: GoogleFonts.poppins(color: const Color(0xFF3A7FC1), fontSize: 12, fontWeight: FontWeight.bold),
           ),
           Text(
             label,
-            style: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.6), fontSize: 9),
+            style: GoogleFonts.poppins(color: Colors.grey.shade600, fontSize: 9),
           ),
         ],
       ),
@@ -661,7 +653,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1B5E20),
+                color: const Color(0xFF2D6A1F),
               ),
             ),
             TextButton(
@@ -674,7 +666,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF2E7D32),
+                  color: const Color(0xFF5A9E36),
                 ),
               ),
             ),
@@ -684,7 +676,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color(0xFFF7F3EC),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -740,15 +732,15 @@ class _HomeDashboardState extends State<HomeDashboard> {
     switch (type) {
       case 'voice':
         icon = Iconsax.microphone;
-        color = Colors.blue;
+        color = const Color(0xFF5A9E36);
         break;
       case 'market':
         icon = Iconsax.chart_2;
-        color = const Color(0xFF2E7D32);
+        color = const Color(0xFFD4831A);
         break;
       case 'disease':
         icon = Iconsax.camera;
-        color = Colors.orange;
+        color = const Color(0xFFC85A28);
         break;
       default:
         icon = Iconsax.activity;
@@ -796,7 +788,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF1B5E20),
+                          color: const Color(0xFF2D6A1F),
                         ),
                       ),
                       Text(
@@ -841,7 +833,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D2D0F),
+        color: const Color(0xFFF7F3EC),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -862,10 +854,10 @@ class _HomeDashboardState extends State<HomeDashboard> {
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: const Color(0xFF2D6A1F),
                 ),
               ),
-              const Icon(Iconsax.trend_up, color: Color(0xFF4CAF50), size: 18),
+              const Icon(Iconsax.trend_up, color: Color(0xFFD4831A), size: 18),
             ],
           ),
           const SizedBox(height: 20),
@@ -880,7 +872,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       'Top: Big Tomato',
                       style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: Colors.grey.shade600,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -889,7 +881,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       style: GoogleFonts.poppins(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: const Color(0xFFD4831A),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -898,7 +890,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF4CAF50),
+                        color: const Color(0xFFD4831A),
                       ),
                     ),
                   ],
@@ -924,13 +916,13 @@ class _HomeDashboardState extends State<HomeDashboard> {
                             FlSpot(5, 6),
                           ],
                           isCurved: true,
-                          color: const Color(0xFF4CAF50),
+                          color: const Color(0xFFD4831A),
                           barWidth: 3,
                           isStrokeCapRound: true,
                           dotData: const FlDotData(show: false),
                           belowBarData: BarAreaData(
                             show: true,
-                            color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+                            color: const Color(0xFFD4831A).withValues(alpha: 0.2),
                           ),
                         ),
                       ],
