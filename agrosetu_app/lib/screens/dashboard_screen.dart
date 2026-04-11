@@ -375,7 +375,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
         
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: const Color(0xFFF7F3EC),
             borderRadius: BorderRadius.circular(24),
@@ -387,7 +387,12 @@ class _HomeDashboardState extends State<HomeDashboard> {
               ),
             ],
           ),
-          child: Row(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            decoration: const BoxDecoration(
+              border: Border(left: BorderSide(color: Color(0xFF5A9E36), width: 6)),
+            ),
+            child: Row(
             children: [
               Expanded(
                 child: Column(
@@ -494,7 +499,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: const Color(0xFFF7F3EC),
         borderRadius: BorderRadius.circular(24),
@@ -506,7 +511,12 @@ class _HomeDashboardState extends State<HomeDashboard> {
           ),
         ],
       ),
-      child: Stack(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          border: Border(left: BorderSide(color: Color(0xFF5A9E36), width: 6)),
+        ),
+        child: Stack(
         children: [
           Positioned(
             right: -20,
@@ -674,7 +684,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
         ),
         const SizedBox(height: 12),
         Container(
-          padding: const EdgeInsets.all(20),
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: const Color(0xFFF7F3EC),
             borderRadius: BorderRadius.circular(24),
@@ -686,7 +696,12 @@ class _HomeDashboardState extends State<HomeDashboard> {
               ),
             ],
           ),
-          child: _recentActivities.isEmpty
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              border: Border(left: BorderSide(color: Color(0xFF5A9E36), width: 6)),
+            ),
+            child: _recentActivities.isEmpty
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 20),
@@ -831,7 +846,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
   Widget _buildMarketPreview() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: const Color(0xFFF7F3EC),
         borderRadius: BorderRadius.circular(24),
@@ -843,7 +858,12 @@ class _HomeDashboardState extends State<HomeDashboard> {
           ),
         ],
       ),
-      child: Column(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          border: Border(left: BorderSide(color: Color(0xFF5A9E36), width: 6)),
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
