@@ -479,6 +479,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
               ),
             ],
           ),
+        ),
         );
       },
     );
@@ -623,6 +624,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
           ),
         ],
       ),
+        ),
     );
   }
 
@@ -721,6 +723,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                     return _buildTimelineItem(activity, isLast);
                   },
                 ),
+        ),
         ),
       ],
     );
@@ -954,6 +957,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
           ),
         ],
       ),
+        ),
     );
   }
 
