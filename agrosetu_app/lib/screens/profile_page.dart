@@ -655,6 +655,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           ElevatedButton(
             onPressed: () async {
+              final navigator = Navigator.of(context);
               Navigator.pop(context); // Close dialog
               
               // Clear all session data
@@ -664,9 +665,9 @@ class _ProfilePageState extends State<ProfilePage> {
               await prefs.remove('auth_token');
               await prefs.remove('is_logged_in');
 
-              // Navigate immediately before widget is disposed
+              // Navigate after async operations using captured navigator
               if (mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
+                navigator.pushAndRemoveUntil(
                   MaterialPageRoute(
                     builder: (context) => const LoginScreen(),
                   ),

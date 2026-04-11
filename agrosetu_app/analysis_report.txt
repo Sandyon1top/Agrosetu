@@ -1,0 +1,17 @@
+Analyzing agrosetu_app...                                       
+
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/community_page.dart:351:41 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/community_page.dart:354:48 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/community_page.dart:362:48 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/community_page.dart:371:46 • use_build_context_synchronously
+warning • The left operand can't be null, so the right operand is never executed • lib/screens/disease_detection_page.dart:95:48 • dead_null_aware_expression
+warning • The left operand can't be null, so the right operand is never executed • lib/screens/disease_detection_page_new.dart:64:48 • dead_null_aware_expression
+warning • The operand can't be 'null', so the condition is always 'false' • lib/screens/disease_detection_page_new.dart:108:17 • unnecessary_null_comparison
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/disease_detection_page_new.dart:121:53 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/login_screen.dart:223:34 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/profile_page.dart:669:30 • use_build_context_synchronously
+warning • Unused import: '../widgets/custom_textfield.dart' • lib/screens/signup_screen.dart:6:8 • unused_import
+   info • Invalid use of a private type in a public API • lib/screens/weather/weather_detail_popup.dart:9:3 • library_private_types_in_public_api
+warning • Unused import: 'package:flutter/foundation.dart' • lib/services/activity_service.dart:1:8 • unused_import
+
+13 issues found. (ran in 2.3s)

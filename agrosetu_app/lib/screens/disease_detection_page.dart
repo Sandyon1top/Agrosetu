@@ -92,7 +92,7 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
 
       // Pass bytes directly to avoid relying on state timing
       // captured.path can be null on web — pass empty string when null
-      await _sendImageToFlask(captured.path ?? '', bytes);
+      await _sendImageToFlask(captured.path, bytes);
     } catch (e) {
       setState(() {
         _isProcessing = false;
@@ -223,7 +223,7 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
         _showErrorSnackBar(_errorMessage ?? 'Failed to detect disease');
       }
     } catch (e) {
-      print('[Disease Detection] Exception: $e');
+      debugPrint('[Disease Detection] Exception: $e');
       setState(() {
         _isProcessing = false;
         _errorMessage = 'Error: $e';

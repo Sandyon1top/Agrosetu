@@ -52,12 +52,12 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setBool('remember_me', true);
       await prefs.setString('remembered_email', _emailController.text.trim());
       await prefs.setString('remembered_password', _passwordController.text.trim());
-      print('[LoginScreen] 💾 Credentials saved locally');
+      debugPrint('[LoginScreen] 💾 Credentials saved locally');
     } else {
       await prefs.setBool('remember_me', false);
       await prefs.remove('remembered_email');
       await prefs.remove('remembered_password');
-      print('[LoginScreen] 🗑️ Credentials cleared from local storage');
+      debugPrint('[LoginScreen] 🗑️ Credentials cleared from local storage');
     }
   }
 
@@ -65,6 +65,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState == null || !_formKey.currentState!.validate()) {
       return;
     }
+
+    // Capture context-dependent objects before any async gaps
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
 
     setState(() => _isLoading = true);
     
@@ -83,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      print('[LoginScreen] Full response: $response');
+      debugPrint('[LoginScreen] Full response: $response');
       
       if (response['status'] == 'ok') {
         try {
@@ -95,9 +99,9 @@ class _LoginScreenState extends State<LoginScreen> {
           final userInfo = backendData['user'] as Map<String, dynamic>?;
           final token = backendData['token'] as String?;
 
-          print('[LoginScreen] backendData: $backendData');
-          print('[LoginScreen] userInfo: $userInfo');
-          print('[LoginScreen] token: $token');
+          debugPrint('[LoginScreen] backendData: $backendData');
+          debugPrint('[LoginScreen] userInfo: $userInfo');
+          debugPrint('[LoginScreen] token: $token');
           
           if (userInfo == null || userInfo['id'] == null) {
             _showErrorDialog('Login Error', 'Invalid user data received from server');
@@ -124,11 +128,11 @@ class _LoginScreenState extends State<LoginScreen> {
             'marketTips': 0,
           };
           
-          print('[LoginScreen] Saving user: ${userToSave['name']}');
+          debugPrint('[LoginScreen] Saving user: ${userToSave['name']}');
           await UserService.saveUser(userToSave);
           
           final savedUser = await UserService.getUser();
-          print('[LoginScreen] ✅ Saved user verified: ${savedUser?['name']}, token exists: ${savedUser?['token'] != null}');
+          debugPrint('[LoginScreen] ✅ Saved user verified: ${savedUser?['name']}, token exists: ${savedUser?['token'] != null}');
 
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -157,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
           }
           
         } catch (dataError) {
-          print('[LoginScreen] ❌ Error processing user data: $dataError');
+          debugPrint('[LoginScreen] ❌ Error processing user data: $dataError');
           _showErrorDialog('Data Error', 'Failed to process login response: $dataError');
         }
 
@@ -204,7 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
     } on SocketException {
-      // OFFLINE LOGIN FALLBACK
+      // OFFLINE LOGIN FALLBACK (uses messenger/navigator captured at top of _login)
       try {
         final prefs = await SharedPreferences.getInstance();
         final savedEmail = prefs.getString('offline_email');
@@ -220,7 +224,7 @@ class _LoginScreenState extends State<LoginScreen> {
           if (savedUser != null) {
             // Treat as successful login
             setState(() => _isLoading = false);
-            ScaffoldMessenger.of(context).showSnackBar(
+            messenger.showSnackBar(
               const SnackBar(
                 content: Text('Offline Login Successful 🌱'),
                 backgroundColor: Colors.orange,
@@ -229,8 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
             
             await Future.delayed(const Duration(milliseconds: 800));
             if (mounted) {
-              Navigator.pushReplacement(
-                context,
+              navigator.pushReplacement(
                 MaterialPageRoute(builder: (context) => const DashboardScreen()),
               );
             }
@@ -238,14 +241,14 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         }
       } catch (e) {
-        print("Offline logic fallback failed: $e");
+        debugPrint("Offline logic fallback failed: $e");
       }
       
       setState(() => _isLoading = false);
       _showErrorDialog('Network Error', 'No internet connection and no offline profile found. Please check your connection.');
     } catch (e) {
       setState(() => _isLoading = false);
-      print('Login error: $e');
+      debugPrint('Login error: $e');
       _showErrorDialog('Error', 'An unexpected error occurred: $e');
     }
   }

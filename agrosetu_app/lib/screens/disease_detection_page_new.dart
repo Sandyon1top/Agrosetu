@@ -61,7 +61,7 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
 
       // Pass bytes directly to avoid relying on state timing
       // captured.path can be null on web — pass empty string when null
-      await _sendImageToFlask(captured.path ?? '', bytes);
+      await _sendImageToFlask(captured.path, bytes);
     } catch (e) {
       setState(() {
         _isProcessing = false;
@@ -77,7 +77,7 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
             defaultTargetPlatform == TargetPlatform.macOS);
 
     try {
-      Uint8List? bytes;
+      late Uint8List bytes;
       String? imagePath;
 
       if (isDesktopOrWeb) {
@@ -88,13 +88,14 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
         );
         if (result == null || result.files.isEmpty) return;
         final file = result.files.first;
-        bytes = file.bytes;
+        final fileBytes = file.bytes;
         // On web `file.path` may be null or throw; use bytes on web and avoid accessing path
         imagePath = kIsWeb ? null : file.path;
-        if (bytes == null) {
+        if (fileBytes == null) {
           _showErrorSnackBar('Selected file cannot be read');
           return;
         }
+        bytes = fileBytes;
       } else {
         final ImagePicker picker = ImagePicker();
         final XFile? picked =
@@ -105,11 +106,6 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
         imagePath = picked.path;
       }
 
-      if (bytes == null) {
-        _showErrorSnackBar('Could not read selected image');
-        return;
-      }
-
       setState(() {
         _selectedImage = bytes;
         _isProcessing = true;
@@ -118,7 +114,7 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
 
       // CRITICAL: Pass bytes directly - don't rely on state which hasn't updated yet
       // file.path may be null on web — pass empty string when null
-      await _sendImageToFlask(imagePath ?? '', bytes!);
+      await _sendImageToFlask(imagePath ?? '', bytes);
     } catch (e) {
       setState(() {
         _isProcessing = false;
@@ -132,23 +128,23 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
       // On web, we have bytes; on mobile, we have file path
       final bool isWeb = kIsWeb;
       
-      print('[Disease Detection] Sending image to Flask (isWeb=$isWeb)');
-      print('[Disease Detection] Image path: $imagePath');
-      print('[Disease Detection] Image bytes: ${bytes.length}');
+      debugPrint('[Disease Detection] Sending image to Flask (isWeb=$isWeb)');
+      debugPrint('[Disease Detection] Image path: $imagePath');
+      debugPrint('[Disease Detection] Image bytes: ${bytes.length}');
       
       late Map<String, dynamic> result;
       
       if (isWeb) {
         // Web: use bytes directly (parameter)
-        print('[Disease Detection] Using bytes method for web (${bytes.length} bytes)');
+        debugPrint('[Disease Detection] Using bytes method for web (${bytes.length} bytes)');
         result = await ApiService.predictDiseaseFromImageBytes(bytes);
       } else {
         // Mobile/Desktop: use file path
-        print('[Disease Detection] Using file path method for mobile: $imagePath');
+        debugPrint('[Disease Detection] Using file path method for mobile: $imagePath');
         result = await ApiService.predictDiseaseFromImage(imagePath);
       }
 
-      print('[Disease Detection] Result: $result');
+      debugPrint('[Disease Detection] Result: $result');
 
       if (result['status'] == 'ok') {
         setState(() {
@@ -177,7 +173,7 @@ class _DiseaseDetectionPageNewState extends State<DiseaseDetectionPageNew> {
         _showErrorSnackBar(_errorMessage ?? 'Failed to detect disease');
       }
     } catch (e) {
-      print('[Disease Detection] Exception: $e');
+      debugPrint('[Disease Detection] Exception: $e');
       setState(() {
         _isProcessing = false;
         _errorMessage = 'Error: $e';

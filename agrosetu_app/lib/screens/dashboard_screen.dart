@@ -4,6 +4,7 @@ import 'package:agrosetu_app/screens/market_analytics_page.dart';
 import 'package:agrosetu_app/screens/community_page.dart';
 import 'package:agrosetu_app/screens/profile_page.dart';
 import 'package:agrosetu_app/screens/notifications_page.dart';
+import 'package:agrosetu_app/screens/voice_assistant_screen.dart';
 import 'package:agrosetu_app/services/weather_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -187,7 +188,6 @@ class _HomeDashboardState extends State<HomeDashboard> {
               // 3. MODERN WEATHER CARD
               _buildCompactWeatherCard(),
               const SizedBox(height: 24),
-              const SizedBox(height: 24),
               
               // 5. MARKET PREVIEW
               _buildMarketPreview(),
@@ -199,6 +199,24 @@ class _HomeDashboardState extends State<HomeDashboard> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const VoiceAssistantScreen()),
+          );
+        },
+        backgroundColor: const Color(0xFF2E7D32),
+        icon: const Icon(Iconsax.microphone, color: Colors.white),
+        label: Text(
+          'AI Voice',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        elevation: 4,
       ),
     );
   }

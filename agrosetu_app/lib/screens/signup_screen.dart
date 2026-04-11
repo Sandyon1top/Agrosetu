@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 import 'dart:async'; // Added for Timer
 import '../services/api_service.dart';
-import '../widgets/custom_textfield.dart';
 import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {

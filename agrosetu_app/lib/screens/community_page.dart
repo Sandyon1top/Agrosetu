@@ -334,6 +334,8 @@ class _CommunityPageState extends State<CommunityPage> {
                         return;
                       }
 
+                      final navigator = Navigator.of(context);
+                      final messenger = ScaffoldMessenger.of(context);
                       try {
                         final response = await ApiService.createPost(
                           title: titleController.text,
@@ -348,10 +350,10 @@ class _CommunityPageState extends State<CommunityPage> {
 
                         if (response['status'] == 'ok') {
                           if (!mounted) return;
-                          Navigator.pop(context);
+                          navigator.pop();
                           await _fetchPosts();
                           if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             const SnackBar(
                               content: Text('Post created successfully!'),
                               backgroundColor: Colors.green,
@@ -359,7 +361,7 @@ class _CommunityPageState extends State<CommunityPage> {
                           );
                         } else {
                           if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             SnackBar(
                               content: Text(response['message'] ?? 'Failed to create post'),
                               backgroundColor: Colors.red,
@@ -368,7 +370,7 @@ class _CommunityPageState extends State<CommunityPage> {
                         }
                       } catch (e) {
                         if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                           SnackBar(
                             content: Text('Error: $e'),
                             backgroundColor: Colors.red,

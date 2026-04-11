@@ -50,7 +50,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         // Show dev code if available (for testing)
         final devCode = response['data']?['_devCode'];
         if (devCode != null) {
-          print('[ForgotPassword] 🔐 Dev reset code: $devCode');
+          debugPrint('[ForgotPassword] 🔐 Dev reset code: $devCode');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Reset code (dev): $devCode'),
@@ -79,7 +79,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       _showErrorDialog('Error', 'An unexpected error occurred: $e');
-      print('[ForgotPassword] Error: $e');
+      debugPrint('[ForgotPassword] Error: $e');
     }
   }
 

@@ -6,7 +6,7 @@ class WeatherDetailPopup extends StatefulWidget {
   const WeatherDetailPopup({super.key});
 
   @override
-  _WeatherDetailPopupState createState() => _WeatherDetailPopupState();
+  State<WeatherDetailPopup> createState() => _WeatherDetailPopupState();
 }
 
 class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
@@ -35,7 +35,7 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading weather: $e');
+      debugPrint('Error loading weather: $e');
       // 2. Offline Fallback Logic
       final cached = await WeatherService.getCachedWeather();
       setState(() {
