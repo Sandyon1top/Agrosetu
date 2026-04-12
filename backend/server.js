@@ -15,6 +15,19 @@ const path = require("path");
 const upload = multer({ dest: path.join(__dirname, "uploads/") });
 
 const app = express();
+const http = require("http");
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server, { cors: { origin: "*" } });
+
+app.set("io", io);
+
+io.on("connection", (socket) => {
+  console.log("Client connected via WebSocket: ", socket.id);
+  socket.on("join_user_room", (userId) => {
+    socket.join(`user_${userId}`);
+  });
+});
 
 // ====== NEW: EMAIL CONFIGURATION ======
 const transporter = nodemailer.createTransport({
@@ -132,9 +145,10 @@ const Post = mongoose.model("posts", PostSchema);
 
 // ====== NOTIFICATION SCHEMA ======
 const NotificationSchema = new mongoose.Schema({
-  recipientId: mongoose.Schema.Types.ObjectId, // Post Author ID
-  senderName: String, // User who liked/commented
+  recipientId: mongoose.Schema.Types.ObjectId,
+  senderName: String,
   type: String, // 'like' or 'comment'
+  message: String, // Explicit message payload for real-time detailed info
   postTitle: String,
   postId: mongoose.Schema.Types.ObjectId,
   read: { type: Boolean, default: false },
@@ -803,6 +817,42 @@ app.get("/api/community/posts", async (req, res) => {
   }
 });
 
+app.get("/api/community/post-detail/:postId", async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({ status: "error", message: "Invalid ID format" });
+    }
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ status: "error", message: "Post not found" });
+    }
+    
+    res.json({
+      status: "ok",
+      post: {
+        id: post._id,
+        title: post.title,
+        description: post.description,
+        category: post.category,
+        imageUrl: post.imageUrl,
+        author: post.author,
+        likes: post.likes.length,
+        comments: post.comments.length,
+        commentList: post.comments,
+        solved: post.solved,
+        createdAt: post.createdAt,
+        timestamp: getTimeAgo(post.createdAt),
+      }
+    });
+  } catch (error) {
+    console.error("Get Single Post Error:", error);
+    res.status(500).json({ status: "error", message: "Fetch failed" });
+  }
+});
+
 app.post("/api/community/posts", async (req, res) => {
   try {
     const { title, description, category, author, image_data } = req.body;
@@ -820,9 +870,16 @@ app.post("/api/community/posts", async (req, res) => {
 
 app.post("/api/community/posts/:postId/like", async (req, res) => {
   try {
-    const { userId, userName } = req.body;
+    let { userId, userName } = req.body;
     const post = await Post.findById(req.params.postId);
     if (!post) return res.json({ status: "error", message: "Not found" });
+
+    // Fallback: If userName is missing, fetch it from the User collection
+    if (!userName && userId) {
+      const user = await User.findById(userId);
+      if (user) userName = user.name;
+    }
+    if (!userName) userName = "Someone";
 
     const likeIndex = post.likes.indexOf(userId);
     let liked = false;
@@ -830,7 +887,17 @@ app.post("/api/community/posts/:postId/like", async (req, res) => {
       post.likes.push(userId);
       liked = true;
       if (post.author.id.toString() !== userId) {
-        await Notification.create({ recipientId: post.author.id, senderName: userName, type: "like", postTitle: post.title, postId: post._id });
+        const messageStr = `${userName} liked your post "${post.title}"`;
+        const newNotif = await Notification.create({ 
+          recipientId: post.author.id, 
+          senderName: userName, 
+          type: "like", 
+          message: messageStr, 
+          postTitle: post.title, 
+          postId: post._id 
+        });
+        const io = req.app.get("io");
+        if (io) io.to(`user_${post.author.id}`).emit("new_notification", newNotif);
       }
     } else {
       post.likes.splice(likeIndex, 1);
@@ -846,9 +913,19 @@ app.post("/api/community/posts/:postId/like", async (req, res) => {
 
 app.post("/api/community/posts/:postId/comments", async (req, res) => {
   try {
-    const { userId, userName, userEmail, text, image_data } = req.body;
+    let { userId, userName, userEmail, text, image_data } = req.body;
     const post = await Post.findById(req.params.postId);
     if (!post) return res.json({ status: "error", message: "Post not found" });
+
+    // Fallback: If userName is missing, fetch it from the User collection
+    if (!userName && userId) {
+      const user = await User.findById(userId);
+      if (user) {
+        userName = user.name;
+        userEmail = userEmail || user.email;
+      }
+    }
+    if (!userName) userName = "Someone";
 
     const newComment = {
       userId,
@@ -864,7 +941,17 @@ app.post("/api/community/posts/:postId/comments", async (req, res) => {
     await post.save();
 
     if (post.author.id.toString() !== userId) {
-      await Notification.create({ recipientId: post.author.id, senderName: userName, type: "comment", postTitle: post.title, postId: post._id });
+      const messageStr = `${userName} commented on your post "${post.title}"`;
+      const newNotif = await Notification.create({ 
+        recipientId: post.author.id, 
+        senderName: userName, 
+        type: "comment", 
+        message: messageStr, 
+        postTitle: post.title, 
+        postId: post._id 
+      });
+      const io = req.app.get("io");
+      if (io) io.to(`user_${post.author.id}`).emit("new_notification", newNotif);
     }
     res.json({ status: "ok", comment: newComment });
   } catch (error) {
@@ -1236,7 +1323,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, HOST, () => {
+  server.listen(PORT, HOST, () => {
     console.log("=".repeat(50));
     console.log(`🚀 Server running on PORT: ${PORT}`);
     console.log(`🌐 Accessible on: http://${HOST}:${PORT}`);

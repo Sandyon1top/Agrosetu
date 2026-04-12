@@ -60,20 +60,47 @@ class NotificationService {
         final localJson = prefs.getString(_notificationsKey);
         List<dynamic> localList = localJson != null ? jsonDecode(localJson) : [];
 
-        // Simple merge: Add server notifs if ID doesn't exist locally
         for (var sn in serverNotifs) {
-          bool exists = localList.any((ln) => ln['id'] == sn['_id'] || ln['id'] == sn['id']);
-          if (!exists) {
+          final String sId = (sn['_id'] ?? sn['id']).toString();
+          
+          // Find index of existing notification
+          int index = localList.indexWhere((ln) => ln['id'].toString() == sId);
+          
+          if (index == -1) {
+            // New notification - Insert at start
             localList.insert(0, {
-              'id': sn['_id'] ?? sn['id'],
+              'id': sId,
               'title': sn['type'] == 'like' ? 'New Like' : 'New Comment',
               'body': sn['message'],
               'type': sn['type'],
               'read': sn['isRead'] ?? false,
               'timestamp': sn['createdAt'] ?? DateTime.now().toIso8601String(),
+              'postId': sn['postId']?.toString(), // ENSURE STRING
+              'senderName': sn['senderName']?.toString(), // ENSURE STRING
+              'postTitle': sn['postTitle']?.toString(), // ENSURE STRING
             });
+          } else {
+            // Update existing notification with missing fields
+            var ln = localList[index];
+            bool modified = false;
+            
+            if (ln['postId'] == null && sn['postId'] != null) {
+              ln['postId'] = sn['postId'].toString(); // ENSURE STRING
+              modified = true;
+            }
+            if (ln['senderName'] == null && sn['senderName'] != null) {
+              ln['senderName'] = sn['senderName'].toString(); // ENSURE STRING
+              modified = true;
+            }
+            if (ln['postTitle'] == null && sn['postTitle'] != null) {
+              ln['postTitle'] = sn['postTitle'].toString(); // ENSURE STRING
+              modified = true;
+            }
+            
+            if (modified) localList[index] = ln;
           }
         }
+        debugPrint('[NotificationService] Synced ${localList.length} notifications. Latest IDs: ${localList.take(3).map((n) => n['id']).toList()}');
         await prefs.setString(_notificationsKey, jsonEncode(localList));
       }
     } catch (e) {

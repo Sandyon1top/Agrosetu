@@ -311,6 +311,35 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> getPostById(String postId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/community/post-detail/$postId'),
+        headers: getHeaders(),
+      );
+      
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {
+          'status': 'ok',
+          'post': responseData['post'],
+          'message': 'Post fetched successfully',
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': responseData['message'] ?? 'Failed to fetch post',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
   static Future<Map<String, dynamic>> createPost({
     required String title,
     required String description,
@@ -354,6 +383,7 @@ class ApiService {
   static Future<Map<String, dynamic>> likePost({
     required String postId,
     required String userId,
+    required String userName,
   }) async {
     try {
       final response = await http.post(
@@ -361,6 +391,7 @@ class ApiService {
         headers: getHeaders(),
         body: jsonEncode({
           'userId': userId,
+          'userName': userName,
         }),
       );
       

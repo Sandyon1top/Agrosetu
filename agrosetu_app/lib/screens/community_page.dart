@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import '../services/api_service.dart';
 import '../services/user_service.dart';
+import 'post_details_page.dart';
 
 class CommunityPage extends StatefulWidget {
   const CommunityPage({super.key});
@@ -245,10 +246,22 @@ class _CommunityPageState extends State<CommunityPage> {
       itemCount: _discussions.length,
       itemBuilder: (context, index) {
         final discussion = _discussions[index];
-        return _DiscussionCard(
-          discussion: discussion,
-          onRefresh: _fetchPosts,
-          currentUserId: _currentUserId,
+        return InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PostDetailsPage(postId: discussion['id']),
+              ),
+            ).then((_) => _fetchPosts()); // Refresh when coming back
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: _DiscussionCard(
+            discussion: discussion,
+            onRefresh: _fetchPosts,
+            currentUserId: _currentUserId,
+            currentUserName: _currentUser?['name'],
+          ),
         );
       },
     );
@@ -408,11 +421,13 @@ class _DiscussionCard extends StatefulWidget {
   final Map<String, dynamic> discussion;
   final VoidCallback onRefresh;
   final String? currentUserId;
+  final String? currentUserName;
 
   const _DiscussionCard({
     required this.discussion,
     required this.onRefresh,
     this.currentUserId,
+    this.currentUserName,
   });
 
   @override
@@ -611,6 +626,7 @@ class _DiscussionCardState extends State<_DiscussionCard> {
                     await ApiService.likePost(
                       postId: widget.discussion['id'],
                       userId: widget.currentUserId!,
+                      userName: widget.currentUserName ?? 'Someone',
                     );
                   } catch (e) {
                     debugPrint('Error liking post: $e');

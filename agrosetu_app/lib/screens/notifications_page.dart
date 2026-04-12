@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import '../services/notification_service.dart';
 import 'package:intl/intl.dart';
+import 'post_details_page.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -193,86 +194,116 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     itemBuilder: (context, index) {
                       final notif = _notifications[index];
                       final isRead = notif['read'] == true;
+                      final String? type = notif['type'];
+                      final String senderName = notif['senderName'] ?? 'Someone';
+                      final String? postTitle = notif['postTitle'];
 
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isRead
-                                ? Colors.transparent
-                                : const Color(0xFF2E7D32).withValues(alpha: 0.2),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(12),
-                          leading: Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: _getNotificationColor(notif['type'])
-                                  .withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              _getNotificationIcon(notif['type']),
-                              color:
-                                  _getNotificationColor(notif['type']),
-                              size: 24,
-                            ),
-                          ),
-                          title: Text(
-                            notif['title'] ?? 'Notification',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 4),
-                              Text(
-                                notif['body'] ?? '',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
+                      String dynamicTitle = notif['title'] ?? 'Notification';
+                      if (type == 'like') {
+                        dynamicTitle = '$senderName liked your post';
+                      } else if (type == 'comment') {
+                        dynamicTitle = '$senderName commented on your post';
+                      }
+
+                      return InkWell(
+                        onTap: () {
+                          if (notif['id'] != null) _markAsRead(notif['id']);
+                          if (notif['postId'] != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PostDetailsPage(postId: notif['postId']),
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                _formatTime(notif['timestamp'] ?? ''),
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade500,
-                                ),
+                            );
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isRead ? Colors.white : const Color(0xFFF1F8E9),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isRead
+                                  ? Colors.grey.shade200
+                                  : const Color(0xFF2E7D32).withValues(alpha: 0.1),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          trailing: isRead
-                              ? null
-                              : GestureDetector(
-                                  onTap: () => _markAsRead(notif['id']),
-                                  child: Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Color(0xFF2E7D32),
-                                    ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: _getNotificationColor(type).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    _getNotificationIcon(type),
+                                    color: _getNotificationColor(type),
+                                    size: 24,
                                   ),
                                 ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      dynamicTitle,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontWeight: isRead ? FontWeight.w500 : FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    if (postTitle != null) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '"$postTitle"',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                          color: const Color(0xFF2E7D32),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      _formatTime(notif['timestamp'] ?? ''),
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (!isRead)
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  margin: const EdgeInsets.only(top: 4),
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Color(0xFF2E7D32),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       );
                     },
