@@ -34,6 +34,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
   late Animation<double> _pulseAnim;
 
   bool _submitInProgress = false;
+  Timer? _silenceTimer;
 
   @override
   void initState() {
@@ -171,6 +172,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
       _partialText = '';
       _submitInProgress = false;
     });
+    _silenceTimer?.cancel();
     await _speechToText.listen(
       onResult: _onSpeechResult,
       localeId: 'ne_NP',
@@ -185,6 +187,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
   }
 
   Future<void> _stopListening() async {
+    _silenceTimer?.cancel();
     await _speechToText.stop();
     setState(() => _isListening = false);
     if (_recognizedText.isNotEmpty && !_isLoading && !_submitInProgress) {
@@ -199,6 +202,13 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
         _partialText = '';
       } else {
         _partialText = result.recognizedWords;
+      }
+    });
+
+    _silenceTimer?.cancel();
+    _silenceTimer = Timer(const Duration(seconds: 3), () {
+      if (_isListening && mounted) {
+        _stopListening();
       }
     });
   }
@@ -294,6 +304,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
 
   @override
   void dispose() {
+    _silenceTimer?.cancel();
     _animController.dispose();
     _speechToText.stop();
     _audioPlayer.dispose();

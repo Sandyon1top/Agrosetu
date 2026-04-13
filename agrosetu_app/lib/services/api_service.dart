@@ -9,18 +9,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum BackendTarget { localhost, emulator, ngrok, custom }
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:5001';
+  static const String baseUrl = 'http://192.168.101.3:5001';
 
   // NOTE: `flaskBaseUrl` is configurable at runtime so you can switch
   // easily between local, emulator and ngrok when testing on devices.
   // Default (local machine running Flask):
-  static String flaskBaseUrl = 'http://127.0.0.1:8000';
+  static String flaskBaseUrl = 'http://192.168.101.3:8000';
 
   // Helper to change target backend quickly from code:
   static void setBackendTarget(BackendTarget target, {String? ngrokUrl, String? customUrl}) {
     switch (target) {
       case BackendTarget.localhost:
-        flaskBaseUrl = 'http://127.0.0.1:8000';
+        flaskBaseUrl = 'http://192.168.101.3:8000';
         break;
       case BackendTarget.emulator:
         // Android emulator special host mapping
@@ -694,6 +694,47 @@ class ApiService {
         'message': 'Network error: Flask server not running on $flaskBaseUrl',
       };
     } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  // Grad-CAM Visualization API
+  static Future<Map<String, dynamic>> predictVisualization(Uint8List imageBytes) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$flaskBaseUrl/predict/visualize'),
+      );
+      
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image',
+          imageBytes,
+          filename: 'leaf_scan.jpg',
+        ),
+      );
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'status': 'ok',
+          'heatmap_base64': responseData['heatmap_base64'],
+          'model_used': responseData['model_used'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': responseData['message'] ?? 'Visualization failed',
+        };
+      }
+    } catch (e) {
+      debugPrint('[API] Visualization error: $e');
       return {
         'status': 'error',
         'message': 'Error: $e',

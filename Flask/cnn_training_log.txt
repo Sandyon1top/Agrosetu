@@ -1,0 +1,255 @@
+🚀 Starting ROBUST Custom CNN Training (SCRATCH) on mps
+📊 Mode: Manual Loading, No Cheating, 104 Classes
+  Searching in /Users/sandip/All Agrosetu /argo_setu 3/Flask/data/train...
+  Loaded 100107 images for train
+  Searching in /Users/sandip/All Agrosetu /argo_setu 3/Flask/data/valid...
+  Loaded 11452 images for valid
+Epoch 1/25 | Batch 0/1565 | Loss: 4.6675
+Epoch 1/25 | Batch 200/1565 | Loss: 1.8690
+Epoch 1/25 | Batch 400/1565 | Loss: 1.6046
+Epoch 1/25 | Batch 600/1565 | Loss: 1.5057
+Epoch 1/25 | Batch 800/1565 | Loss: 1.4544
+Epoch 1/25 | Batch 1000/1565 | Loss: 1.2107
+Epoch 1/25 | Batch 1200/1565 | Loss: 1.3506
+Epoch 1/25 | Batch 1400/1565 | Loss: 1.1073
+🏁 Epoch 1 Done | Val Acc: 74.55% | Time: 524.8s
+🌟 Best model saved! (74.55%)
+Epoch 2/25 | Batch 0/1565 | Loss: 0.9722
+Epoch 2/25 | Batch 200/1565 | Loss: 1.1107
+Epoch 2/25 | Batch 400/1565 | Loss: 1.1178
+Epoch 2/25 | Batch 600/1565 | Loss: 0.9143
+Epoch 2/25 | Batch 800/1565 | Loss: 1.0466
+Epoch 2/25 | Batch 1000/1565 | Loss: 0.7235
+Epoch 2/25 | Batch 1200/1565 | Loss: 1.0479
+Epoch 2/25 | Batch 1400/1565 | Loss: 0.7999
+🏁 Epoch 2 Done | Val Acc: 78.92% | Time: 513.7s
+🌟 Best model saved! (78.92%)
+Epoch 3/25 | Batch 0/1565 | Loss: 0.6706
+Epoch 3/25 | Batch 200/1565 | Loss: 0.9561
+Epoch 3/25 | Batch 400/1565 | Loss: 0.9349
+Epoch 3/25 | Batch 600/1565 | Loss: 0.7558
+Epoch 3/25 | Batch 800/1565 | Loss: 1.0014
+Epoch 3/25 | Batch 1000/1565 | Loss: 0.8000
+Epoch 3/25 | Batch 1200/1565 | Loss: 0.6944
+Epoch 3/25 | Batch 1400/1565 | Loss: 0.7549
+🏁 Epoch 3 Done | Val Acc: 77.80% | Time: 514.3s
+Epoch 4/25 | Batch 0/1565 | Loss: 0.6432
+Epoch 4/25 | Batch 200/1565 | Loss: 0.5786
+Epoch 4/25 | Batch 400/1565 | Loss: 0.7573
+Epoch 4/25 | Batch 600/1565 | Loss: 0.6048
+Epoch 4/25 | Batch 800/1565 | Loss: 0.7647
+Epoch 4/25 | Batch 1000/1565 | Loss: 0.5634
+Epoch 4/25 | Batch 1200/1565 | Loss: 0.8971
+Epoch 4/25 | Batch 1400/1565 | Loss: 0.7924
+🏁 Epoch 4 Done | Val Acc: 83.18% | Time: 519.7s
+🌟 Best model saved! (83.18%)
+Epoch 5/25 | Batch 0/1565 | Loss: 0.5891
+Epoch 5/25 | Batch 200/1565 | Loss: 0.4294
+Epoch 5/25 | Batch 400/1565 | Loss: 0.5453
+Epoch 5/25 | Batch 600/1565 | Loss: 0.4873
+Epoch 5/25 | Batch 800/1565 | Loss: 0.5597
+Epoch 5/25 | Batch 1000/1565 | Loss: 0.5215
+Epoch 5/25 | Batch 1200/1565 | Loss: 0.8744
+Epoch 5/25 | Batch 1400/1565 | Loss: 0.5179
+🏁 Epoch 5 Done | Val Acc: 85.44% | Time: 519.8s
+🌟 Best model saved! (85.44%)
+Epoch 6/25 | Batch 0/1565 | Loss: 0.4783
+Epoch 6/25 | Batch 200/1565 | Loss: 0.4605
+Epoch 6/25 | Batch 400/1565 | Loss: 0.5725
+Epoch 6/25 | Batch 600/1565 | Loss: 0.6898
+Epoch 6/25 | Batch 800/1565 | Loss: 0.8247
+Epoch 6/25 | Batch 1000/1565 | Loss: 0.7458
+Epoch 6/25 | Batch 1200/1565 | Loss: 0.7594
+Epoch 6/25 | Batch 1400/1565 | Loss: 0.5456
+🏁 Epoch 6 Done | Val Acc: 86.12% | Time: 518.8s
+🌟 Best model saved! (86.12%)
+Epoch 7/25 | Batch 0/1565 | Loss: 0.9130
+Epoch 7/25 | Batch 200/1565 | Loss: 0.9374
+Epoch 7/25 | Batch 400/1565 | Loss: 0.7564
+Epoch 7/25 | Batch 600/1565 | Loss: 0.3756
+Epoch 7/25 | Batch 800/1565 | Loss: 0.6797
+Epoch 7/25 | Batch 1000/1565 | Loss: 0.3379
+Epoch 7/25 | Batch 1200/1565 | Loss: 0.3592
+Epoch 7/25 | Batch 1400/1565 | Loss: 0.4187
+🏁 Epoch 7 Done | Val Acc: 87.42% | Time: 518.4s
+🌟 Best model saved! (87.42%)
+Epoch 8/25 | Batch 0/1565 | Loss: 0.3462
+Epoch 8/25 | Batch 200/1565 | Loss: 0.5372
+Epoch 8/25 | Batch 400/1565 | Loss: 0.6168
+Epoch 8/25 | Batch 600/1565 | Loss: 0.6834
+Epoch 8/25 | Batch 800/1565 | Loss: 0.3925
+Epoch 8/25 | Batch 1000/1565 | Loss: 0.5595
+Epoch 8/25 | Batch 1200/1565 | Loss: 0.5349
+Epoch 8/25 | Batch 1400/1565 | Loss: 0.6502
+🏁 Epoch 8 Done | Val Acc: 88.78% | Time: 518.4s
+🌟 Best model saved! (88.78%)
+Epoch 9/25 | Batch 0/1565 | Loss: 0.4509
+Epoch 9/25 | Batch 200/1565 | Loss: 0.4173
+Epoch 9/25 | Batch 400/1565 | Loss: 0.5284
+Epoch 9/25 | Batch 600/1565 | Loss: 0.6234
+Epoch 9/25 | Batch 800/1565 | Loss: 0.8233
+Epoch 9/25 | Batch 1000/1565 | Loss: 0.6094
+Epoch 9/25 | Batch 1200/1565 | Loss: 0.4471
+Epoch 9/25 | Batch 1400/1565 | Loss: 0.4449
+🏁 Epoch 9 Done | Val Acc: 88.77% | Time: 519.4s
+Epoch 10/25 | Batch 0/1565 | Loss: 0.3519
+Epoch 10/25 | Batch 200/1565 | Loss: 0.6373
+Epoch 10/25 | Batch 400/1565 | Loss: 0.4744
+Epoch 10/25 | Batch 600/1565 | Loss: 0.3458
+Epoch 10/25 | Batch 800/1565 | Loss: 0.6491
+Epoch 10/25 | Batch 1000/1565 | Loss: 0.4803
+Epoch 10/25 | Batch 1200/1565 | Loss: 0.5420
+Epoch 10/25 | Batch 1400/1565 | Loss: 0.3711
+🏁 Epoch 10 Done | Val Acc: 89.16% | Time: 516.5s
+🌟 Best model saved! (89.16%)
+Epoch 11/25 | Batch 0/1565 | Loss: 0.3153
+Epoch 11/25 | Batch 200/1565 | Loss: 0.3255
+Epoch 11/25 | Batch 400/1565 | Loss: 0.2560
+Epoch 11/25 | Batch 600/1565 | Loss: 0.3055
+Epoch 11/25 | Batch 800/1565 | Loss: 0.6067
+Epoch 11/25 | Batch 1000/1565 | Loss: 0.4855
+Epoch 11/25 | Batch 1200/1565 | Loss: 0.4016
+Epoch 11/25 | Batch 1400/1565 | Loss: 0.3331
+🏁 Epoch 11 Done | Val Acc: 89.30% | Time: 517.5s
+🌟 Best model saved! (89.30%)
+Epoch 12/25 | Batch 0/1565 | Loss: 0.4904
+Epoch 12/25 | Batch 200/1565 | Loss: 0.8053
+Epoch 12/25 | Batch 400/1565 | Loss: 0.4785
+Epoch 12/25 | Batch 600/1565 | Loss: 0.7001
+Epoch 12/25 | Batch 800/1565 | Loss: 0.3305
+Epoch 12/25 | Batch 1000/1565 | Loss: 0.5559
+Epoch 12/25 | Batch 1200/1565 | Loss: 0.5713
+Epoch 12/25 | Batch 1400/1565 | Loss: 0.4066
+🏁 Epoch 12 Done | Val Acc: 90.93% | Time: 518.3s
+🌟 Best model saved! (90.93%)
+Epoch 13/25 | Batch 0/1565 | Loss: 0.3662
+Epoch 13/25 | Batch 200/1565 | Loss: 0.3016
+Epoch 13/25 | Batch 400/1565 | Loss: 0.4674
+Epoch 13/25 | Batch 600/1565 | Loss: 0.4508
+Epoch 13/25 | Batch 800/1565 | Loss: 0.3855
+Epoch 13/25 | Batch 1000/1565 | Loss: 0.3285
+Epoch 13/25 | Batch 1200/1565 | Loss: 0.3050
+Epoch 13/25 | Batch 1400/1565 | Loss: 0.3850
+🏁 Epoch 13 Done | Val Acc: 91.34% | Time: 518.5s
+🌟 Best model saved! (91.34%)
+Epoch 14/25 | Batch 0/1565 | Loss: 0.2950
+Epoch 14/25 | Batch 200/1565 | Loss: 0.2522
+Epoch 14/25 | Batch 400/1565 | Loss: 0.3288
+Epoch 14/25 | Batch 600/1565 | Loss: 0.5721
+Epoch 14/25 | Batch 800/1565 | Loss: 0.4957
+Epoch 14/25 | Batch 1000/1565 | Loss: 0.2459
+Epoch 14/25 | Batch 1200/1565 | Loss: 0.3782
+Epoch 14/25 | Batch 1400/1565 | Loss: 0.3352
+🏁 Epoch 14 Done | Val Acc: 91.63% | Time: 517.4s
+🌟 Best model saved! (91.63%)
+Epoch 15/25 | Batch 0/1565 | Loss: 0.3634
+Epoch 15/25 | Batch 200/1565 | Loss: 0.3803
+Epoch 15/25 | Batch 400/1565 | Loss: 0.2407
+Epoch 15/25 | Batch 600/1565 | Loss: 0.3269
+Epoch 15/25 | Batch 800/1565 | Loss: 0.4025
+Epoch 15/25 | Batch 1000/1565 | Loss: 0.4249
+Epoch 15/25 | Batch 1200/1565 | Loss: 0.3496
+Epoch 15/25 | Batch 1400/1565 | Loss: 0.4066
+🏁 Epoch 15 Done | Val Acc: 91.81% | Time: 518.3s
+🌟 Best model saved! (91.81%)
+Epoch 16/25 | Batch 0/1565 | Loss: 0.2311
+Epoch 16/25 | Batch 200/1565 | Loss: 0.3803
+Epoch 16/25 | Batch 400/1565 | Loss: 0.2466
+Epoch 16/25 | Batch 600/1565 | Loss: 0.1787
+Epoch 16/25 | Batch 800/1565 | Loss: 0.4437
+Epoch 16/25 | Batch 1000/1565 | Loss: 0.2857
+Epoch 16/25 | Batch 1200/1565 | Loss: 0.3558
+Epoch 16/25 | Batch 1400/1565 | Loss: 0.4778
+🏁 Epoch 16 Done | Val Acc: 92.22% | Time: 518.4s
+🌟 Best model saved! (92.22%)
+Epoch 17/25 | Batch 0/1565 | Loss: 0.3239
+Epoch 17/25 | Batch 200/1565 | Loss: 0.1289
+Epoch 17/25 | Batch 400/1565 | Loss: 0.3223
+Epoch 17/25 | Batch 600/1565 | Loss: 0.2704
+Epoch 17/25 | Batch 800/1565 | Loss: 0.3959
+Epoch 17/25 | Batch 1000/1565 | Loss: 0.3637
+Epoch 17/25 | Batch 1200/1565 | Loss: 0.2947
+Epoch 17/25 | Batch 1400/1565 | Loss: 0.2607
+🏁 Epoch 17 Done | Val Acc: 92.68% | Time: 518.4s
+🌟 Best model saved! (92.68%)
+Epoch 18/25 | Batch 0/1565 | Loss: 0.3003
+Epoch 18/25 | Batch 200/1565 | Loss: 0.2914
+Epoch 18/25 | Batch 400/1565 | Loss: 0.3741
+Epoch 18/25 | Batch 600/1565 | Loss: 0.2531
+Epoch 18/25 | Batch 800/1565 | Loss: 0.2483
+Epoch 18/25 | Batch 1000/1565 | Loss: 0.2256
+Epoch 18/25 | Batch 1200/1565 | Loss: 0.3569
+Epoch 18/25 | Batch 1400/1565 | Loss: 0.4676
+🏁 Epoch 18 Done | Val Acc: 92.69% | Time: 514.5s
+🌟 Best model saved! (92.69%)
+Epoch 19/25 | Batch 0/1565 | Loss: 0.2576
+Epoch 19/25 | Batch 200/1565 | Loss: 0.3285
+Epoch 19/25 | Batch 400/1565 | Loss: 0.2858
+Epoch 19/25 | Batch 600/1565 | Loss: 0.3791
+Epoch 19/25 | Batch 800/1565 | Loss: 0.1435
+Epoch 19/25 | Batch 1000/1565 | Loss: 0.4569
+Epoch 19/25 | Batch 1200/1565 | Loss: 0.3213
+Epoch 19/25 | Batch 1400/1565 | Loss: 0.3508
+🏁 Epoch 19 Done | Val Acc: 92.90% | Time: 517.7s
+🌟 Best model saved! (92.90%)
+Epoch 20/25 | Batch 0/1565 | Loss: 0.3231
+Epoch 20/25 | Batch 200/1565 | Loss: 0.1841
+Epoch 20/25 | Batch 400/1565 | Loss: 0.3149
+Epoch 20/25 | Batch 600/1565 | Loss: 0.2221
+Epoch 20/25 | Batch 800/1565 | Loss: 0.2699
+Epoch 20/25 | Batch 1000/1565 | Loss: 0.1820
+Epoch 20/25 | Batch 1200/1565 | Loss: 0.1739
+Epoch 20/25 | Batch 1400/1565 | Loss: 0.1776
+🏁 Epoch 20 Done | Val Acc: 93.36% | Time: 517.5s
+🌟 Best model saved! (93.36%)
+Epoch 21/25 | Batch 0/1565 | Loss: 0.3622
+Epoch 21/25 | Batch 200/1565 | Loss: 0.2786
+Epoch 21/25 | Batch 400/1565 | Loss: 0.2238
+Epoch 21/25 | Batch 600/1565 | Loss: 0.1477
+Epoch 21/25 | Batch 800/1565 | Loss: 0.2002
+Epoch 21/25 | Batch 1000/1565 | Loss: 0.1837
+Epoch 21/25 | Batch 1200/1565 | Loss: 0.2700
+Epoch 21/25 | Batch 1400/1565 | Loss: 0.2459
+🏁 Epoch 21 Done | Val Acc: 93.88% | Time: 525.2s
+🌟 Best model saved! (93.88%)
+Epoch 22/25 | Batch 0/1565 | Loss: 0.3749
+Epoch 22/25 | Batch 200/1565 | Loss: 0.2009
+Epoch 22/25 | Batch 400/1565 | Loss: 0.2882
+Epoch 22/25 | Batch 600/1565 | Loss: 0.2143
+Epoch 22/25 | Batch 800/1565 | Loss: 0.2186
+Epoch 22/25 | Batch 1000/1565 | Loss: 0.1902
+Epoch 22/25 | Batch 1200/1565 | Loss: 0.3321
+Epoch 22/25 | Batch 1400/1565 | Loss: 0.2639
+🏁 Epoch 22 Done | Val Acc: 93.93% | Time: 520.3s
+🌟 Best model saved! (93.93%)
+Epoch 23/25 | Batch 0/1565 | Loss: 0.2674
+Epoch 23/25 | Batch 200/1565 | Loss: 0.2766
+Epoch 23/25 | Batch 400/1565 | Loss: 0.3127
+Epoch 23/25 | Batch 600/1565 | Loss: 0.0861
+Epoch 23/25 | Batch 800/1565 | Loss: 0.3329
+Epoch 23/25 | Batch 1000/1565 | Loss: 0.2529
+Epoch 23/25 | Batch 1200/1565 | Loss: 0.2899
+Epoch 23/25 | Batch 1400/1565 | Loss: 0.2996
+🏁 Epoch 23 Done | Val Acc: 94.07% | Time: 517.8s
+🌟 Best model saved! (94.07%)
+Epoch 24/25 | Batch 0/1565 | Loss: 0.1183
+Epoch 24/25 | Batch 200/1565 | Loss: 0.1752
+Epoch 24/25 | Batch 400/1565 | Loss: 0.1974
+Epoch 24/25 | Batch 600/1565 | Loss: 0.1622
+Epoch 24/25 | Batch 800/1565 | Loss: 0.3599
+Epoch 24/25 | Batch 1000/1565 | Loss: 0.2311
+Epoch 24/25 | Batch 1200/1565 | Loss: 0.3719
+Epoch 24/25 | Batch 1400/1565 | Loss: 0.1809
+🏁 Epoch 24 Done | Val Acc: 94.60% | Time: 517.2s
+🌟 Best model saved! (94.60%)
+Epoch 25/25 | Batch 0/1565 | Loss: 0.1650
+Epoch 25/25 | Batch 200/1565 | Loss: 0.2853
+Epoch 25/25 | Batch 400/1565 | Loss: 0.2996
+Epoch 25/25 | Batch 600/1565 | Loss: 0.1597
+Epoch 25/25 | Batch 800/1565 | Loss: 0.0662
+Epoch 25/25 | Batch 1000/1565 | Loss: 0.4737
+Epoch 25/25 | Batch 1200/1565 | Loss: 0.2172
+Epoch 25/25 | Batch 1400/1565 | Loss: 0.3630
+🏁 Epoch 25 Done | Val Acc: 94.91% | Time: 514.5s
+🌟 Best model saved! (94.91%)
+✨ Training Complete! Peak Accuracy: 94.91%
