@@ -1,10 +1,10 @@
-/*import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
+import 'screens/dashboard_screen.dart';
 import 'services/user_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Initialize UserService to load cached user data
   await UserService.initialize();
   runApp(const AgroSetuApp());
 }
@@ -25,8 +25,6 @@ class AgroSetuApp extends StatelessWidget {
         ),
         fontFamily: 'Poppins',
         scaffoldBackgroundColor: Colors.white,
-        
-        // App bar theme (simplified)
         appBarTheme: const AppBarTheme(
           elevation: 0,
           backgroundColor: Colors.white,
@@ -38,8 +36,6 @@ class AgroSetuApp extends StatelessWidget {
             color: Color(0xFF1B5E20),
           ),
         ),
-        
-        // Elevated button theme
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF2E7D32),
@@ -51,49 +47,80 @@ class AgroSetuApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const LoginScreen(), // Start with login for now
+      home: const _SplashRouter(),
     );
   }
-}*/
-
-import 'package:flutter/material.dart';
-import 'screens/homepage_screen.dart'; // Add this import
-
-void main() {
-  runApp(const AgroSetuApp());
 }
 
-class AgroSetuApp extends StatelessWidget {
-  const AgroSetuApp({super.key});
+/// Shows a green splash screen, then routes to Dashboard or Login
+class _SplashRouter extends StatefulWidget {
+  const _SplashRouter();
+
+  @override
+  State<_SplashRouter> createState() => _SplashRouterState();
+}
+
+class _SplashRouterState extends State<_SplashRouter> {
+  @override
+  void initState() {
+    super.initState();
+    _route();
+  }
+
+  Future<void> _route() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    final user = await UserService.getUser();
+    if (!mounted) return;
+    if (user != null && user['token'] != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AgroSetu',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: const Color(0xFF2E7D32),
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          primary: const Color(0xFF2E7D32),
-          secondary: const Color(0xFF4CAF50),
-        ),
-        fontFamily: 'Poppins',
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          elevation: 0,
-          backgroundColor: Colors.white,
-          iconTheme: IconThemeData(color: Color(0xFF1B5E20)),
-          titleTextStyle: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1B5E20),
-          ),
+    return const Scaffold(
+      backgroundColor: Color(0xFF1B5E20),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.park, size: 80, color: Colors.white),
+            SizedBox(height: 16),
+            Text(
+              'AGROSETU',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: 2,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'HAMRO LAGI',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF81C784),
+                letterSpacing: 2,
+              ),
+            ),
+            SizedBox(height: 40),
+            CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+          ],
         ),
       ),
-      // Change this line - start with HomepageScreen instead of LoginScreen
-      home: const HomepageScreen(),
     );
   }
 }
-

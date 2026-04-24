@@ -9,18 +9,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum BackendTarget { localhost, emulator, ngrok, custom }
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.101.3:5001';
+  static const String baseUrl = 'http://10.22.8.50:5001';
 
   // NOTE: `flaskBaseUrl` is configurable at runtime so you can switch
   // easily between local, emulator and ngrok when testing on devices.
   // Default (local machine running Flask):
-  static String flaskBaseUrl = 'http://192.168.101.3:8000';
+  static String flaskBaseUrl = 'http://10.22.8.50:8000';
 
   // Helper to change target backend quickly from code:
   static void setBackendTarget(BackendTarget target, {String? ngrokUrl, String? customUrl}) {
     switch (target) {
       case BackendTarget.localhost:
-        flaskBaseUrl = 'http://192.168.101.3:8000';
+        flaskBaseUrl = 'http://10.22.8.50:8000';
         break;
       case BackendTarget.emulator:
         // Android emulator special host mapping
@@ -89,6 +89,58 @@ class ApiService {
         'status': 'error',
         'message': 'Network error: $e',
       };
+    }
+  }
+
+  // Google Login API
+  static Future<Map<String, dynamic>> googleLogin(String idToken) async {
+    try {
+      debugPrint('[ApiService] Posting Google ID token to $baseUrl/api/auth/google');
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/google'),
+        headers: getHeaders(),
+        body: jsonEncode({'idToken': idToken}),
+      ).timeout(const Duration(seconds: 15));
+
+      try {
+        final responseData = jsonDecode(response.body);
+        if (response.statusCode == 200) {
+          if (responseData['data']?['token'] != null) {
+            await _saveToken(responseData['data']['token']);
+          }
+          return {
+            'status': 'ok',
+            'data': responseData['data'],
+            'message': responseData['message'] ?? 'Google login successful',
+          };
+        } else {
+          return {
+            'status': 'error',
+            'message': responseData['message'] ?? 'Google login failed',
+            'error': responseData,
+          };
+        }
+      } catch (parseError) {
+        debugPrint('[ApiService] Google login JSON Parse Error: $parseError');
+        return {
+          'status': 'error',
+          'message': 'Server error: Invalid response format',
+        };
+      }
+    } on SocketException {
+      return {
+        'status': 'error',
+        'message': 'Network error: Cannot reach backend at $baseUrl. '
+            'Check that your Flask server is running and reachable from your device.',
+      };
+    } on TimeoutException {
+      return {
+        'status': 'error',
+        'message': 'Google login timed out. Backend may be slow or unreachable.',
+      };
+    } catch (e) {
+      debugPrint('[ApiService] Google login error: $e');
+      return {'status': 'error', 'message': 'Network error: $e'};
     }
   }
   
@@ -345,6 +397,7 @@ class ApiService {
     required String description,
     required String category,
     required Map<String, dynamic> author,
+    String? imageData,
   }) async {
     try {
       final response = await http.post(
@@ -355,6 +408,7 @@ class ApiService {
           'description': description,
           'category': category,
           'author': author,
+          'image_data': imageData,
         }),
       );
       
@@ -370,6 +424,35 @@ class ApiService {
         return {
           'status': 'error',
           'message': responseData['message'] ?? 'Failed to create post',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Search users API
+  static Future<Map<String, dynamic>> searchUsers(String query) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/users/search?query=$query'),
+        headers: getHeaders(),
+      );
+      
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {
+          'status': 'ok',
+          'users': responseData['users'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': responseData['message'] ?? 'Failed to search users',
         };
       }
     } catch (e) {

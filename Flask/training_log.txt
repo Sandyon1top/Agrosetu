@@ -1,0 +1,1252 @@
+🚀 Starting EfficientNet-B0 Scratch Training
+📍 Device: mps
+📍 Classes: 104
+  Searching in /Users/sandip/All Agrosetu /argo_setu 3/Flask/data/train...
+  Loaded 100107 images for train
+  Searching in /Users/sandip/All Agrosetu /argo_setu 3/Flask/data/valid...
+  Loaded 11452 images for valid
+  Batch 100/3129 | Loss: 4.2204
+  Batch 200/3129 | Loss: 3.3706
+  Batch 300/3129 | Loss: 2.9722
+  Batch 400/3129 | Loss: 2.8267
+  Batch 500/3129 | Loss: 2.4127
+  Batch 600/3129 | Loss: 2.6738
+  Batch 700/3129 | Loss: 1.9296
+  Batch 800/3129 | Loss: 2.0730
+  Batch 900/3129 | Loss: 2.1561
+  Batch 1000/3129 | Loss: 1.9047
+  Batch 1100/3129 | Loss: 1.6202
+  Batch 1200/3129 | Loss: 1.6129
+  Batch 1300/3129 | Loss: 1.7465
+  Batch 1400/3129 | Loss: 1.6016
+  Batch 1500/3129 | Loss: 1.1193
+  Batch 1600/3129 | Loss: 1.2088
+  Batch 1700/3129 | Loss: 1.3369
+  Batch 1800/3129 | Loss: 1.3774
+  Batch 1900/3129 | Loss: 1.1990
+  Batch 2000/3129 | Loss: 1.3387
+  Batch 2100/3129 | Loss: 1.1009
+  Batch 2200/3129 | Loss: 1.3815
+  Batch 2300/3129 | Loss: 0.9749
+  Batch 2400/3129 | Loss: 1.1571
+  Batch 2500/3129 | Loss: 0.7815
+  Batch 2600/3129 | Loss: 1.3384
+  Batch 2700/3129 | Loss: 0.5815
+  Batch 2800/3129 | Loss: 0.8044
+  Batch 2900/3129 | Loss: 1.6345
+  Batch 3000/3129 | Loss: 1.4545
+  Batch 3100/3129 | Loss: 0.7867
+Epoch 1/80 | 1925.8s
+  Train Loss: 1.8550 | Acc: 47.21%
+  Val Loss  : 0.9861 | Acc: 67.92%
+  ⭐ New Best Accuracy: 67.92% (Saved)
+  Batch 100/3129 | Loss: 0.5243
+  Batch 200/3129 | Loss: 0.4798
+  Batch 300/3129 | Loss: 0.7059
+  Batch 400/3129 | Loss: 0.8328
+  Batch 500/3129 | Loss: 0.8754
+  Batch 600/3129 | Loss: 0.7482
+  Batch 700/3129 | Loss: 1.1790
+  Batch 800/3129 | Loss: 0.6912
+  Batch 900/3129 | Loss: 1.2164
+  Batch 1000/3129 | Loss: 1.2970
+  Batch 1100/3129 | Loss: 0.8759
+  Batch 1200/3129 | Loss: 0.8770
+  Batch 1300/3129 | Loss: 0.5667
+  Batch 1400/3129 | Loss: 0.7579
+  Batch 1500/3129 | Loss: 0.8736
+  Batch 1600/3129 | Loss: 0.7055
+  Batch 1700/3129 | Loss: 1.0114
+  Batch 1800/3129 | Loss: 1.2212
+  Batch 1900/3129 | Loss: 0.9457
+  Batch 2000/3129 | Loss: 0.7852
+  Batch 2100/3129 | Loss: 0.4407
+  Batch 2200/3129 | Loss: 0.7886
+  Batch 2300/3129 | Loss: 0.8559
+  Batch 2400/3129 | Loss: 0.4894
+  Batch 2500/3129 | Loss: 0.5115
+  Batch 2600/3129 | Loss: 0.5744
+  Batch 2700/3129 | Loss: 0.6896
+  Batch 2800/3129 | Loss: 0.6579
+  Batch 2900/3129 | Loss: 0.5122
+  Batch 3000/3129 | Loss: 0.6457
+  Batch 3100/3129 | Loss: 0.6753
+Epoch 2/80 | 1920.8s
+  Train Loss: 0.8130 | Acc: 74.32%
+  Val Loss  : 0.6690 | Acc: 78.62%
+  ⭐ New Best Accuracy: 78.62% (Saved)
+  Batch 100/3129 | Loss: 0.3251
+  Batch 200/3129 | Loss: 0.6518
+  Batch 300/3129 | Loss: 0.7237
+  Batch 400/3129 | Loss: 0.9020
+  Batch 500/3129 | Loss: 0.2567
+  Batch 600/3129 | Loss: 0.8460
+  Batch 700/3129 | Loss: 0.3588
+  Batch 800/3129 | Loss: 0.8770
+  Batch 900/3129 | Loss: 0.7572
+  Batch 1000/3129 | Loss: 0.4503
+  Batch 1100/3129 | Loss: 1.1755
+  Batch 1200/3129 | Loss: 0.6127
+  Batch 1300/3129 | Loss: 0.3093
+  Batch 1400/3129 | Loss: 0.6542
+  Batch 1500/3129 | Loss: 0.7055
+  Batch 1600/3129 | Loss: 0.5007
+  Batch 1700/3129 | Loss: 0.8813
+  Batch 1800/3129 | Loss: 0.5259
+  Batch 1900/3129 | Loss: 0.8470
+  Batch 2000/3129 | Loss: 0.5312
+  Batch 2100/3129 | Loss: 0.4565
+  Batch 2200/3129 | Loss: 0.3683
+  Batch 2300/3129 | Loss: 0.5501
+  Batch 2400/3129 | Loss: 0.4463
+  Batch 2500/3129 | Loss: 0.7665
+  Batch 2600/3129 | Loss: 0.4703
+  Batch 2700/3129 | Loss: 0.3917
+  Batch 2800/3129 | Loss: 0.6496
+  Batch 2900/3129 | Loss: 0.3258
+  Batch 3000/3129 | Loss: 0.5628
+  Batch 3100/3129 | Loss: 0.6189
+Epoch 3/80 | 1920.3s
+  Train Loss: 0.5914 | Acc: 80.88%
+  Val Loss  : 0.4880 | Acc: 83.92%
+  ⭐ New Best Accuracy: 83.92% (Saved)
+  Batch 100/3129 | Loss: 0.5458
+  Batch 200/3129 | Loss: 1.2087
+  Batch 300/3129 | Loss: 0.4863
+  Batch 400/3129 | Loss: 0.5428
+  Batch 500/3129 | Loss: 0.4523
+  Batch 600/3129 | Loss: 0.2992
+  Batch 700/3129 | Loss: 0.4478
+  Batch 800/3129 | Loss: 0.4063
+  Batch 900/3129 | Loss: 0.5440
+  Batch 1000/3129 | Loss: 0.8179
+  Batch 1100/3129 | Loss: 0.7499
+  Batch 1200/3129 | Loss: 0.8274
+  Batch 1300/3129 | Loss: 0.4778
+  Batch 1400/3129 | Loss: 0.3927
+  Batch 1500/3129 | Loss: 0.2347
+  Batch 1600/3129 | Loss: 0.7280
+  Batch 1700/3129 | Loss: 0.7199
+  Batch 1800/3129 | Loss: 0.3910
+  Batch 1900/3129 | Loss: 0.3352
+  Batch 2000/3129 | Loss: 0.7728
+  Batch 2100/3129 | Loss: 0.4431
+  Batch 2200/3129 | Loss: 0.2683
+  Batch 2300/3129 | Loss: 0.4008
+  Batch 2400/3129 | Loss: 0.5659
+  Batch 2500/3129 | Loss: 0.5620
+  Batch 2600/3129 | Loss: 0.3607
+  Batch 2700/3129 | Loss: 0.1545
+  Batch 2800/3129 | Loss: 0.1676
+  Batch 2900/3129 | Loss: 0.7420
+  Batch 3000/3129 | Loss: 0.2247
+  Batch 3100/3129 | Loss: 0.3630
+Epoch 4/80 | 1925.5s
+  Train Loss: 0.4730 | Acc: 84.41%
+  Val Loss  : 0.4267 | Acc: 85.75%
+  ⭐ New Best Accuracy: 85.75% (Saved)
+  Batch 100/3129 | Loss: 0.2604
+  Batch 200/3129 | Loss: 0.4727
+  Batch 300/3129 | Loss: 0.5052
+  Batch 400/3129 | Loss: 0.5255
+  Batch 500/3129 | Loss: 0.1818
+  Batch 600/3129 | Loss: 0.5871
+  Batch 700/3129 | Loss: 0.2558
+  Batch 800/3129 | Loss: 0.2759
+  Batch 900/3129 | Loss: 0.4674
+  Batch 1000/3129 | Loss: 0.5042
+  Batch 1100/3129 | Loss: 0.4252
+  Batch 1200/3129 | Loss: 0.2357
+  Batch 1300/3129 | Loss: 0.1934
+  Batch 1400/3129 | Loss: 0.3300
+  Batch 1500/3129 | Loss: 0.4980
+  Batch 1600/3129 | Loss: 0.5685
+  Batch 1700/3129 | Loss: 0.3997
+  Batch 1800/3129 | Loss: 0.1880
+  Batch 1900/3129 | Loss: 0.5067
+  Batch 2000/3129 | Loss: 0.6026
+  Batch 2100/3129 | Loss: 0.3230
+  Batch 2200/3129 | Loss: 0.2888
+  Batch 2300/3129 | Loss: 0.2124
+  Batch 2400/3129 | Loss: 0.4596
+  Batch 2500/3129 | Loss: 0.2219
+  Batch 2600/3129 | Loss: 0.1953
+  Batch 2700/3129 | Loss: 0.4667
+  Batch 2800/3129 | Loss: 0.2718
+  Batch 2900/3129 | Loss: 0.2946
+  Batch 3000/3129 | Loss: 0.2769
+  Batch 3100/3129 | Loss: 0.2489
+Epoch 5/80 | 1927.6s
+  Train Loss: 0.4055 | Acc: 86.39%
+  Val Loss  : 0.3726 | Acc: 87.41%
+  ⭐ New Best Accuracy: 87.41% (Saved)
+  Batch 100/3129 | Loss: 0.3383
+  Batch 200/3129 | Loss: 0.6377
+  Batch 300/3129 | Loss: 0.6974
+  Batch 400/3129 | Loss: 0.7708
+  Batch 500/3129 | Loss: 0.2700
+  Batch 600/3129 | Loss: 0.1564
+  Batch 700/3129 | Loss: 0.2135
+  Batch 800/3129 | Loss: 0.7428
+  Batch 900/3129 | Loss: 0.2551
+  Batch 1000/3129 | Loss: 0.2831
+  Batch 1100/3129 | Loss: 0.7606
+  Batch 1200/3129 | Loss: 0.8794
+  Batch 1300/3129 | Loss: 0.3346
+  Batch 1400/3129 | Loss: 0.0331
+  Batch 1500/3129 | Loss: 0.1369
+  Batch 1600/3129 | Loss: 0.1446
+  Batch 1700/3129 | Loss: 0.1496
+  Batch 1800/3129 | Loss: 0.4248
+  Batch 1900/3129 | Loss: 0.3553
+  Batch 2000/3129 | Loss: 0.2502
+  Batch 2100/3129 | Loss: 0.3668
+  Batch 2200/3129 | Loss: 0.2649
+  Batch 2300/3129 | Loss: 0.2610
+  Batch 2400/3129 | Loss: 0.4484
+  Batch 2500/3129 | Loss: 0.4152
+  Batch 2600/3129 | Loss: 0.3337
+  Batch 2700/3129 | Loss: 0.1644
+  Batch 2800/3129 | Loss: 0.1286
+  Batch 2900/3129 | Loss: 0.3264
+  Batch 3000/3129 | Loss: 0.5147
+  Batch 3100/3129 | Loss: 0.3210
+Epoch 6/80 | 1918.0s
+  Train Loss: 0.3557 | Acc: 87.83%
+  Val Loss  : 0.2991 | Acc: 89.63%
+  ⭐ New Best Accuracy: 89.63% (Saved)
+  Batch 100/3129 | Loss: 0.1162
+  Batch 200/3129 | Loss: 0.4380
+  Batch 300/3129 | Loss: 0.2776
+  Batch 400/3129 | Loss: 0.3444
+  Batch 500/3129 | Loss: 0.5348
+  Batch 600/3129 | Loss: 0.2855
+  Batch 700/3129 | Loss: 0.1324
+  Batch 800/3129 | Loss: 0.2885
+  Batch 900/3129 | Loss: 0.1161
+  Batch 1000/3129 | Loss: 0.3133
+  Batch 1100/3129 | Loss: 0.4521
+  Batch 1200/3129 | Loss: 0.7502
+  Batch 1300/3129 | Loss: 0.3051
+  Batch 1400/3129 | Loss: 0.2264
+  Batch 1500/3129 | Loss: 0.4641
+  Batch 1600/3129 | Loss: 0.0811
+  Batch 1700/3129 | Loss: 0.4328
+  Batch 1800/3129 | Loss: 0.3226
+  Batch 1900/3129 | Loss: 0.2304
+  Batch 2000/3129 | Loss: 0.2830
+  Batch 2100/3129 | Loss: 0.2028
+  Batch 2200/3129 | Loss: 0.1643
+  Batch 2300/3129 | Loss: 0.2575
+  Batch 2400/3129 | Loss: 0.4849
+  Batch 2500/3129 | Loss: 0.2402
+  Batch 2600/3129 | Loss: 0.2396
+  Batch 2700/3129 | Loss: 0.1533
+  Batch 2800/3129 | Loss: 0.3573
+  Batch 2900/3129 | Loss: 0.2671
+  Batch 3000/3129 | Loss: 0.2486
+  Batch 3100/3129 | Loss: 0.2825
+Epoch 7/80 | 1924.3s
+  Train Loss: 0.3177 | Acc: 89.01%
+  Val Loss  : 0.2946 | Acc: 89.76%
+  ⭐ New Best Accuracy: 89.76% (Saved)
+  Batch 100/3129 | Loss: 0.2830
+  Batch 200/3129 | Loss: 0.2874
+  Batch 300/3129 | Loss: 0.1042
+  Batch 400/3129 | Loss: 0.1874
+  Batch 500/3129 | Loss: 0.2362
+  Batch 600/3129 | Loss: 0.3331
+  Batch 700/3129 | Loss: 0.3205
+  Batch 800/3129 | Loss: 0.2377
+  Batch 900/3129 | Loss: 0.2796
+  Batch 1000/3129 | Loss: 0.3649
+  Batch 1100/3129 | Loss: 0.0569
+  Batch 1200/3129 | Loss: 0.4119
+  Batch 1300/3129 | Loss: 0.2132
+  Batch 1400/3129 | Loss: 0.1967
+  Batch 1500/3129 | Loss: 0.5382
+  Batch 1600/3129 | Loss: 0.5314
+  Batch 1700/3129 | Loss: 0.1632
+  Batch 1800/3129 | Loss: 0.0715
+  Batch 1900/3129 | Loss: 0.4090
+  Batch 2000/3129 | Loss: 0.6585
+  Batch 2100/3129 | Loss: 0.3639
+  Batch 2200/3129 | Loss: 0.1190
+  Batch 2300/3129 | Loss: 0.3261
+  Batch 2400/3129 | Loss: 0.1985
+  Batch 2500/3129 | Loss: 0.2678
+  Batch 2600/3129 | Loss: 0.3428
+  Batch 2700/3129 | Loss: 0.4248
+  Batch 2800/3129 | Loss: 0.1732
+  Batch 2900/3129 | Loss: 0.3522
+  Batch 3000/3129 | Loss: 0.6358
+  Batch 3100/3129 | Loss: 0.4279
+Epoch 8/80 | 1926.4s
+  Train Loss: 0.2902 | Acc: 89.85%
+  Val Loss  : 0.2660 | Acc: 90.14%
+  ⭐ New Best Accuracy: 90.14% (Saved)
+  Batch 100/3129 | Loss: 0.2558
+  Batch 200/3129 | Loss: 0.1105
+  Batch 300/3129 | Loss: 0.1564
+  Batch 400/3129 | Loss: 0.1116
+  Batch 500/3129 | Loss: 0.2065
+  Batch 600/3129 | Loss: 0.1674
+  Batch 700/3129 | Loss: 0.0769
+  Batch 800/3129 | Loss: 0.4843
+  Batch 900/3129 | Loss: 0.0653
+  Batch 1000/3129 | Loss: 0.2193
+  Batch 1100/3129 | Loss: 0.4459
+  Batch 1200/3129 | Loss: 0.1767
+  Batch 1300/3129 | Loss: 0.2259
+  Batch 1400/3129 | Loss: 0.1639
+  Batch 1500/3129 | Loss: 0.2629
+  Batch 1600/3129 | Loss: 0.3355
+  Batch 1700/3129 | Loss: 0.0832
+  Batch 1800/3129 | Loss: 0.0963
+  Batch 1900/3129 | Loss: 0.1103
+  Batch 2000/3129 | Loss: 0.1039
+  Batch 2100/3129 | Loss: 0.4256
+  Batch 2200/3129 | Loss: 0.1691
+  Batch 2300/3129 | Loss: 0.3076
+  Batch 2400/3129 | Loss: 0.4105
+  Batch 2500/3129 | Loss: 0.0271
+  Batch 2600/3129 | Loss: 0.3034
+  Batch 2700/3129 | Loss: 0.2188
+  Batch 2800/3129 | Loss: 0.1409
+  Batch 2900/3129 | Loss: 0.2750
+  Batch 3000/3129 | Loss: 0.2691
+  Batch 3100/3129 | Loss: 0.1672
+Epoch 9/80 | 1924.3s
+  Train Loss: 0.2650 | Acc: 90.64%
+  Val Loss  : 0.2346 | Acc: 91.41%
+  ⭐ New Best Accuracy: 91.41% (Saved)
+  Batch 100/3129 | Loss: 0.3623
+  Batch 200/3129 | Loss: 0.0420
+  Batch 300/3129 | Loss: 0.1727
+  Batch 400/3129 | Loss: 0.2464
+  Batch 500/3129 | Loss: 0.1482
+  Batch 600/3129 | Loss: 0.1502
+  Batch 700/3129 | Loss: 0.1036
+  Batch 800/3129 | Loss: 0.2572
+  Batch 900/3129 | Loss: 0.2980
+  Batch 1000/3129 | Loss: 0.4440
+  Batch 1100/3129 | Loss: 0.1627
+  Batch 1200/3129 | Loss: 0.3802
+  Batch 1300/3129 | Loss: 0.2788
+  Batch 1400/3129 | Loss: 0.3827
+  Batch 1500/3129 | Loss: 0.4236
+  Batch 1600/3129 | Loss: 0.3060
+  Batch 1700/3129 | Loss: 0.2336
+  Batch 1800/3129 | Loss: 0.0637
+  Batch 1900/3129 | Loss: 0.1784
+  Batch 2000/3129 | Loss: 0.2316
+  Batch 2100/3129 | Loss: 0.3101
+  Batch 2200/3129 | Loss: 0.2538
+  Batch 2300/3129 | Loss: 0.1218
+  Batch 2400/3129 | Loss: 0.2698
+  Batch 2500/3129 | Loss: 0.0743
+  Batch 2600/3129 | Loss: 0.1762
+  Batch 2700/3129 | Loss: 0.1978
+  Batch 2800/3129 | Loss: 0.1231
+  Batch 2900/3129 | Loss: 0.2928
+  Batch 3000/3129 | Loss: 0.3423
+  Batch 3100/3129 | Loss: 0.1220
+Epoch 10/80 | 1934.3s
+  Train Loss: 0.2416 | Acc: 91.28%
+  Val Loss  : 0.1951 | Acc: 93.01%
+  ⭐ New Best Accuracy: 93.01% (Saved)
+  Batch 100/3129 | Loss: 0.0841
+  Batch 200/3129 | Loss: 0.7350
+  Batch 300/3129 | Loss: 0.1715
+  Batch 400/3129 | Loss: 0.1597
+  Batch 500/3129 | Loss: 0.4310
+  Batch 600/3129 | Loss: 0.1909
+  Batch 700/3129 | Loss: 0.1171
+  Batch 800/3129 | Loss: 0.3575
+  Batch 900/3129 | Loss: 0.1959
+  Batch 1000/3129 | Loss: 0.1221
+  Batch 1100/3129 | Loss: 0.0929
+  Batch 1200/3129 | Loss: 0.1079
+  Batch 1300/3129 | Loss: 0.1672
+  Batch 1400/3129 | Loss: 0.0805
+  Batch 1500/3129 | Loss: 0.0694
+  Batch 1600/3129 | Loss: 0.3069
+  Batch 1700/3129 | Loss: 0.2418
+  Batch 1800/3129 | Loss: 0.1853
+  Batch 1900/3129 | Loss: 0.3938
+  Batch 2000/3129 | Loss: 0.3991
+  Batch 2100/3129 | Loss: 0.2437
+  Batch 2200/3129 | Loss: 0.0630
+  Batch 2300/3129 | Loss: 0.1949
+  Batch 2400/3129 | Loss: 0.3038
+  Batch 2500/3129 | Loss: 0.3185
+  Batch 2600/3129 | Loss: 0.0587
+  Batch 2700/3129 | Loss: 0.0930
+  Batch 2800/3129 | Loss: 0.0695
+  Batch 2900/3129 | Loss: 0.0133
+  Batch 3000/3129 | Loss: 0.2710
+  Batch 3100/3129 | Loss: 0.1269
+Epoch 11/80 | 1927.8s
+  Train Loss: 0.2271 | Acc: 91.81%
+  Val Loss  : 0.2353 | Acc: 91.30%
+  Batch 100/3129 | Loss: 0.0094
+  Batch 200/3129 | Loss: 0.0744
+  Batch 300/3129 | Loss: 0.1167
+  Batch 400/3129 | Loss: 0.2629
+  Batch 500/3129 | Loss: 0.6166
+  Batch 600/3129 | Loss: 0.1062
+  Batch 700/3129 | Loss: 0.0268
+  Batch 800/3129 | Loss: 0.1646
+  Batch 900/3129 | Loss: 0.2051
+  Batch 1000/3129 | Loss: 0.1668
+  Batch 1100/3129 | Loss: 0.1342
+  Batch 1200/3129 | Loss: 0.2589
+  Batch 1300/3129 | Loss: 0.4486
+  Batch 1400/3129 | Loss: 0.2758
+  Batch 1500/3129 | Loss: 0.0801
+  Batch 1600/3129 | Loss: 0.2947
+  Batch 1700/3129 | Loss: 0.0877
+  Batch 1800/3129 | Loss: 0.2277
+  Batch 1900/3129 | Loss: 0.3098
+  Batch 2000/3129 | Loss: 0.1774
+  Batch 2100/3129 | Loss: 0.1765
+  Batch 2200/3129 | Loss: 0.0921
+  Batch 2300/3129 | Loss: 0.3671
+  Batch 2400/3129 | Loss: 0.2127
+  Batch 2500/3129 | Loss: 0.2241
+  Batch 2600/3129 | Loss: 0.4201
+  Batch 2700/3129 | Loss: 0.1227
+  Batch 2800/3129 | Loss: 0.0701
+  Batch 2900/3129 | Loss: 0.2474
+  Batch 3000/3129 | Loss: 0.1141
+  Batch 3100/3129 | Loss: 0.2227
+Epoch 12/80 | 1928.9s
+  Train Loss: 0.2097 | Acc: 92.46%
+  Val Loss  : 0.1821 | Acc: 93.05%
+  ⭐ New Best Accuracy: 93.05% (Saved)
+  Batch 100/3129 | Loss: 0.0562
+  Batch 200/3129 | Loss: 0.2721
+  Batch 300/3129 | Loss: 0.1412
+  Batch 400/3129 | Loss: 0.0519
+  Batch 500/3129 | Loss: 0.1257
+  Batch 600/3129 | Loss: 0.0421
+  Batch 700/3129 | Loss: 0.0848
+  Batch 800/3129 | Loss: 0.2984
+  Batch 900/3129 | Loss: 0.1999
+  Batch 1000/3129 | Loss: 0.2334
+  Batch 1100/3129 | Loss: 0.1522
+  Batch 1200/3129 | Loss: 0.1899
+  Batch 1300/3129 | Loss: 0.0977
+  Batch 1400/3129 | Loss: 0.2030
+  Batch 1500/3129 | Loss: 0.2361
+  Batch 1600/3129 | Loss: 0.2458
+  Batch 1700/3129 | Loss: 0.2793
+  Batch 1800/3129 | Loss: 0.0995
+  Batch 1900/3129 | Loss: 0.1624
+  Batch 2000/3129 | Loss: 0.0635
+  Batch 2100/3129 | Loss: 0.6806
+  Batch 2200/3129 | Loss: 0.1657
+  Batch 2300/3129 | Loss: 0.0789
+  Batch 2400/3129 | Loss: 0.0682
+  Batch 2500/3129 | Loss: 0.3358
+  Batch 2600/3129 | Loss: 0.1085
+  Batch 2700/3129 | Loss: 0.0472
+  Batch 2800/3129 | Loss: 0.1721
+  Batch 2900/3129 | Loss: 0.3097
+  Batch 3000/3129 | Loss: 0.1624
+  Batch 3100/3129 | Loss: 0.1803
+Epoch 13/80 | 1931.0s
+  Train Loss: 0.1989 | Acc: 92.80%
+  Val Loss  : 0.1559 | Acc: 94.38%
+  ⭐ New Best Accuracy: 94.38% (Saved)
+  Batch 100/3129 | Loss: 0.2535
+  Batch 200/3129 | Loss: 0.0901
+  Batch 300/3129 | Loss: 0.1544
+  Batch 400/3129 | Loss: 0.0804
+  Batch 500/3129 | Loss: 0.0847
+  Batch 600/3129 | Loss: 0.1828
+  Batch 700/3129 | Loss: 0.1352
+  Batch 800/3129 | Loss: 0.1536
+  Batch 900/3129 | Loss: 0.3222
+  Batch 1000/3129 | Loss: 0.0661
+  Batch 1100/3129 | Loss: 0.1846
+  Batch 1200/3129 | Loss: 0.0904
+  Batch 1300/3129 | Loss: 0.0847
+  Batch 1400/3129 | Loss: 0.1378
+  Batch 1500/3129 | Loss: 0.1485
+  Batch 1600/3129 | Loss: 0.3310
+  Batch 1700/3129 | Loss: 0.3121
+  Batch 1800/3129 | Loss: 0.1439
+  Batch 1900/3129 | Loss: 0.2302
+  Batch 2000/3129 | Loss: 0.0432
+  Batch 2100/3129 | Loss: 0.0456
+  Batch 2200/3129 | Loss: 0.2286
+  Batch 2300/3129 | Loss: 0.1518
+  Batch 2400/3129 | Loss: 0.1759
+  Batch 2500/3129 | Loss: 0.1876
+  Batch 2600/3129 | Loss: 0.4918
+  Batch 2700/3129 | Loss: 0.1567
+  Batch 2800/3129 | Loss: 0.1534
+  Batch 2900/3129 | Loss: 0.1977
+  Batch 3000/3129 | Loss: 0.1165
+  Batch 3100/3129 | Loss: 0.0124
+Epoch 14/80 | 1923.7s
+  Train Loss: 0.1861 | Acc: 93.18%
+  Val Loss  : 0.1792 | Acc: 93.21%
+  Batch 100/3129 | Loss: 0.0900
+  Batch 200/3129 | Loss: 0.1643
+  Batch 300/3129 | Loss: 0.2296
+  Batch 400/3129 | Loss: 0.1054
+  Batch 500/3129 | Loss: 0.4184
+  Batch 600/3129 | Loss: 0.0481
+  Batch 700/3129 | Loss: 0.0985
+  Batch 800/3129 | Loss: 0.1697
+  Batch 900/3129 | Loss: 0.1063
+  Batch 1000/3129 | Loss: 0.2601
+  Batch 1100/3129 | Loss: 0.0264
+  Batch 1200/3129 | Loss: 0.4286
+  Batch 1300/3129 | Loss: 0.1856
+  Batch 1400/3129 | Loss: 0.1197
+  Batch 1500/3129 | Loss: 0.2078
+  Batch 1600/3129 | Loss: 0.3082
+  Batch 1700/3129 | Loss: 0.1781
+  Batch 1800/3129 | Loss: 0.3056
+  Batch 1900/3129 | Loss: 0.1212
+  Batch 2000/3129 | Loss: 0.4683
+  Batch 2100/3129 | Loss: 0.1847
+  Batch 2200/3129 | Loss: 0.0422
+  Batch 2300/3129 | Loss: 0.0789
+  Batch 2400/3129 | Loss: 0.1648
+  Batch 2500/3129 | Loss: 0.0771
+  Batch 2600/3129 | Loss: 0.1347
+  Batch 2700/3129 | Loss: 0.1575
+  Batch 2800/3129 | Loss: 0.0405
+  Batch 2900/3129 | Loss: 0.1703
+  Batch 3000/3129 | Loss: 0.1918
+  Batch 3100/3129 | Loss: 0.2187
+Epoch 15/80 | 1924.3s
+  Train Loss: 0.1753 | Acc: 93.61%
+  Val Loss  : 0.1697 | Acc: 94.08%
+  Batch 100/3129 | Loss: 0.1650
+  Batch 200/3129 | Loss: 0.1142
+  Batch 300/3129 | Loss: 0.1332
+  Batch 400/3129 | Loss: 0.0313
+  Batch 500/3129 | Loss: 0.1197
+  Batch 600/3129 | Loss: 0.1539
+  Batch 700/3129 | Loss: 0.1289
+  Batch 800/3129 | Loss: 0.1261
+  Batch 900/3129 | Loss: 0.2865
+  Batch 1000/3129 | Loss: 0.0576
+  Batch 1100/3129 | Loss: 0.6298
+  Batch 1200/3129 | Loss: 0.2874
+  Batch 1300/3129 | Loss: 0.0968
+  Batch 1400/3129 | Loss: 0.1694
+  Batch 1500/3129 | Loss: 0.3009
+  Batch 1600/3129 | Loss: 0.1152
+  Batch 1700/3129 | Loss: 0.1708
+  Batch 1800/3129 | Loss: 0.1108
+  Batch 1900/3129 | Loss: 0.0537
+  Batch 2000/3129 | Loss: 0.1154
+  Batch 2100/3129 | Loss: 0.1371
+  Batch 2200/3129 | Loss: 0.0803
+  Batch 2300/3129 | Loss: 0.2435
+  Batch 2400/3129 | Loss: 0.2020
+  Batch 2500/3129 | Loss: 0.2006
+  Batch 2600/3129 | Loss: 0.2276
+  Batch 2700/3129 | Loss: 0.0562
+  Batch 2800/3129 | Loss: 0.4714
+  Batch 2900/3129 | Loss: 0.0364
+  Batch 3000/3129 | Loss: 0.0539
+  Batch 3100/3129 | Loss: 0.2582
+Epoch 16/80 | 1924.6s
+  Train Loss: 0.1671 | Acc: 93.86%
+  Val Loss  : 0.1501 | Acc: 94.32%
+  Batch 100/3129 | Loss: 0.1980
+  Batch 200/3129 | Loss: 0.2962
+  Batch 300/3129 | Loss: 0.1055
+  Batch 400/3129 | Loss: 0.1502
+  Batch 500/3129 | Loss: 0.0286
+  Batch 600/3129 | Loss: 0.1349
+  Batch 700/3129 | Loss: 0.1902
+  Batch 800/3129 | Loss: 0.1218
+  Batch 900/3129 | Loss: 0.1634
+  Batch 1000/3129 | Loss: 0.2144
+  Batch 1100/3129 | Loss: 0.1858
+  Batch 1200/3129 | Loss: 0.1232
+  Batch 1300/3129 | Loss: 0.1015
+  Batch 1400/3129 | Loss: 0.3081
+  Batch 1500/3129 | Loss: 0.5010
+  Batch 1600/3129 | Loss: 0.1675
+  Batch 1700/3129 | Loss: 0.3357
+  Batch 1800/3129 | Loss: 0.0544
+  Batch 1900/3129 | Loss: 0.2474
+  Batch 2000/3129 | Loss: 0.0685
+  Batch 2100/3129 | Loss: 0.1083
+  Batch 2200/3129 | Loss: 0.1607
+  Batch 2300/3129 | Loss: 0.0616
+  Batch 2400/3129 | Loss: 0.1156
+  Batch 2500/3129 | Loss: 0.1504
+  Batch 2600/3129 | Loss: 0.3963
+  Batch 2700/3129 | Loss: 0.2023
+  Batch 2800/3129 | Loss: 0.1013
+  Batch 2900/3129 | Loss: 0.2694
+  Batch 3000/3129 | Loss: 0.0993
+  Batch 3100/3129 | Loss: 0.2196
+Epoch 17/80 | 1927.7s
+  Train Loss: 0.1590 | Acc: 94.17%
+  Val Loss  : 0.1684 | Acc: 93.78%
+  Batch 100/3129 | Loss: 0.1137
+  Batch 200/3129 | Loss: 0.0271
+  Batch 300/3129 | Loss: 0.0929
+  Batch 400/3129 | Loss: 0.0458
+  Batch 500/3129 | Loss: 0.1878
+  Batch 600/3129 | Loss: 0.0727
+  Batch 700/3129 | Loss: 0.1758
+  Batch 800/3129 | Loss: 0.1304
+  Batch 900/3129 | Loss: 0.0741
+  Batch 1000/3129 | Loss: 0.1097
+  Batch 1100/3129 | Loss: 0.0325
+  Batch 1200/3129 | Loss: 0.0696
+  Batch 1300/3129 | Loss: 0.0856
+  Batch 1400/3129 | Loss: 0.2207
+  Batch 1500/3129 | Loss: 0.1079
+  Batch 1600/3129 | Loss: 0.0499
+  Batch 1700/3129 | Loss: 0.1587
+  Batch 1800/3129 | Loss: 0.0545
+  Batch 1900/3129 | Loss: 0.1784
+  Batch 2000/3129 | Loss: 0.2067
+  Batch 2100/3129 | Loss: 0.0996
+  Batch 2200/3129 | Loss: 0.1914
+  Batch 2300/3129 | Loss: 0.1935
+  Batch 2400/3129 | Loss: 0.2190
+  Batch 2500/3129 | Loss: 0.0481
+  Batch 2600/3129 | Loss: 0.2625
+  Batch 2700/3129 | Loss: 0.1546
+  Batch 2800/3129 | Loss: 0.0826
+  Batch 2900/3129 | Loss: 0.1281
+  Batch 3000/3129 | Loss: 0.0879
+  Batch 3100/3129 | Loss: 0.0433
+Epoch 18/80 | 1928.2s
+  Train Loss: 0.1511 | Acc: 94.43%
+  Val Loss  : 0.1357 | Acc: 94.86%
+  ⭐ New Best Accuracy: 94.86% (Saved)
+  Batch 100/3129 | Loss: 0.0050
+  Batch 200/3129 | Loss: 0.1849
+  Batch 300/3129 | Loss: 0.2244
+  Batch 400/3129 | Loss: 0.1579
+  Batch 500/3129 | Loss: 0.2102
+  Batch 600/3129 | Loss: 0.0220
+  Batch 700/3129 | Loss: 0.0927
+  Batch 800/3129 | Loss: 0.1736
+  Batch 900/3129 | Loss: 0.2868
+  Batch 1000/3129 | Loss: 0.1635
+  Batch 1100/3129 | Loss: 0.1627
+  Batch 1200/3129 | Loss: 0.3303
+  Batch 1300/3129 | Loss: 0.0265
+  Batch 1400/3129 | Loss: 0.0499
+  Batch 1500/3129 | Loss: 0.2436
+  Batch 1600/3129 | Loss: 0.1592
+  Batch 1700/3129 | Loss: 0.0607
+  Batch 1800/3129 | Loss: 0.2339
+  Batch 1900/3129 | Loss: 0.0211
+  Batch 2000/3129 | Loss: 0.0596
+  Batch 2100/3129 | Loss: 0.1061
+  Batch 2200/3129 | Loss: 0.2825
+  Batch 2300/3129 | Loss: 0.1431
+  Batch 2400/3129 | Loss: 0.1811
+  Batch 2500/3129 | Loss: 0.4231
+  Batch 2600/3129 | Loss: 0.0489
+  Batch 2700/3129 | Loss: 0.3062
+  Batch 2800/3129 | Loss: 0.1829
+  Batch 2900/3129 | Loss: 0.1699
+  Batch 3000/3129 | Loss: 0.2315
+  Batch 3100/3129 | Loss: 0.2254
+Epoch 19/80 | 1925.4s
+  Train Loss: 0.1454 | Acc: 94.68%
+  Val Loss  : 0.1159 | Acc: 95.42%
+  ⭐ New Best Accuracy: 95.42% (Saved)
+  Batch 100/3129 | Loss: 0.1938
+  Batch 200/3129 | Loss: 0.2200
+  Batch 300/3129 | Loss: 0.0525
+  Batch 400/3129 | Loss: 0.1277
+  Batch 500/3129 | Loss: 0.2731
+  Batch 600/3129 | Loss: 0.1259
+  Batch 700/3129 | Loss: 0.3580
+  Batch 800/3129 | Loss: 0.0603
+  Batch 900/3129 | Loss: 0.0616
+  Batch 1000/3129 | Loss: 0.1810
+  Batch 1100/3129 | Loss: 0.0789
+  Batch 1200/3129 | Loss: 0.2757
+  Batch 1300/3129 | Loss: 0.2838
+  Batch 1400/3129 | Loss: 0.0746
+  Batch 1500/3129 | Loss: 0.0960
+  Batch 1600/3129 | Loss: 0.2870
+  Batch 1700/3129 | Loss: 0.2199
+  Batch 1800/3129 | Loss: 0.3015
+  Batch 1900/3129 | Loss: 0.0022
+  Batch 2000/3129 | Loss: 0.1825
+  Batch 2100/3129 | Loss: 0.1863
+  Batch 2200/3129 | Loss: 0.1929
+  Batch 2300/3129 | Loss: 0.1571
+  Batch 2400/3129 | Loss: 0.1868
+  Batch 2500/3129 | Loss: 0.1768
+  Batch 2600/3129 | Loss: 0.0938
+  Batch 2700/3129 | Loss: 0.1809
+  Batch 2800/3129 | Loss: 0.1197
+  Batch 2900/3129 | Loss: 0.0833
+  Batch 3000/3129 | Loss: 0.0886
+  Batch 3100/3129 | Loss: 0.0586
+Epoch 20/80 | 1923.5s
+  Train Loss: 0.1393 | Acc: 94.90%
+  Val Loss  : 0.1403 | Acc: 94.66%
+  Batch 100/3129 | Loss: 0.1408
+  Batch 200/3129 | Loss: 0.0550
+  Batch 300/3129 | Loss: 0.0415
+  Batch 400/3129 | Loss: 0.4015
+  Batch 500/3129 | Loss: 0.2224
+  Batch 600/3129 | Loss: 0.1757
+  Batch 700/3129 | Loss: 0.0676
+  Batch 800/3129 | Loss: 0.1328
+  Batch 900/3129 | Loss: 0.0355
+  Batch 1000/3129 | Loss: 0.2087
+  Batch 1100/3129 | Loss: 0.1158
+  Batch 1200/3129 | Loss: 0.0213
+  Batch 1300/3129 | Loss: 0.1510
+  Batch 1400/3129 | Loss: 0.1984
+  Batch 1500/3129 | Loss: 0.1296
+  Batch 1600/3129 | Loss: 0.1594
+  Batch 1700/3129 | Loss: 0.0377
+  Batch 1800/3129 | Loss: 0.0968
+  Batch 1900/3129 | Loss: 0.0598
+  Batch 2000/3129 | Loss: 0.1218
+  Batch 2100/3129 | Loss: 0.1499
+  Batch 2200/3129 | Loss: 0.0579
+  Batch 2300/3129 | Loss: 0.3466
+  Batch 2400/3129 | Loss: 0.4505
+  Batch 2500/3129 | Loss: 0.0176
+  Batch 2600/3129 | Loss: 0.0041
+  Batch 2700/3129 | Loss: 0.2156
+  Batch 2800/3129 | Loss: 0.2132
+  Batch 2900/3129 | Loss: 0.1298
+  Batch 3000/3129 | Loss: 0.2995
+  Batch 3100/3129 | Loss: 0.3405
+Epoch 21/80 | 1922.5s
+  Train Loss: 0.1343 | Acc: 94.95%
+  Val Loss  : 0.1298 | Acc: 95.16%
+  Batch 100/3129 | Loss: 0.1380
+  Batch 200/3129 | Loss: 0.1074
+  Batch 300/3129 | Loss: 0.1476
+  Batch 400/3129 | Loss: 0.0647
+  Batch 500/3129 | Loss: 0.1218
+  Batch 600/3129 | Loss: 0.0837
+  Batch 700/3129 | Loss: 0.2859
+  Batch 800/3129 | Loss: 0.1121
+  Batch 900/3129 | Loss: 0.3003
+  Batch 1000/3129 | Loss: 0.2791
+  Batch 1100/3129 | Loss: 0.0431
+  Batch 1200/3129 | Loss: 0.0791
+  Batch 1300/3129 | Loss: 0.0127
+  Batch 1400/3129 | Loss: 0.3186
+  Batch 1500/3129 | Loss: 0.1132
+  Batch 1600/3129 | Loss: 0.3154
+  Batch 1700/3129 | Loss: 0.0574
+  Batch 1800/3129 | Loss: 0.2176
+  Batch 1900/3129 | Loss: 0.0599
+  Batch 2000/3129 | Loss: 0.0929
+  Batch 2100/3129 | Loss: 0.3886
+  Batch 2200/3129 | Loss: 0.3692
+  Batch 2300/3129 | Loss: 0.1685
+  Batch 2400/3129 | Loss: 0.1483
+  Batch 2500/3129 | Loss: 0.0832
+  Batch 2600/3129 | Loss: 0.1374
+  Batch 2700/3129 | Loss: 0.0873
+  Batch 2800/3129 | Loss: 0.0044
+  Batch 2900/3129 | Loss: 0.0256
+  Batch 3000/3129 | Loss: 0.1213
+  Batch 3100/3129 | Loss: 0.1628
+Epoch 22/80 | 1926.3s
+  Train Loss: 0.1268 | Acc: 95.30%
+  Val Loss  : 0.1005 | Acc: 96.08%
+  ⭐ New Best Accuracy: 96.08% (Saved)
+  Batch 100/3129 | Loss: 0.1920
+  Batch 200/3129 | Loss: 0.2890
+  Batch 300/3129 | Loss: 0.0898
+  Batch 400/3129 | Loss: 0.0148
+  Batch 500/3129 | Loss: 0.0125
+  Batch 600/3129 | Loss: 0.0432
+  Batch 700/3129 | Loss: 0.1214
+  Batch 800/3129 | Loss: 0.1269
+  Batch 900/3129 | Loss: 0.0582
+  Batch 1000/3129 | Loss: 0.1859
+  Batch 1100/3129 | Loss: 0.0216
+  Batch 1200/3129 | Loss: 0.2914
+  Batch 1300/3129 | Loss: 0.0417
+  Batch 1400/3129 | Loss: 0.0358
+  Batch 1500/3129 | Loss: 0.1299
+  Batch 1600/3129 | Loss: 0.1213
+  Batch 1700/3129 | Loss: 0.1663
+  Batch 1800/3129 | Loss: 0.0750
+  Batch 1900/3129 | Loss: 0.3861
+  Batch 2000/3129 | Loss: 0.0514
+  Batch 2100/3129 | Loss: 0.0381
+  Batch 2200/3129 | Loss: 0.1451
+  Batch 2300/3129 | Loss: 0.5086
+  Batch 2400/3129 | Loss: 0.2488
+  Batch 2500/3129 | Loss: 0.1075
+  Batch 2600/3129 | Loss: 0.1618
+  Batch 2700/3129 | Loss: 0.1129
+  Batch 2800/3129 | Loss: 0.0015
+  Batch 2900/3129 | Loss: 0.3074
+  Batch 3000/3129 | Loss: 0.1101
+  Batch 3100/3129 | Loss: 0.0548
+Epoch 23/80 | 1926.5s
+  Train Loss: 0.1264 | Acc: 95.34%
+  Val Loss  : 0.1630 | Acc: 94.41%
+  Batch 100/3129 | Loss: 0.0403
+  Batch 200/3129 | Loss: 0.0531
+  Batch 300/3129 | Loss: 0.2359
+  Batch 400/3129 | Loss: 0.3199
+  Batch 500/3129 | Loss: 0.1180
+  Batch 600/3129 | Loss: 0.0697
+  Batch 700/3129 | Loss: 0.1836
+  Batch 800/3129 | Loss: 0.0565
+  Batch 900/3129 | Loss: 0.0170
+  Batch 1000/3129 | Loss: 0.0751
+  Batch 1100/3129 | Loss: 0.0969
+  Batch 1200/3129 | Loss: 0.1073
+  Batch 1300/3129 | Loss: 0.0784
+  Batch 1400/3129 | Loss: 0.3280
+  Batch 1500/3129 | Loss: 0.1130
+  Batch 1600/3129 | Loss: 0.0631
+  Batch 1700/3129 | Loss: 0.0976
+  Batch 1800/3129 | Loss: 0.0553
+  Batch 1900/3129 | Loss: 0.0233
+  Batch 2000/3129 | Loss: 0.1060
+  Batch 2100/3129 | Loss: 0.0584
+  Batch 2200/3129 | Loss: 0.1748
+  Batch 2300/3129 | Loss: 0.0466
+  Batch 2400/3129 | Loss: 0.1768
+  Batch 2500/3129 | Loss: 0.1683
+  Batch 2600/3129 | Loss: 0.2008
+  Batch 2700/3129 | Loss: 0.0648
+  Batch 2800/3129 | Loss: 0.1718
+  Batch 2900/3129 | Loss: 0.1780
+  Batch 3000/3129 | Loss: 0.0387
+  Batch 3100/3129 | Loss: 0.1817
+Epoch 24/80 | 3388.4s
+  Train Loss: 0.1208 | Acc: 95.56%
+  Val Loss  : 0.0997 | Acc: 96.09%
+  ⭐ New Best Accuracy: 96.09% (Saved)
+  Batch 100/3129 | Loss: 0.0682
+  Batch 200/3129 | Loss: 0.0263
+  Batch 300/3129 | Loss: 0.0385
+  Batch 400/3129 | Loss: 0.0331
+  Batch 500/3129 | Loss: 0.2641
+  Batch 600/3129 | Loss: 0.0602
+  Batch 700/3129 | Loss: 0.0377
+  Batch 800/3129 | Loss: 0.1334
+  Batch 900/3129 | Loss: 0.1231
+  Batch 1000/3129 | Loss: 0.4035
+  Batch 1100/3129 | Loss: 0.0561
+  Batch 1200/3129 | Loss: 0.1451
+  Batch 1300/3129 | Loss: 0.0358
+  Batch 1400/3129 | Loss: 0.0743
+  Batch 1500/3129 | Loss: 0.0881
+  Batch 1600/3129 | Loss: 0.3330
+  Batch 1700/3129 | Loss: 0.1028
+  Batch 1800/3129 | Loss: 0.1379
+  Batch 1900/3129 | Loss: 0.0498
+  Batch 2000/3129 | Loss: 0.2243
+  Batch 2100/3129 | Loss: 0.0489
+  Batch 2200/3129 | Loss: 0.0506
+  Batch 2300/3129 | Loss: 0.1167
+  Batch 2400/3129 | Loss: 0.1090
+  Batch 2500/3129 | Loss: 0.0536
+  Batch 2600/3129 | Loss: 0.0542
+  Batch 2700/3129 | Loss: 0.1384
+  Batch 2800/3129 | Loss: 0.0427
+  Batch 2900/3129 | Loss: 0.0666
+  Batch 3000/3129 | Loss: 0.0497
+  Batch 3100/3129 | Loss: 0.3155
+Epoch 25/80 | 1954.1s
+  Train Loss: 0.1161 | Acc: 95.66%
+  Val Loss  : 0.1201 | Acc: 95.36%
+  Batch 100/3129 | Loss: 0.0318
+  Batch 200/3129 | Loss: 0.1969
+  Batch 300/3129 | Loss: 0.0581
+  Batch 400/3129 | Loss: 0.0448
+  Batch 500/3129 | Loss: 0.0576
+  Batch 600/3129 | Loss: 0.0549
+  Batch 700/3129 | Loss: 0.1105
+  Batch 800/3129 | Loss: 0.0087
+  Batch 900/3129 | Loss: 0.0275
+  Batch 1000/3129 | Loss: 0.2331
+  Batch 1100/3129 | Loss: 0.0311
+  Batch 1200/3129 | Loss: 0.1287
+  Batch 1300/3129 | Loss: 0.1693
+  Batch 1400/3129 | Loss: 0.0598
+  Batch 1500/3129 | Loss: 0.0818
+  Batch 1600/3129 | Loss: 0.0914
+  Batch 1700/3129 | Loss: 0.0507
+  Batch 1800/3129 | Loss: 0.1040
+  Batch 1900/3129 | Loss: 0.0633
+  Batch 2000/3129 | Loss: 0.0718
+  Batch 2100/3129 | Loss: 0.0449
+  Batch 2200/3129 | Loss: 0.1520
+  Batch 2300/3129 | Loss: 0.0640
+  Batch 2400/3129 | Loss: 0.0544
+  Batch 2500/3129 | Loss: 0.1571
+  Batch 2600/3129 | Loss: 0.1481
+  Batch 2700/3129 | Loss: 0.1615
+  Batch 2800/3129 | Loss: 0.2891
+  Batch 2900/3129 | Loss: 0.1025
+  Batch 3000/3129 | Loss: 0.2710
+  Batch 3100/3129 | Loss: 0.2067
+Epoch 26/80 | 1971.2s
+  Train Loss: 0.1107 | Acc: 95.86%
+  Val Loss  : 0.1295 | Acc: 94.98%
+  Batch 100/3129 | Loss: 0.4401
+  Batch 200/3129 | Loss: 0.3658
+  Batch 300/3129 | Loss: 0.2276
+  Batch 400/3129 | Loss: 0.0438
+  Batch 500/3129 | Loss: 0.0579
+  Batch 600/3129 | Loss: 0.0889
+  Batch 700/3129 | Loss: 0.0635
+  Batch 800/3129 | Loss: 0.1339
+  Batch 900/3129 | Loss: 0.1038
+  Batch 1000/3129 | Loss: 0.0290
+  Batch 1100/3129 | Loss: 0.0450
+  Batch 1200/3129 | Loss: 0.0221
+  Batch 1300/3129 | Loss: 0.0247
+  Batch 1400/3129 | Loss: 0.0426
+  Batch 1500/3129 | Loss: 0.0765
+  Batch 1600/3129 | Loss: 0.1323
+  Batch 1700/3129 | Loss: 0.1431
+  Batch 1800/3129 | Loss: 0.0315
+  Batch 1900/3129 | Loss: 0.1645
+  Batch 2000/3129 | Loss: 0.0052
+  Batch 2100/3129 | Loss: 0.0971
+  Batch 2200/3129 | Loss: 0.0156
+  Batch 2300/3129 | Loss: 0.0965
+  Batch 2400/3129 | Loss: 0.0611
+  Batch 2500/3129 | Loss: 0.2161
+  Batch 2600/3129 | Loss: 0.0886
+  Batch 2700/3129 | Loss: 0.0735
+  Batch 2800/3129 | Loss: 0.1093
+  Batch 2900/3129 | Loss: 0.0009
+  Batch 3000/3129 | Loss: 0.0292
+  Batch 3100/3129 | Loss: 0.1019
+Epoch 27/80 | 6048.7s
+  Train Loss: 0.1099 | Acc: 95.86%
+  Val Loss  : 0.1033 | Acc: 96.05%
+  Batch 100/3129 | Loss: 0.0637
+  Batch 200/3129 | Loss: 0.0735
+  Batch 300/3129 | Loss: 0.1490
+  Batch 400/3129 | Loss: 0.2296
+  Batch 500/3129 | Loss: 0.0064
+  Batch 600/3129 | Loss: 0.0504
+  Batch 700/3129 | Loss: 0.0754
+  Batch 800/3129 | Loss: 0.0470
+  Batch 900/3129 | Loss: 0.0652
+  Batch 1000/3129 | Loss: 0.0180
+  Batch 1100/3129 | Loss: 0.2140
+  Batch 1200/3129 | Loss: 0.0431
+  Batch 1300/3129 | Loss: 0.2024
+  Batch 1400/3129 | Loss: 0.0580
+  Batch 1500/3129 | Loss: 0.0301
+  Batch 1600/3129 | Loss: 0.1572
+  Batch 1700/3129 | Loss: 0.3420
+  Batch 1800/3129 | Loss: 0.0809
+  Batch 1900/3129 | Loss: 0.2064
+  Batch 2000/3129 | Loss: 0.3402
+  Batch 2100/3129 | Loss: 0.0735
+  Batch 2200/3129 | Loss: 0.2490
+  Batch 2300/3129 | Loss: 0.0831
+  Batch 2400/3129 | Loss: 0.0536
+  Batch 2500/3129 | Loss: 0.0062
+  Batch 2600/3129 | Loss: 0.0313
+  Batch 2700/3129 | Loss: 0.2262
+  Batch 2800/3129 | Loss: 0.0782
+  Batch 2900/3129 | Loss: 0.0962
+  Batch 3000/3129 | Loss: 0.0961
+  Batch 3100/3129 | Loss: 0.0859
+Epoch 28/80 | 1920.3s
+  Train Loss: 0.1051 | Acc: 96.06%
+  Val Loss  : 0.1007 | Acc: 96.19%
+  ⭐ New Best Accuracy: 96.19% (Saved)
+  Batch 100/3129 | Loss: 0.1069
+  Batch 200/3129 | Loss: 0.0795
+  Batch 300/3129 | Loss: 0.0420
+  Batch 400/3129 | Loss: 0.0163
+  Batch 500/3129 | Loss: 0.0013
+  Batch 600/3129 | Loss: 0.0694
+  Batch 700/3129 | Loss: 0.0590
+  Batch 800/3129 | Loss: 0.1991
+  Batch 900/3129 | Loss: 0.1124
+  Batch 1000/3129 | Loss: 0.2530
+  Batch 1100/3129 | Loss: 0.0632
+  Batch 1200/3129 | Loss: 0.1447
+  Batch 1300/3129 | Loss: 0.0168
+  Batch 1400/3129 | Loss: 0.0119
+  Batch 1500/3129 | Loss: 0.0660
+  Batch 1600/3129 | Loss: 0.0254
+  Batch 1700/3129 | Loss: 0.0443
+  Batch 1800/3129 | Loss: 0.0378
+  Batch 1900/3129 | Loss: 0.1765
+  Batch 2000/3129 | Loss: 0.1919
+  Batch 2100/3129 | Loss: 0.0157
+  Batch 2200/3129 | Loss: 0.0146
+  Batch 2300/3129 | Loss: 0.0524
+  Batch 2400/3129 | Loss: 0.1691
+  Batch 2500/3129 | Loss: 0.2118
+  Batch 2600/3129 | Loss: 0.1195
+  Batch 2700/3129 | Loss: 0.1521
+  Batch 2800/3129 | Loss: 0.0658
+  Batch 2900/3129 | Loss: 0.1490
+  Batch 3000/3129 | Loss: 0.0361
+  Batch 3100/3129 | Loss: 0.1490
+Epoch 29/80 | 1925.1s
+  Train Loss: 0.1053 | Acc: 96.06%
+  Val Loss  : 0.1008 | Acc: 96.06%
+  Batch 100/3129 | Loss: 0.0421
+  Batch 200/3129 | Loss: 0.0064
+  Batch 300/3129 | Loss: 0.2575
+  Batch 400/3129 | Loss: 0.0299
+  Batch 500/3129 | Loss: 0.1324
+  Batch 600/3129 | Loss: 0.0151
+  Batch 700/3129 | Loss: 0.1030
+  Batch 800/3129 | Loss: 0.3093
+  Batch 900/3129 | Loss: 0.1081
+  Batch 1000/3129 | Loss: 0.0091
+  Batch 1100/3129 | Loss: 0.2473
+  Batch 1200/3129 | Loss: 0.0324
+  Batch 1300/3129 | Loss: 0.2284
+  Batch 1400/3129 | Loss: 0.1560
+  Batch 1500/3129 | Loss: 0.2884
+  Batch 1600/3129 | Loss: 0.1063
+  Batch 1700/3129 | Loss: 0.2144
+  Batch 1800/3129 | Loss: 0.1195
+  Batch 1900/3129 | Loss: 0.0761
+  Batch 2000/3129 | Loss: 0.0559
+  Batch 2100/3129 | Loss: 0.0722
+  Batch 2200/3129 | Loss: 0.0404
+  Batch 2300/3129 | Loss: 0.0370
+  Batch 2400/3129 | Loss: 0.0805
+  Batch 2500/3129 | Loss: 0.0121
+  Batch 2600/3129 | Loss: 0.1251
+  Batch 2700/3129 | Loss: 0.1708
+  Batch 2800/3129 | Loss: 0.1514
+  Batch 2900/3129 | Loss: 0.0611
+  Batch 3000/3129 | Loss: 0.0746
+  Batch 3100/3129 | Loss: 0.0375
+Epoch 30/80 | 4182.5s
+  Train Loss: 0.1014 | Acc: 96.17%
+  Val Loss  : 0.0975 | Acc: 96.20%
+  ⭐ New Best Accuracy: 96.20% (Saved)
+  Batch 100/3129 | Loss: 0.0483
+  Batch 200/3129 | Loss: 0.0468
+  Batch 300/3129 | Loss: 0.1767
+  Batch 400/3129 | Loss: 0.0202
+  Batch 500/3129 | Loss: 0.0074
+  Batch 600/3129 | Loss: 0.0909
+  Batch 700/3129 | Loss: 0.0553
+  Batch 800/3129 | Loss: 0.0917
+  Batch 900/3129 | Loss: 0.0063
+  Batch 1000/3129 | Loss: 0.2449
+  Batch 1100/3129 | Loss: 0.1954
+  Batch 1200/3129 | Loss: 0.0320
+  Batch 1300/3129 | Loss: 0.0419
+  Batch 1400/3129 | Loss: 0.0759
+  Batch 1500/3129 | Loss: 0.0189
+  Batch 1600/3129 | Loss: 0.1208
+  Batch 1700/3129 | Loss: 0.1889
+  Batch 1800/3129 | Loss: 0.0563
+  Batch 1900/3129 | Loss: 0.0330
+  Batch 2000/3129 | Loss: 0.2903
+  Batch 2100/3129 | Loss: 0.1111
+  Batch 2200/3129 | Loss: 0.0225
+  Batch 2300/3129 | Loss: 0.1656
+  Batch 2400/3129 | Loss: 0.0496
+  Batch 2500/3129 | Loss: 0.0391
+  Batch 2600/3129 | Loss: 0.0381
+  Batch 2700/3129 | Loss: 0.1160
+  Batch 2800/3129 | Loss: 0.0585
+  Batch 2900/3129 | Loss: 0.1361
+  Batch 3000/3129 | Loss: 0.1121
+  Batch 3100/3129 | Loss: 0.1873
+Epoch 31/80 | 1906.2s
+  Train Loss: 0.0995 | Acc: 96.19%
+  Val Loss  : 0.0805 | Acc: 96.61%
+  ⭐ New Best Accuracy: 96.61% (Saved)
+  Batch 100/3129 | Loss: 0.0257
+  Batch 200/3129 | Loss: 0.3248
+  Batch 300/3129 | Loss: 0.3829
+  Batch 400/3129 | Loss: 0.1107
+  Batch 500/3129 | Loss: 0.0549
+  Batch 600/3129 | Loss: 0.0314
+  Batch 700/3129 | Loss: 0.0553
+  Batch 800/3129 | Loss: 0.4569
+  Batch 900/3129 | Loss: 0.0091
+  Batch 1000/3129 | Loss: 0.0320
+  Batch 1100/3129 | Loss: 0.1631
+  Batch 1200/3129 | Loss: 0.0081
+  Batch 1300/3129 | Loss: 0.1708
+  Batch 1400/3129 | Loss: 0.0756
+  Batch 1500/3129 | Loss: 0.0563
+  Batch 1600/3129 | Loss: 0.0916
+  Batch 1700/3129 | Loss: 0.2708
+  Batch 1800/3129 | Loss: 0.1817
+  Batch 1900/3129 | Loss: 0.2317
+  Batch 2000/3129 | Loss: 0.1149
+  Batch 2100/3129 | Loss: 0.2964
+  Batch 2200/3129 | Loss: 0.0275
+  Batch 2300/3129 | Loss: 0.0484
+  Batch 2400/3129 | Loss: 0.0127
+  Batch 2500/3129 | Loss: 0.0850
+  Batch 2600/3129 | Loss: 0.0059
+  Batch 2700/3129 | Loss: 0.1234
+  Batch 2800/3129 | Loss: 0.0287
+  Batch 2900/3129 | Loss: 0.1789
+  Batch 3000/3129 | Loss: 0.0276
+  Batch 3100/3129 | Loss: 0.1104
+Epoch 32/80 | 1904.0s
+  Train Loss: 0.0962 | Acc: 96.37%
+  Val Loss  : 0.0901 | Acc: 96.32%
+  Batch 100/3129 | Loss: 0.2077
+  Batch 200/3129 | Loss: 0.0732
+  Batch 300/3129 | Loss: 0.2027
+  Batch 400/3129 | Loss: 0.1160
+  Batch 500/3129 | Loss: 0.0309
+  Batch 600/3129 | Loss: 0.0106
+  Batch 700/3129 | Loss: 0.0896
+  Batch 800/3129 | Loss: 0.1226
+  Batch 900/3129 | Loss: 0.0089
+  Batch 1000/3129 | Loss: 0.0546
+  Batch 1100/3129 | Loss: 0.1992
+  Batch 1200/3129 | Loss: 0.1846
+  Batch 1300/3129 | Loss: 0.1035
+  Batch 1400/3129 | Loss: 0.0804
+  Batch 1500/3129 | Loss: 0.1079
+  Batch 1600/3129 | Loss: 0.0859
+  Batch 1700/3129 | Loss: 0.0570
+  Batch 1800/3129 | Loss: 0.0938
+  Batch 1900/3129 | Loss: 0.0019
+  Batch 2000/3129 | Loss: 0.0416
+  Batch 2100/3129 | Loss: 0.1146
+  Batch 2200/3129 | Loss: 0.0140
+  Batch 2300/3129 | Loss: 0.0712
+  Batch 2400/3129 | Loss: 0.1491
+  Batch 2500/3129 | Loss: 0.0132
+  Batch 2600/3129 | Loss: 0.3783
+  Batch 2700/3129 | Loss: 0.1353
+  Batch 2800/3129 | Loss: 0.0596
+  Batch 2900/3129 | Loss: 0.0590
+  Batch 3000/3129 | Loss: 0.0051
+  Batch 3100/3129 | Loss: 0.0855
+Epoch 33/80 | 1904.0s
+  Train Loss: 0.0935 | Acc: 96.44%
+  Val Loss  : 0.1091 | Acc: 95.91%
+  Batch 100/3129 | Loss: 0.0682
+  Batch 200/3129 | Loss: 0.0383
+  Batch 300/3129 | Loss: 0.0186
+  Batch 400/3129 | Loss: 0.0227
+  Batch 500/3129 | Loss: 0.1458
+  Batch 600/3129 | Loss: 0.0243
+  Batch 700/3129 | Loss: 0.0390
+  Batch 800/3129 | Loss: 0.0035
+  Batch 900/3129 | Loss: 0.0183
+  Batch 1000/3129 | Loss: 0.1527
+  Batch 1100/3129 | Loss: 0.0059
+  Batch 1200/3129 | Loss: 0.0121
+  Batch 1300/3129 | Loss: 0.1144
+  Batch 1400/3129 | Loss: 0.1580
+  Batch 1500/3129 | Loss: 0.0633
+  Batch 1600/3129 | Loss: 0.0652
+  Batch 1700/3129 | Loss: 0.1278
+  Batch 1800/3129 | Loss: 0.0271
+  Batch 1900/3129 | Loss: 0.1653
+  Batch 2000/3129 | Loss: 0.0714
+  Batch 2100/3129 | Loss: 0.0480
+  Batch 2200/3129 | Loss: 0.0535
+  Batch 2300/3129 | Loss: 0.0055
+  Batch 2400/3129 | Loss: 0.0433
+  Batch 2500/3129 | Loss: 0.0162
+  Batch 2600/3129 | Loss: 0.1041
+  Batch 2700/3129 | Loss: 0.0453
+  Batch 2800/3129 | Loss: 0.0909
+  Batch 2900/3129 | Loss: 0.0264
+  Batch 3000/3129 | Loss: 0.0164
+  Batch 3100/3129 | Loss: 0.0810
+Epoch 34/80 | 6587.3s
+  Train Loss: 0.0940 | Acc: 96.43%
+  Val Loss  : 0.0974 | Acc: 96.47%
+  Batch 100/3129 | Loss: 0.0071
+  Batch 200/3129 | Loss: 0.1831
+  Batch 300/3129 | Loss: 0.2651
+  Batch 400/3129 | Loss: 0.0710
+  Batch 500/3129 | Loss: 0.0283
+  Batch 600/3129 | Loss: 0.1188
+  Batch 700/3129 | Loss: 0.1423
+  Batch 800/3129 | Loss: 0.0039
+  Batch 900/3129 | Loss: 0.0732
+  Batch 1000/3129 | Loss: 0.1693
+  Batch 1100/3129 | Loss: 0.3813
+  Batch 1200/3129 | Loss: 0.1379
+  Batch 1300/3129 | Loss: 0.2414
+  Batch 1400/3129 | Loss: 0.0639
+  Batch 1500/3129 | Loss: 0.0236
+  Batch 1600/3129 | Loss: 0.0421
+  Batch 1700/3129 | Loss: 0.0131
+  Batch 1800/3129 | Loss: 0.0576
+  Batch 1900/3129 | Loss: 0.1328
+  Batch 2000/3129 | Loss: 0.0847
+  Batch 2100/3129 | Loss: 0.0118
+  Batch 2200/3129 | Loss: 0.0582
+  Batch 2300/3129 | Loss: 0.0569
+  Batch 2400/3129 | Loss: 0.0257
+  Batch 2500/3129 | Loss: 0.0074
+  Batch 2600/3129 | Loss: 0.4047
+  Batch 2700/3129 | Loss: 0.0357
+  Batch 2800/3129 | Loss: 0.2659
+  Batch 2900/3129 | Loss: 0.0418
+  Batch 3000/3129 | Loss: 0.0946
+  Batch 3100/3129 | Loss: 0.2739
+Epoch 35/80 | 1920.5s
+  Train Loss: 0.0932 | Acc: 96.49%
+  Val Loss  : 0.0987 | Acc: 95.78%
+  Batch 100/3129 | Loss: 0.1325
+  Batch 200/3129 | Loss: 0.0285
+  Batch 300/3129 | Loss: 0.0148
+  Batch 400/3129 | Loss: 0.1990
+  Batch 500/3129 | Loss: 0.0964
+  Batch 600/3129 | Loss: 0.0742
+  Batch 700/3129 | Loss: 0.0160
+  Batch 800/3129 | Loss: 0.0879
+  Batch 900/3129 | Loss: 0.0173
+  Batch 1000/3129 | Loss: 0.2372
+  Batch 1100/3129 | Loss: 0.0849
+  Batch 1200/3129 | Loss: 0.1946
+  Batch 1300/3129 | Loss: 0.0281
+  Batch 1400/3129 | Loss: 0.0931
+  Batch 1500/3129 | Loss: 0.2321
+  Batch 1600/3129 | Loss: 0.0956
+  Batch 1700/3129 | Loss: 0.0203
+  Batch 1800/3129 | Loss: 0.1685
+  Batch 1900/3129 | Loss: 0.1594
+  Batch 2000/3129 | Loss: 0.0277
+  Batch 2100/3129 | Loss: 0.0538
+  Batch 2200/3129 | Loss: 0.1217
+  Batch 2300/3129 | Loss: 0.0010
+  Batch 2400/3129 | Loss: 0.0599
+  Batch 2500/3129 | Loss: 0.1234
+  Batch 2600/3129 | Loss: 0.0559
+  Batch 2700/3129 | Loss: 0.0237
+  Batch 2800/3129 | Loss: 0.0236
+  Batch 2900/3129 | Loss: 0.1467
+  Batch 3000/3129 | Loss: 0.0300
+  Batch 3100/3129 | Loss: 0.0984
+Epoch 36/80 | 1922.5s
+  Train Loss: 0.0892 | Acc: 96.61%
+  Val Loss  : 0.1311 | Acc: 95.43%
+  Batch 100/3129 | Loss: 0.2258
+  Batch 200/3129 | Loss: 0.0269

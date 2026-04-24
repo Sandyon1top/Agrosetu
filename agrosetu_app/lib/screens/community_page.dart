@@ -4,6 +4,9 @@ import 'package:iconsax/iconsax.dart';
 import '../services/api_service.dart';
 import '../services/user_service.dart';
 import 'post_details_page.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 
 class CommunityPage extends StatefulWidget {
   const CommunityPage({super.key});
@@ -18,6 +21,12 @@ class _CommunityPageState extends State<CommunityPage> {
   bool _isLoading = true;
   String? _currentUserId;
   Map<String, dynamic>? _currentUser;
+
+  // Search state
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, dynamic>> _searchResults = [];
+  bool _isSearchLoading = false;
 
   final List<String> _categories = ['All', 'Rice', 'Wheat', 'Corn', 'Market', 'General'];
 
@@ -108,6 +117,31 @@ class _CommunityPageState extends State<CommunityPage> {
     );
   }
 
+  Future<void> _performSearch(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _isSearchLoading = false;
+      });
+      return;
+    }
+
+    setState(() => _isSearchLoading = true);
+    
+    try {
+      final response = await ApiService.searchUsers(query);
+      if (response['status'] == 'ok') {
+        setState(() {
+          _searchResults = List<Map<String, dynamic>>.from(response['users']);
+          _isSearchLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Search error: $e');
+      setState(() => _isSearchLoading = false);
+    }
+  }
+
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -121,47 +155,121 @@ class _CommunityPageState extends State<CommunityPage> {
           ],
         ),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Iconsax.message,
-              size: 28,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Farmer Community',
-                  style: GoogleFonts.poppins(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    letterSpacing: 0.3,
+          Row(
+            children: [
+              if (!_isSearching) ...[
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Iconsax.message, size: 24, color: Colors.white),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Farmer Community',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Share knowledge & tips',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Share knowledge & discuss farming tips',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontWeight: FontWeight.w400,
+              ] else ...[
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _performSearch,
+                    autofocus: true,
+                    style: GoogleFonts.poppins(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Search farmers...',
+                      hintStyle: GoogleFonts.poppins(color: Colors.white70),
+                      border: InputBorder.none,
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+                        onPressed: () {
+                          setState(() {
+                            _isSearching = false;
+                            _searchController.clear();
+                            _searchResults = [];
+                          });
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ],
-            ),
+              if (!_isSearching)
+                IconButton(
+                  onPressed: () => setState(() => _isSearching = true),
+                  icon: const Icon(Iconsax.search_normal, color: Colors.white),
+                ),
+            ],
           ),
+          if (_isSearching && (_isSearchLoading || _searchResults.isNotEmpty))
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              constraints: const BoxConstraints(maxHeight: 200),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+              child: _isSearchLoading
+                  ? const Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _searchResults.length,
+                      itemBuilder: (context, index) {
+                        final user = _searchResults[index];
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.green.shade100,
+                            child: Text(user['name'][0].toUpperCase(), style: const TextStyle(color: Colors.green)),
+                          ),
+                          title: Text(user['name'], style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
+                          subtitle: Text(user['email'], style: GoogleFonts.poppins(fontSize: 12)),
+                          onTap: () {
+                            // Can add "View Profile" logic here later
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Profile view for ${user['name']} coming soon!')),
+                            );
+                            setState(() {
+                              _isSearching = false;
+                              _searchController.clear();
+                              _searchResults = [];
+                            });
+                          },
+                        );
+                      },
+                    ),
+            ),
         ],
       ),
     );
@@ -271,144 +379,211 @@ class _CommunityPageState extends State<CommunityPage> {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     String selectedCategory = _categories[_selectedTab == 0 ? 1 : _selectedTab];
+    Uint8List? dialogImageBytes;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Start a Discussion',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1B5E20),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Start a Discussion',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1B5E20),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, size: 20),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: titleController,
-                  decoration: InputDecoration(
-                    hintText: 'Title',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: titleController,
+                    decoration: InputDecoration(
+                      hintText: 'Title',
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      contentPadding: const EdgeInsets.all(16),
                     ),
-                    contentPadding: const EdgeInsets.all(12),
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descriptionController,
-                  decoration: InputDecoration(
-                    hintText: 'What\'s your question or thought?',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descriptionController,
+                    decoration: InputDecoration(
+                      hintText: 'What\'s your question or thought?',
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      contentPadding: const EdgeInsets.all(16),
                     ),
-                    contentPadding: const EdgeInsets.all(12),
+                    maxLines: 3,
                   ),
-                  maxLines: 4,
-                ),
-                const SizedBox(height: 12),
-                DropdownButton<String>(
-                  isExpanded: true,
-                  value: selectedCategory,
-                  items: _categories.skip(1).map((cat) {
-                    return DropdownMenuItem(
-                      value: cat,
-                      child: Text(cat),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    selectedCategory = value ?? 'General';
-                  },
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
+                  const SizedBox(height: 16),
+                  
+                  // Category Dropdown
+                  Row(
+                    children: [
+                      const Icon(Iconsax.category, size: 18, color: Color(0xFF2E7D32)),
+                      const SizedBox(width: 8),
+                      Text('Category:', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          value: selectedCategory,
+                          underline: const SizedBox(),
+                          items: _categories.skip(1).map((cat) {
+                            return DropdownMenuItem(value: cat, child: Text(cat, style: GoogleFonts.poppins(fontSize: 14)));
+                          }).toList(),
+                          onChanged: (value) => setDialogState(() => selectedCategory = value ?? 'General'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  // Image Picker and Preview
+                  if (dialogImageBytes != null)
+                    Stack(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.symmetric(vertical: 12),
+                          height: 180,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            image: DecorationImage(
+                              image: MemoryImage(dialogImageBytes!),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 20,
+                          right: 8,
+                          child: GestureDetector(
+                            onTap: () => setDialogState(() => dialogImageBytes = null),
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                              child: const Icon(Icons.close, size: 16, color: Colors.red),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  
+                  OutlinedButton.icon(
                     onPressed: () async {
-                      if (titleController.text.isEmpty || descriptionController.text.isEmpty) {
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please fill all fields'),
-                            backgroundColor: Colors.orange,
-                          ),
-                        );
-                        return;
-                      }
-
-                      final navigator = Navigator.of(context);
-                      final messenger = ScaffoldMessenger.of(context);
-                      try {
-                        final response = await ApiService.createPost(
-                          title: titleController.text,
-                          description: descriptionController.text,
-                          category: selectedCategory,
-                          author: {
-                            'id': _currentUser?['id'],
-                            'name': _currentUser?['name'],
-                            'email': _currentUser?['email'],
-                          },
-                        );
-
-                        if (response['status'] == 'ok') {
-                          if (!mounted) return;
-                          navigator.pop();
-                          await _fetchPosts();
-                          if (!mounted) return;
-                          messenger.showSnackBar(
-                            const SnackBar(
-                              content: Text('Post created successfully!'),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        } else {
-                          if (!mounted) return;
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(response['message'] ?? 'Failed to create post'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        if (!mounted) return;
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text('Error: $e'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
+                      final picker = ImagePicker();
+                      final image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+                      if (image != null) {
+                        final bytes = await image.readAsBytes();
+                        setDialogState(() => dialogImageBytes = bytes);
                       }
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF2E7D32),
+                      side: const BorderSide(color: Color(0xFF2E7D32)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: Text(
-                      'Post',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                    icon: const Icon(Iconsax.image, size: 20),
+                    label: Text(dialogImageBytes == null ? 'Add Photo' : 'Change Photo'),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (titleController.text.isEmpty || descriptionController.text.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please fill all fields'), backgroundColor: Colors.orange),
+                          );
+                          return;
+                        }
+
+                        final navigator = Navigator.of(context);
+                        final messenger = ScaffoldMessenger.of(context);
+                        try {
+                          final response = await ApiService.createPost(
+                            title: titleController.text,
+                            description: descriptionController.text,
+                            category: selectedCategory,
+                            author: {
+                              'id': _currentUser?['id'],
+                              'name': _currentUser?['name'],
+                              'email': _currentUser?['email'],
+                            },
+                            imageData: dialogImageBytes != null ? base64Encode(dialogImageBytes!) : null,
+                          );
+
+                          if (response['status'] == 'ok') {
+                            navigator.pop();
+                            await _fetchPosts();
+                            messenger.showSnackBar(
+                              const SnackBar(content: Text('Post created successfully!'), backgroundColor: Colors.green),
+                            );
+                          } else {
+                            messenger.showSnackBar(
+                              SnackBar(content: Text(response['message'] ?? 'Failed'), backgroundColor: Colors.red),
+                            );
+                          }
+                        } catch (e) {
+                          messenger.showSnackBar(
+                            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2E7D32),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
                       ),
+                      child: Text('Post Discussion', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -584,6 +759,21 @@ class _DiscussionCardState extends State<_DiscussionCard> {
           ),
           
           const SizedBox(height: 12),
+          
+          // Image Preview (if exists)
+          if (widget.discussion['imageUrl'] != null && widget.discussion['imageUrl'].toString().isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              height: 200,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                image: DecorationImage(
+                  image: MemoryImage(base64Decode(widget.discussion['imageUrl'])),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
           
           // Stats
           Row(

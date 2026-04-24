@@ -1,0 +1,14 @@
+Device : mps
+Classes: 104
+[LOAD] ✅ mobilenet  (2.4M params)  from mobilenet_scratch_best.pt
+[LOAD] ✅ efficientnet  (7.3M params)  from efficientnet_scratch_best.pt
+[LOAD] 2/3 models ready on mps
+[VALIDATOR] ✅ ImageNet validator loaded
+Starting Flask on http://0.0.0.0:8000
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8000
+ * Running on http://192.168.101.3:8000
+[33mPress CTRL+C to quit[0m

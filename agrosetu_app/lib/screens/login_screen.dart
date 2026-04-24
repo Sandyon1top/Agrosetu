@@ -8,6 +8,7 @@ import '../widgets/animated_background.dart';
 import 'dashboard_screen.dart';
 import '../services/user_service.dart';
 import '../services/api_service.dart';
+import '../services/social_auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -250,6 +251,91 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = false);
       debugPrint('Login error: $e');
       _showErrorDialog('Error', 'An unexpected error occurred: $e');
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    debugPrint('[LoginScreen] 👆 Google login button tapped');
+    
+    // Immediate visual feedback to prove the code is running
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Starting Google Sign-In...'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await SocialAuthService.signInWithGoogle();
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      if (response['status'] == 'ok') {
+        try {
+          final backendData = response['data'] as Map<String, dynamic>? ?? response;
+          final userInfo = backendData['user'] as Map<String, dynamic>?;
+          final token = backendData['token'] as String?;
+
+          if (userInfo == null || userInfo['id'] == null) {
+            _showErrorDialog('Login Error', 'Invalid user data received from server');
+            return;
+          }
+          
+          if (token == null || token.isEmpty) {
+            _showErrorDialog('Login Error', 'No authentication token received');
+            return;
+          }
+
+          final userToSave = {
+            'id': userInfo['id'].toString(),
+            'name': userInfo['name'] ?? 'User',
+            'email': userInfo['email'] ?? '',
+            'token': token,
+            'phone': '+977 9800000000',
+            'location': 'Kathmandu, Nepal',
+            'farmSize': '2.0 hectares',
+            'mainCrops': ['Rice', 'Wheat'],
+            'joinDate': DateTime.now().toString().split(' ')[0],
+            'detections': 0,
+            'discussions': 0,
+            'marketTips': 0,
+          };
+
+          await UserService.saveUser(userToSave);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Welcome, ${userInfo['name']}! 🌱'),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+
+          await Future.delayed(const Duration(milliseconds: 800));
+          
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            );
+          }
+        } catch (dataError) {
+          debugPrint('[LoginScreen] ❌ Error processing google login data: $dataError');
+          _showErrorDialog('Data Error', 'Failed to process login response: $dataError');
+        }
+      } else {
+        final errorMsg = response['message'] ?? 'Google Login failed';
+        _showErrorDialog('Login Failed', errorMsg);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+      debugPrint('Google Login error: $e');
+      _showErrorDialog('Error', 'An unexpected error occurred during Google Sign-In: $e');
     }
   }
   
@@ -647,7 +733,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                _buildSocialButton(icon: Icons.g_mobiledata, color: const Color(0xFFDB4437)),
+                                _buildSocialButton(
+                                  icon: Icons.g_mobiledata, 
+                                  color: const Color(0xFFDB4437),
+                                  onTap: _handleGoogleLogin,
+                                ),
                                 const SizedBox(width: 16),
                                 _buildSocialButton(icon: Icons.facebook, color: const Color(0xFF4267B2)),
                                 const SizedBox(width: 16),
@@ -719,23 +809,30 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildSocialButton({required IconData icon, required Color color}) {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.shade200, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+  Widget _buildSocialButton({required IconData icon, required Color color, VoidCallback? onTap}) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(30),
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            border: Border.all(color: Colors.grey.shade200, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
+          child: Icon(icon, color: color, size: 24),
+        ),
       ),
-      child: Icon(icon, color: color, size: 24),
     );
   }
 }

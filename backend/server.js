@@ -56,6 +56,7 @@ mongoose
 const UserSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true, sparse: true },
+  googleId: { type: String, unique: true, sparse: true },
   // FIX: phoneNumber field and phone-related verification removed per workflow
   password: String,
 
@@ -471,14 +472,14 @@ app.get("/api/weather/current", async (req, res) => {
     res.json({ ...weatherData, source: 'api' });
   } catch (error) {
     console.error('❌ Current Weather API error:', error.message);
-    
+
     // Fallback: Return ANY available cache if API fails
     const { lat, lon } = req.query;
     const fallbackLat = lat || 27.7172;
     const fallbackLon = lon || 85.3240;
     const oldCache = await WeatherCache.findOne({ latitude: fallbackLat, longitude: fallbackLon, type: 'current' }).sort({ updatedAt: -1 });
     if (oldCache) return res.json({ ...oldCache.data, source: 'offline-cache' });
-    
+
     res.status(500).json({ status: "error", message: "Weather service unavailable" });
   }
 });
@@ -568,10 +569,10 @@ app.get("/api/weather/forecast", async (req, res) => {
 
     await WeatherCache.findOneAndUpdate(
       { latitude: targetLat, longitude: targetLon, type: 'forecast' },
-      { 
-        data: forecastArray, 
-        expiresAt: new Date(Date.now() + 3 * 60 * 60 * 1000), 
-        updatedAt: new Date() 
+      {
+        data: forecastArray,
+        expiresAt: new Date(Date.now() + 3 * 60 * 60 * 1000),
+        updatedAt: new Date()
       },
       { upsert: true }
     );
@@ -579,14 +580,14 @@ app.get("/api/weather/forecast", async (req, res) => {
     res.json(forecastArray);
   } catch (error) {
     console.error('❌ Forecast API error:', error.message);
-    
+
     // Fallback: Return ANY available cache if API fails
     const { lat, lon } = req.query;
     const fallbackLat = lat || 27.7172;
     const fallbackLon = lon || 85.3240;
     const oldCache = await WeatherCache.findOne({ latitude: fallbackLat, longitude: fallbackLon, type: 'forecast' }).sort({ updatedAt: -1 });
     if (oldCache) return res.json(oldCache.data);
-    
+
     res.status(500).json({ status: "error", message: "Forecast unavailable" });
   }
 });
@@ -735,8 +736,35 @@ app.post("/api/verify-otp", async (req, res) => {
     await user.save();
     res.json({ status: "ok", message: "Account verified! You can now login." });
   } catch (error) {
-    console.error("Verification error:", error);
+    console.error("Verify OTP Error:", error);
     res.status(500).json({ status: "error", message: "Verification failed" });
+  }
+});
+
+// User Search API
+app.get("/api/users/search", async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) {
+      return res.json({ status: "ok", users: [] });
+    }
+
+    const users = await User.find({
+      name: { $regex: query, $options: 'i' },
+      isActive: true
+    }).limit(10).select('name email _id');
+
+    res.json({
+      status: "ok",
+      users: users.map(u => ({
+        id: u._id,
+        name: u.name,
+        email: u.email
+      }))
+    });
+  } catch (error) {
+    console.error("User search error:", error);
+    res.status(500).json({ status: "error", message: "Search failed" });
   }
 });
 
@@ -786,6 +814,92 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// ====== GOOGLE AUTH ROUTE ======
+const { OAuth2Client } = require('google-auth-library');
+
+const GOOGLE_WEB_CLIENT_ID = process.env.GOOGLE_WEB_CLIENT_ID ||
+  '666169833803-mdpcvgsfvt6r1itejpd0f4pjprncvk4u.apps.googleusercontent.com';
+const GOOGLE_IOS_CLIENT_ID = process.env.GOOGLE_IOS_CLIENT_ID ||
+  '666169833803-ukurcn8csd642q65r126f76uulqo1dbh.apps.googleusercontent.com';
+
+const googleClient = new OAuth2Client();
+
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) {
+      return res.status(400).json({ status: 'error', message: 'Missing idToken' });
+    }
+
+    // Verify the token AND check it was issued for our app (audience check).
+    // Without audience, any valid Google token from any app would be accepted.
+    let ticket;
+    try {
+      ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: [GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID],
+      });
+    } catch (verifyErr) {
+      console.error('[Google Auth] Token verification failed:', verifyErr.message);
+      return res.status(401).json({ status: 'error', message: 'Invalid Google token' });
+    }
+
+    const payload = ticket.getPayload();
+
+    if (!payload.email_verified) {
+      return res.status(403).json({ status: 'error', message: 'Google email is not verified' });
+    }
+
+    const googleId = payload.sub;
+    const email = payload.email.toLowerCase();
+    const name = payload.name || email.split('@')[0];
+
+    // Find by googleId first, then fall back to email (links existing email account).
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+    if (!user) {
+      // Brand new user — create with no password
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        password: '',
+        isVerified: true,
+        isActive: true,
+      });
+    } else {
+      // Existing user — link Google if not already linked, and unblock if needed
+      let changed = false;
+      if (!user.googleId) { user.googleId = googleId; changed = true; }
+      if (!user.isVerified) { user.isVerified = true; changed = true; }
+      if (changed) await user.save();
+
+      if (!user.isActive) {
+        return res.status(403).json({ status: 'error', message: 'Account deactivated' });
+      }
+    }
+
+    // Use same JWT payload shape as /login so authenticateToken middleware works identically
+    const token = jwt.sign(
+      { userId: user._id, identity: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      status: 'ok',
+      message: 'Google login successful',
+      data: {
+        token,
+        user: { id: user._id, name: user.name, email: user.email },
+      },
+    });
+  } catch (err) {
+    console.error('[Google Auth] Error:', err);
+    return res.status(500).json({ status: 'error', message: 'Google authentication failed' });
+  }
+});
+
 // ====== COMMUNITY POSTS ROUTES ======
 
 app.get("/api/community/posts", async (req, res) => {
@@ -829,7 +943,7 @@ app.get("/api/community/post-detail/:postId", async (req, res) => {
     if (!post) {
       return res.status(404).json({ status: "error", message: "Post not found" });
     }
-    
+
     res.json({
       status: "ok",
       post: {
@@ -888,13 +1002,13 @@ app.post("/api/community/posts/:postId/like", async (req, res) => {
       liked = true;
       if (post.author.id.toString() !== userId) {
         const messageStr = `${userName} liked your post "${post.title}"`;
-        const newNotif = await Notification.create({ 
-          recipientId: post.author.id, 
-          senderName: userName, 
-          type: "like", 
-          message: messageStr, 
-          postTitle: post.title, 
-          postId: post._id 
+        const newNotif = await Notification.create({
+          recipientId: post.author.id,
+          senderName: userName,
+          type: "like",
+          message: messageStr,
+          postTitle: post.title,
+          postId: post._id
         });
         const io = req.app.get("io");
         if (io) io.to(`user_${post.author.id}`).emit("new_notification", newNotif);
@@ -942,13 +1056,13 @@ app.post("/api/community/posts/:postId/comments", async (req, res) => {
 
     if (post.author.id.toString() !== userId) {
       const messageStr = `${userName} commented on your post "${post.title}"`;
-      const newNotif = await Notification.create({ 
-        recipientId: post.author.id, 
-        senderName: userName, 
-        type: "comment", 
-        message: messageStr, 
-        postTitle: post.title, 
-        postId: post._id 
+      const newNotif = await Notification.create({
+        recipientId: post.author.id,
+        senderName: userName,
+        type: "comment",
+        message: messageStr,
+        postTitle: post.title,
+        postId: post._id
       });
       const io = req.app.get("io");
       if (io) io.to(`user_${post.author.id}`).emit("new_notification", newNotif);
@@ -1052,7 +1166,7 @@ async function generateAudioBase64(text) {
   const ttsScript = path.join(__dirname, "tts_script.py");
   const tempId = Math.random().toString(36).substring(7);
   const outPath = path.join(__dirname, "uploads", `tts_${tempId}.mp3`);
-  
+
   try {
     const command = `python3 "${ttsScript}" "${text.replace(/"/g, '\\"')}" "${outPath}"`;
     await execAsync(command, { cwd: __dirname, timeout: 60000 });
@@ -1127,7 +1241,7 @@ app.post("/api/voice/text-query", authenticateToken, async (req, res) => {
 async function transcribeAudio(filePath) {
   const whisperScript = path.join(__dirname, "whisper_script.py");
   const command = `python3 "${whisperScript}" "${filePath}"`;
-  const { stdout } = await execAsync(command, { cwd: __dirname, maxBuffer: 1024*1024*10, timeout: 60000 });
+  const { stdout } = await execAsync(command, { cwd: __dirname, maxBuffer: 1024 * 1024 * 10, timeout: 60000 });
   return stdout.trim();
 }
 
