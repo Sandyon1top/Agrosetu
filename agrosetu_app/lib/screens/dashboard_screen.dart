@@ -6,6 +6,7 @@ import 'package:agrosetu_app/screens/profile_page.dart';
 import 'package:agrosetu_app/screens/notifications_page.dart';
 import 'package:agrosetu_app/screens/voice_assistant_screen.dart';
 import 'package:agrosetu_app/services/weather_service.dart';
+import 'package:agrosetu_app/l10n/app_translations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/activity_service.dart';
@@ -69,6 +70,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBottomNavigationBar() {
+    final items = <BottomNavigationBarItem>[
+      BottomNavigationBarItem(icon: const Icon(Iconsax.home),           label: 'nav.home'.tr),
+      BottomNavigationBarItem(icon: const Icon(Iconsax.chart),          label: 'nav.market'.tr),
+      BottomNavigationBarItem(icon: const Icon(Iconsax.camera),         label: 'nav.disease'.tr),
+      BottomNavigationBarItem(icon: const Icon(Iconsax.message),        label: 'nav.community'.tr),
+      BottomNavigationBarItem(icon: const Icon(Iconsax.profile_circle), label: 'nav.profile'.tr),
+    ];
+
     return Container(
       decoration: BoxDecoration(
         color: _C.surface,
@@ -90,13 +99,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           topRight: Radius.circular(24),
         ),
         child: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(icon: Icon(Iconsax.home),           label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Iconsax.chart),          label: 'Market'),
-            BottomNavigationBarItem(icon: Icon(Iconsax.camera),         label: 'Disease'),
-            BottomNavigationBarItem(icon: Icon(Iconsax.message),        label: 'Community'),
-            BottomNavigationBarItem(icon: Icon(Iconsax.profile_circle), label: 'Profile'),
-          ],
+          items: items,
           currentIndex: _selectedIndex,
           selectedItemColor: _C.greenLight,
           unselectedItemColor: Colors.grey.shade500,
@@ -294,11 +297,8 @@ class _HomeDashboardState extends State<HomeDashboard>
                 hasBadge: _unreadNotifications > 0,
                 badgeCount: _unreadNotifications,
               ),
-              const SizedBox(width: 8),
-              _buildTopBarAction(
-                icon: Iconsax.profile_circle,
-                onTap: () {},
-              ),
+              // Profile icon removed from top bar — it duplicates the
+              // "Profile" tab in the bottom navigation.
             ],
           ),
         ],
