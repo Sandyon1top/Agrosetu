@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgroSetu Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .nav-active { background-color: #1B5E20; color: white; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- LOGIN VIEW -->
+<div id="loginView" class="hidden min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-green-700 rounded-2xl mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-800">AgroSetu Admin</h1>
+      <p class="text-sm text-gray-500 mt-1">Sign in with an admin account</p>
+    </div>
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
+        <input id="loginEmail" type="email" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="admin@agrosetu.dev" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Password</label>
+        <input id="loginPassword" type="password" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" />
+      </div>
+      <div id="loginError" class="text-sm text-red-600 hidden"></div>
+      <button type="submit" id="loginBtn" class="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-2.5 rounded-lg transition">
+        Sign In
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- APP VIEW (after login) -->
+<div id="appView" class="hidden">
+  <div class="flex">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 min-h-screen flex flex-col">
+      <div class="px-6 py-5 border-b border-gray-200">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 bg-green-700 rounded-lg flex items-center justify-center">
+            <span class="text-white font-bold text-sm">A</span>
+          </div>
+          <div>
+            <div class="font-bold text-gray-800">AgroSetu</div>
+            <div class="text-xs text-gray-500">Admin Panel</div>
+          </div>
+        </div>
+      </div>
+      <nav class="flex-1 p-3 space-y-1">
+        <button data-view="dashboard" class="navItem w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition flex items-center gap-2">
+          <span>📊</span> Dashboard
+        </button>
+        <button data-view="users" class="navItem w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition flex items-center gap-2">
+          <span>👥</span> Users
+        </button>
+        <button data-view="posts" class="navItem w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition flex items-center gap-2">
+          <span>💬</span> Posts
+        </button>
+        <button data-view="detections" class="navItem w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition flex items-center gap-2">
+          <span>🌿</span> Detections
+        </button>
+      </nav>
+      <div class="p-3 border-t border-gray-200">
+        <div class="text-xs text-gray-500 px-3 mb-1" id="adminEmail">—</div>
+        <button id="logoutBtn" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition">
+          Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 p-8 overflow-x-auto">
+      <div id="content"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Confirm dialog -->
+<div id="confirmDialog" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full">
+    <h3 id="confirmTitle" class="text-lg font-semibold text-gray-800 mb-2"></h3>
+    <p id="confirmBody" class="text-sm text-gray-600 mb-6"></p>
+    <div class="flex gap-3 justify-end">
+      <button id="confirmCancel" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Cancel</button>
+      <button id="confirmOk" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="hidden fixed bottom-4 right-4 z-50 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm"></div>
+
+<script>
+const API = ''; // same-origin, served from express
+let TOKEN = localStorage.getItem('admin_token') || null;
+let CURRENT_USER = JSON.parse(localStorage.getItem('admin_user') || 'null');
+let CURRENT_VIEW = 'dashboard';
+let detectionsChart = null;
+
+// ===== Auth =====
+function showLogin() {
+  document.getElementById('loginView').classList.remove('hidden');
+  document.getElementById('appView').classList.add('hidden');
+}
+function showApp() {
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+  document.getElementById('adminEmail').textContent = CURRENT_USER?.email || '';
+  switchView('dashboard');
+}
+function logout() {
+  TOKEN = null;
+  CURRENT_USER = null;
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_user');
+  showLogin();
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  errEl.classList.add('hidden');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    const r = await fetch(API + '/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const d = await r.json();
+    if (d.status !== 'ok') throw new Error(d.message || 'Login failed');
+    TOKEN = d.token;
+    CURRENT_USER = d.user;
+    localStorage.setItem('admin_token', TOKEN);
+    localStorage.setItem('admin_user', JSON.stringify(CURRENT_USER));
+    showApp();
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', logout);
+
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (TOKEN) headers['Authorization'] = 'Bearer ' + TOKEN;
+  const r = await fetch(API + path, { ...opts, headers });
+  if (r.status === 401 || r.status === 403) {
+    toast('Session expired. Please sign in again.');
+    logout();
+    throw new Error('Unauthorized');
+  }
+  return r.json();
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 2500);
+}
+
+function confirmDialog(title, body, okLabel = 'Confirm') {
+  return new Promise((resolve) => {
+    const dialog = document.getElementById('confirmDialog');
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmBody').textContent = body;
+    const okBtn = document.getElementById('confirmOk');
+    const cancelBtn = document.getElementById('confirmCancel');
+    okBtn.textContent = okLabel;
+    dialog.classList.remove('hidden');
+    const cleanup = (val) => {
+      dialog.classList.add('hidden');
+      okBtn.removeEventListener('click', okHandler);
+      cancelBtn.removeEventListener('click', cancelHandler);
+      resolve(val);
+    };
+    const okHandler = () => cleanup(true);
+    const cancelHandler = () => cleanup(false);
+    okBtn.addEventListener('click', okHandler);
+    cancelBtn.addEventListener('click', cancelHandler);
+  });
+}
+
+// ===== Navigation =====
+document.querySelectorAll('.navItem').forEach(btn => {
+  btn.addEventListener('click', () => switchView(btn.dataset.view));
+});
+
+function switchView(view) {
+  CURRENT_VIEW = view;
+  document.querySelectorAll('.navItem').forEach(b => {
+    if (b.dataset.view === view) b.classList.add('nav-active');
+    else b.classList.remove('nav-active');
+  });
+  if (view === 'dashboard') renderDashboard();
+  else if (view === 'users') renderUsers();
+  else if (view === 'posts') renderPosts();
+  else if (view === 'detections') renderDetections();
+}
+
+// ===== Dashboard =====
+async function renderDashboard() {
+  const el = document.getElementById('content');
+  el.innerHTML = `
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+      <p class="text-sm text-gray-500">System health and key metrics</p>
+    </div>
+    <div id="statsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white p-5 rounded-xl border border-gray-200 animate-pulse"><div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div><div class="h-8 bg-gray-200 rounded w-1/3"></div></div>
+      <div class="bg-white p-5 rounded-xl border border-gray-200 animate-pulse"><div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div><div class="h-8 bg-gray-200 rounded w-1/3"></div></div>
+      <div class="bg-white p-5 rounded-xl border border-gray-200 animate-pulse"><div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div><div class="h-8 bg-gray-200 rounded w-1/3"></div></div>
+      <div class="bg-white p-5 rounded-xl border border-gray-200 animate-pulse"><div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div><div class="h-8 bg-gray-200 rounded w-1/3"></div></div>
+    </div>
+    <div id="healthRow" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6"></div>
+    <div class="bg-white rounded-xl border border-gray-200 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="text-sm font-semibold text-gray-700">Disease Detections — last 30 days</div>
+          <div class="text-xs text-gray-500">Daily count from MongoDB</div>
+        </div>
+      </div>
+      <canvas id="detChart" height="80"></canvas>
+    </div>
+  `;
+
+  const [statsRes, seriesRes] = await Promise.all([
+    api('/api/admin/stats'),
+    api('/api/admin/detections-timeseries?days=30'),
+  ]);
+
+  if (statsRes.status === 'ok') {
+    const s = statsRes.stats;
+    document.getElementById('statsGrid').innerHTML = `
+      ${statCard('Total Users', s.totalUsers, '👥', 'green')}
+      ${statCard('Active Users', s.activeUsers, '✅', 'blue')}
+      ${statCard('Posts', s.totalPosts, '💬', 'purple')}
+      ${statCard('Detections', s.totalDetections, '🌿', 'orange')}
+    `;
+    const h = statsRes.health;
+    document.getElementById('healthRow').innerHTML = `
+      ${healthCard('MongoDB', h.mongodb)}
+      ${healthCard('Flask ML server', h.flask, h.flaskLatencyMs ? h.flaskLatencyMs + 'ms' : '')}
+      ${healthCard('Groq API key', h.groqConfigured)}
+    `;
+  }
+
+  if (seriesRes.status === 'ok') {
+    const labels = seriesRes.series.map(p => p.date);
+    const data = seriesRes.series.map(p => p.count);
+    const ctx = document.getElementById('detChart');
+    if (detectionsChart) detectionsChart.destroy();
+    detectionsChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Detections',
+          data,
+          borderColor: '#1B5E20',
+          backgroundColor: 'rgba(46, 125, 50, 0.15)',
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: '#2E7D32',
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+      },
+    });
+  }
+}
+
+function statCard(label, value, icon, color) {
+  return `<div class="bg-white p-5 rounded-xl border border-gray-200">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-medium text-gray-500 uppercase">${label}</span>
+      <span class="text-xl">${icon}</span>
+    </div>
+    <div class="text-2xl font-bold text-gray-800">${value.toLocaleString()}</div>
+  </div>`;
+}
+
+function healthCard(label, ok, extra = '') {
+  const color = ok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+  const dot = ok ? 'bg-green-500' : 'bg-red-500';
+  return `<div class="bg-white p-4 rounded-xl border border-gray-200 flex items-center gap-3">
+    <span class="w-3 h-3 rounded-full ${dot}"></span>
+    <div class="flex-1">
+      <div class="text-sm font-semibold text-gray-800">${label}</div>
+      <div class="text-xs text-gray-500">${ok ? 'Online' : 'Down'}${extra ? ' · ' + extra : ''}</div>
+    </div>
+    <span class="text-xs font-medium px-2 py-0.5 rounded ${color}">${ok ? 'OK' : 'ERR'}</span>
+  </div>`;
+}
+
+// ===== Users =====
+let usersPage = 1;
+let usersSearch = '';
+
+async function renderUsers() {
+  const el = document.getElementById('content');
+  el.innerHTML = `
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">Users</h1>
+        <p class="text-sm text-gray-500">Manage all registered farmers</p>
+      </div>
+      <input id="userSearch" type="search" placeholder="Search name or email..." value="${usersSearch}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-72 focus:outline-none focus:ring-2 focus:ring-green-500" />
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+          <tr>
+            <th class="text-left px-4 py-3">User</th>
+            <th class="text-left px-4 py-3">Status</th>
+            <th class="text-right px-4 py-3">Posts</th>
+            <th class="text-right px-4 py-3">Detections</th>
+            <th class="text-left px-4 py-3">Joined</th>
+            <th class="text-right px-4 py-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersTbody"><tr><td colspan="6" class="text-center py-8 text-gray-500">Loading...</td></tr></tbody>
+      </table>
+    </div>
+    <div id="usersPager" class="mt-4 flex items-center justify-between text-sm text-gray-600"></div>
+  `;
+  document.getElementById('userSearch').addEventListener('input', (e) => {
+    usersSearch = e.target.value;
+    usersPage = 1;
+    debounceLoadUsers();
+  });
+  loadUsers();
+}
+
+let _userSearchTimer;
+function debounceLoadUsers() {
+  clearTimeout(_userSearchTimer);
+  _userSearchTimer = setTimeout(loadUsers, 350);
+}
+
+async function loadUsers() {
+  const tbody = document.getElementById('usersTbody');
+  const pager = document.getElementById('usersPager');
+  if (!tbody) return;
+  const r = await api(`/api/admin/users?page=${usersPage}&limit=20&search=${encodeURIComponent(usersSearch)}`);
+  if (r.status !== 'ok') return;
+
+  if (r.users.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">No users found</td></tr>`;
+  } else {
+    tbody.innerHTML = r.users.map(u => `
+      <tr class="border-t border-gray-100 hover:bg-gray-50">
+        <td class="px-4 py-3">
+          <div class="font-medium text-gray-800">${escapeHtml(u.name || '—')}${u.isAdmin ? ' <span class="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded ml-1">ADMIN</span>' : ''}</div>
+          <div class="text-xs text-gray-500">${escapeHtml(u.email || '')}</div>
+        </td>
+        <td class="px-4 py-3">
+          ${u.isActive ? '<span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">Active</span>' : '<span class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded">Suspended</span>'}
+          ${u.isVerified ? '<span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded ml-1">Verified</span>' : ''}
+        </td>
+        <td class="px-4 py-3 text-right text-gray-700">${u.postCount}</td>
+        <td class="px-4 py-3 text-right text-gray-700">${u.detectionCount}</td>
+        <td class="px-4 py-3 text-gray-600 text-xs">${fmtDate(u.createdAt)}</td>
+        <td class="px-4 py-3 text-right space-x-1">
+          ${u.isActive
+            ? `<button class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200" onclick="suspendUser('${u.id}', '${escapeAttr(u.name)}')">Suspend</button>`
+            : `<button class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200" onclick="activateUser('${u.id}')">Activate</button>`
+          }
+          <button class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200" onclick="deleteUser('${u.id}', '${escapeAttr(u.name)}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  const pages = Math.max(1, Math.ceil(r.total / r.limit));
+  pager.innerHTML = `
+    <div>Showing ${r.users.length} of ${r.total} users</div>
+    <div class="flex items-center gap-2">
+      <button class="px-3 py-1 border border-gray-300 rounded ${usersPage <= 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}" onclick="if(${usersPage}>1){usersPage--;loadUsers();}">Prev</button>
+      <span>Page ${usersPage} of ${pages}</span>
+      <button class="px-3 py-1 border border-gray-300 rounded ${usersPage >= pages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}" onclick="if(${usersPage}<${pages}){usersPage++;loadUsers();}">Next</button>
+    </div>
+  `;
+}
+
+window.suspendUser = async (id, name) => {
+  const ok = await confirmDialog('Suspend user', `Suspend ${name}? They won't be able to log in until reactivated.`, 'Suspend');
+  if (!ok) return;
+  const r = await api(`/api/admin/users/${id}/suspend`, { method: 'POST' });
+  toast(r.message || (r.status === 'ok' ? 'User suspended' : 'Failed'));
+  loadUsers();
+};
+window.activateUser = async (id) => {
+  const r = await api(`/api/admin/users/${id}/activate`, { method: 'POST' });
+  toast(r.message || (r.status === 'ok' ? 'User activated' : 'Failed'));
+  loadUsers();
+};
+window.deleteUser = async (id, name) => {
+  const ok = await confirmDialog('Delete user', `Permanently delete ${name} and ALL of their posts, notifications and disease history? This cannot be undone.`, 'Delete forever');
+  if (!ok) return;
+  const r = await api(`/api/admin/users/${id}`, { method: 'DELETE' });
+  toast(r.message || (r.status === 'ok' ? 'User deleted' : 'Failed'));
+  loadUsers();
+};
+
+// ===== Posts =====
+let postsPage = 1;
+
+async function renderPosts() {
+  const el = document.getElementById('content');
+  el.innerHTML = `
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-800">Community Posts</h1>
+      <p class="text-sm text-gray-500">Moderate the farmer forum</p>
+    </div>
+    <div id="postsList" class="space-y-3"><div class="text-center py-8 text-gray-500">Loading...</div></div>
+    <div id="postsPager" class="mt-4 flex items-center justify-between text-sm text-gray-600"></div>
+  `;
+  loadPosts();
+}
+
+async function loadPosts() {
+  const list = document.getElementById('postsList');
+  const pager = document.getElementById('postsPager');
+  if (!list) return;
+  const r = await api(`/api/admin/posts?page=${postsPage}&limit=15`);
+  if (r.status !== 'ok') return;
+
+  if (r.posts.length === 0) {
+    list.innerHTML = `<div class="text-center py-8 text-gray-500 bg-white rounded-xl border border-gray-200">No posts yet</div>`;
+  } else {
+    list.innerHTML = r.posts.map(p => `
+      <div class="bg-white rounded-xl border ${p.pinned ? 'border-yellow-400' : 'border-gray-200'} p-4">
+        <div class="flex items-start gap-4">
+          ${p.imageUrl ? `<img src="${p.imageUrl.startsWith('data:') ? p.imageUrl : 'data:image/jpeg;base64,' + p.imageUrl}" class="w-20 h-20 rounded-lg object-cover bg-gray-100 flex-shrink-0" onerror="this.style.display='none'" />` : ''}
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              ${p.pinned ? '<span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded">📌 Pinned</span>' : ''}
+              ${p.category ? `<span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded">${escapeHtml(p.category)}</span>` : ''}
+              ${p.solved ? '<span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">Solved</span>' : ''}
+            </div>
+            <div class="font-semibold text-gray-800">${escapeHtml(p.title || '(no title)')}</div>
+            <div class="text-sm text-gray-600 mt-1 line-clamp-2">${escapeHtml(p.description || '').slice(0, 200)}</div>
+            <div class="text-xs text-gray-500 mt-2">
+              by <strong>${escapeHtml(p.author?.name || 'unknown')}</strong>
+              · ${fmtDate(p.createdAt)}
+              · ❤️ ${p.likeCount}
+              · 💬 ${p.commentCount}
+            </div>
+          </div>
+          <div class="flex flex-col gap-1 flex-shrink-0">
+            <button class="text-xs px-2 py-1 ${p.pinned ? 'bg-gray-100 text-gray-700' : 'bg-yellow-100 text-yellow-800'} rounded hover:opacity-80" onclick="togglePin('${p.id}', ${!p.pinned})">${p.pinned ? 'Unpin' : 'Pin'}</button>
+            <button class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200" onclick="deletePost('${p.id}', '${escapeAttr(p.title)}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  const pages = Math.max(1, Math.ceil(r.total / r.limit));
+  pager.innerHTML = `
+    <div>Showing ${r.posts.length} of ${r.total} posts</div>
+    <div class="flex items-center gap-2">
+      <button class="px-3 py-1 border border-gray-300 rounded ${postsPage <= 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}" onclick="if(${postsPage}>1){postsPage--;loadPosts();}">Prev</button>
+      <span>Page ${postsPage} of ${pages}</span>
+      <button class="px-3 py-1 border border-gray-300 rounded ${postsPage >= pages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}" onclick="if(${postsPage}<${pages}){postsPage++;loadPosts();}">Next</button>
+    </div>
+  `;
+}
+
+window.togglePin = async (id, pinned) => {
+  const r = await api(`/api/admin/posts/${id}/pin`, { method: 'POST', body: JSON.stringify({ pinned }) });
+  toast(r.status === 'ok' ? (pinned ? 'Pinned' : 'Unpinned') : 'Failed');
+  loadPosts();
+};
+window.deletePost = async (id, title) => {
+  const ok = await confirmDialog('Delete post', `Delete "${title || '(no title)'}" permanently?`, 'Delete');
+  if (!ok) return;
+  const r = await api(`/api/admin/posts/${id}`, { method: 'DELETE' });
+  toast(r.message || (r.status === 'ok' ? 'Post deleted' : 'Failed'));
+  loadPosts();
+};
+
+// ===== Detections =====
+let detPage = 1;
+
+async function renderDetections() {
+  const el = document.getElementById('content');
+  el.innerHTML = `
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-800">Disease Detections</h1>
+      <p class="text-sm text-gray-500">Live AI predictions logged from the mobile app</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+          <tr>
+            <th class="text-left px-4 py-3">When</th>
+            <th class="text-left px-4 py-3">User</th>
+            <th class="text-left px-4 py-3">Predicted Disease</th>
+            <th class="text-right px-4 py-3">Confidence</th>
+          </tr>
+        </thead>
+        <tbody id="detTbody"><tr><td colspan="4" class="text-center py-8 text-gray-500">Loading...</td></tr></tbody>
+      </table>
+    </div>
+    <div id="detPager" class="mt-4 flex items-center justify-between text-sm text-gray-600"></div>
+  `;
+  loadDetections();
+}
+
+async function loadDetections() {
+  const tbody = document.getElementById('detTbody');
+  const pager = document.getElementById('detPager');
+  if (!tbody) return;
+  const r = await api(`/api/admin/detections?page=${detPage}&limit=25`);
+  if (r.status !== 'ok') return;
+
+  if (r.detections.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-500">No detections yet — open the mobile app and try the disease detection feature.</td></tr>`;
+  } else {
+    tbody.innerHTML = r.detections.map(d => {
+      const conf = parseFloat(d.confidence);
+      const confColor = isNaN(conf) ? 'text-gray-700' : conf >= 90 ? 'text-green-700' : conf >= 70 ? 'text-blue-700' : 'text-orange-700';
+      return `
+        <tr class="border-t border-gray-100 hover:bg-gray-50">
+          <td class="px-4 py-3 text-xs text-gray-600">${fmtDate(d.createdAt)}</td>
+          <td class="px-4 py-3">
+            <div class="font-medium text-gray-800">${escapeHtml(d.user?.name || '—')}</div>
+            <div class="text-xs text-gray-500">${escapeHtml(d.user?.email || d.userId || '')}</div>
+          </td>
+          <td class="px-4 py-3 font-medium text-gray-800">${escapeHtml(d.disease || '—')}</td>
+          <td class="px-4 py-3 text-right font-mono ${confColor}">${escapeHtml(d.confidence || '—')}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  const pages = Math.max(1, Math.ceil(r.total / r.limit));
+  pager.innerHTML = `
+    <div>Showing ${r.detections.length} of ${r.total} detections</div>
+    <div class="flex items-center gap-2">
+      <button class="px-3 py-1 border border-gray-300 rounded ${detPage <= 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}" onclick="if(${detPage}>1){detPage--;loadDetections();}">Prev</button>
+      <span>Page ${detPage} of ${pages}</span>
+      <button class="px-3 py-1 border border-gray-300 rounded ${detPage >= pages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}" onclick="if(${detPage}<${pages}){detPage++;loadDetections();}">Next</button>
+    </div>
+  `;
+}
+
+// ===== Helpers =====
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function escapeAttr(s) { return escapeHtml(s).replace(/'/g, "\\'"); }
+function fmtDate(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  return dt.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+// ===== Boot =====
+if (TOKEN && CURRENT_USER) {
+  showApp();
+} else {
+  showLogin();
+}
+</script>
+</body>
+</html>

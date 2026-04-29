@@ -60,9 +60,25 @@ const UserSchema = new mongoose.Schema({
   // FIX: phoneNumber field and phone-related verification removed per workflow
   password: String,
 
+  // Profile fields synced from Edit Profile screen
+  phone: String,
+  location: String,
+  farmSize: String,
+  mainCrops: [String],
+
+  // User preferences (synced from Settings / Privacy & Security screens)
+  preferences: {
+    language: { type: String, default: 'en' }, // 'en' or 'ne'
+    notificationsEnabled: { type: Boolean, default: true },
+    profileVisibility: { type: Boolean, default: true },
+    activityLogging: { type: Boolean, default: true },
+    locationServicesEnabled: { type: Boolean, default: false },
+  },
+
   // Account Status
   isVerified: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true }, // For Deactivation/Delete logic
+  isAdmin: { type: Boolean, default: false }, // Admin panel access
 
   // Security
   verificationCode: String,
@@ -72,6 +88,19 @@ const UserSchema = new mongoose.Schema({
 });
 
 const User = mongoose.model("users", UserSchema);
+
+// ====== CONTACT SUPPORT MESSAGE SCHEMA ======
+const ContactMessageSchema = new mongoose.Schema({
+  userId: String,
+  userName: String,
+  userEmail: String,
+  subject: String,
+  message: String,
+  status: { type: String, enum: ['new', 'read', 'resolved'], default: 'new' },
+  createdAt: { type: Date, default: Date.now },
+});
+
+const ContactMessage = mongoose.model("contact_messages", ContactMessageSchema);
 
 // ====== DISEASE HISTORY SCHEMA ======
 const DiseaseHistorySchema = new mongoose.Schema({
@@ -138,6 +167,7 @@ const PostSchema = new mongoose.Schema({
     },
   ],
   solved: { type: Boolean, default: false },
+  pinned: { type: Boolean, default: false }, // Admin-only: pin to top of feed
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
@@ -266,6 +296,40 @@ function authenticateToken(req, res, next) {
   });
 }
 
+// ====== ADMIN MIDDLEWARE ======
+async function requireAdmin(req, res, next) {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ status: "error", message: "Admin token required" });
+    }
+
+    const decoded = await new Promise((resolve, reject) => {
+      jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return reject(err);
+        resolve(user);
+      });
+    }).catch(() => null);
+
+    if (!decoded) {
+      return res.status(403).json({ status: "error", message: "Invalid or expired token" });
+    }
+
+    const user = await User.findById(decoded.userId);
+    if (!user || !user.isAdmin || !user.isActive) {
+      return res.status(403).json({ status: "error", message: "Admin privileges required" });
+    }
+
+    req.user = decoded;
+    req.adminUser = user;
+    next();
+  } catch (e) {
+    console.error("[ADMIN AUTH]", e);
+    res.status(500).json({ status: "error", message: "Authorization failed" });
+  }
+}
+
 // ====== GROQ LLM INTEGRATION ======
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
@@ -289,12 +353,18 @@ async function getGroqAnswer(userQuery) {
             role: "system",
             content: `तपाईं एक नेपाली कृषि विशेषज्ञ हुनुहुन्छ। नेपाली किसानहरूलाई खेतीसम्बन्धी सल्लाह दिनुहोस्।
 
-नियमहरू:
-- सधैं नेपाली भाषामा जवाफ दिनुहोस्
+भाषाका अति कडा नियमहरू:
+- केवल शुद्ध नेपाली भाषामा मात्र जवाफ दिनुहोस्। कुनै पनि हिन्दी शब्द प्रयोग नगर्नुहोस्।
+- "है", "हैं", "नहीं", "क्या", "कैसे", "क्यों", "मैं", "तुम", "आप", "हम", "होगा", "करना", "करें" जस्ता हिन्दी शब्दहरू कहिल्यै प्रयोग नगर्नुहोस्।
+- शुद्ध नेपाली शब्दहरू मात्र प्रयोग गर्नुहोस्: "हो", "होइन", "छैन", "के", "कसरी", "किन", "म", "तपाईं", "हामी", "हुन्छ", "गर्नुहोस्", "गर्नुहुन्छ"।
+- अंग्रेजी अक्षर वा रोमन लिपि कहिल्यै प्रयोग नगर्नुहोस्।
+- वाक्यको अन्त्य "हो", "छ", "छन्", "गर्नुहोस्", "हुन्छ", "पर्छ" जस्ता शुद्ध नेपाली क्रियारूपमा मात्र गर्नुहोस्।
+
+अन्य नियमहरू:
 - जवाफ छोटो र व्यावहारिक राख्नुहोस् (३-५ वाक्य मात्र)
 - बाली रोग, किट, मल, सिँचाइ, र मौसमसम्बन्धी प्रश्नहरूको जवाफ दिनुहोस्
 - नेपालको स्थानीय परिस्थिति अनुसार सल्लाह दिनुहोस्
-- यदि प्रश्न खेतीसँग सम्बन्धित छैन भने विनम्रतापूर्वक भन्नुहोस् कि तपाईं केवल खेतीसम्बन्धी प्रश्नहरूको जवाफ दिन सक्नुहुन्छ`
+- यदि प्रश्न खेतीसँग सम्बन्धित छैन भने विनम्रतापूर्वक नेपालीमा भन्नुहोस् कि तपाईं केवल खेतीसम्बन्धी प्रश्नहरूको जवाफ दिन सक्नुहुन्छ`
           },
           {
             role: "user",
@@ -689,24 +759,186 @@ app.post("/api/resend-otp", async (req, res) => {
 
 app.put("/api/user/update", authenticateToken, async (req, res) => {
   try {
-    const { userId, name, email } = req.body;
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { name, email },
-      { new: true }
-    );
+    const { userId, name, email, phone, location, farmSize, mainCrops } = req.body;
+    if (!userId) {
+      return res.status(400).json({ status: "error", message: "userId is required" });
+    }
+
+    const update = {};
+    if (name !== undefined) update.name = name;
+    if (email !== undefined) update.email = email;
+    if (phone !== undefined) update.phone = phone;
+    if (location !== undefined) update.location = location;
+    if (farmSize !== undefined) update.farmSize = farmSize;
+    if (mainCrops !== undefined) {
+      update.mainCrops = Array.isArray(mainCrops)
+        ? mainCrops
+        : String(mainCrops).split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, update, { new: true });
     if (!updatedUser) return res.status(404).json({ status: "error", message: "User not found" });
+
     res.json({
       status: "ok",
       message: "Profile updated!",
       user: {
+        id: updatedUser._id,
         name: updatedUser.name,
         email: updatedUser.email,
+        phone: updatedUser.phone,
+        location: updatedUser.location,
+        farmSize: updatedUser.farmSize,
+        mainCrops: updatedUser.mainCrops || [],
       }
     });
   } catch (error) {
     console.error("Update User Error:", error);
     res.status(500).json({ status: "error", message: "Update failed" });
+  }
+});
+
+// ====== USER SETTINGS / PREFERENCES ======
+app.get("/api/user/settings/:userId", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).select('preferences');
+    if (!user) return res.status(404).json({ status: "error", message: "User not found" });
+    const prefs = user.preferences || {};
+    res.json({
+      status: "ok",
+      preferences: {
+        language: prefs.language || 'en',
+        notificationsEnabled: prefs.notificationsEnabled !== false,
+        profileVisibility: prefs.profileVisibility !== false,
+        activityLogging: prefs.activityLogging !== false,
+        locationServicesEnabled: prefs.locationServicesEnabled === true,
+      },
+    });
+  } catch (error) {
+    console.error("Get Settings Error:", error);
+    res.status(500).json({ status: "error", message: "Failed to load settings" });
+  }
+});
+
+app.put("/api/user/settings", async (req, res) => {
+  try {
+    const { userId, language, notificationsEnabled, profileVisibility, activityLogging, locationServicesEnabled } = req.body;
+    if (!userId) {
+      return res.status(400).json({ status: "error", message: "userId is required" });
+    }
+    const update = {};
+    if (language !== undefined) update['preferences.language'] = language;
+    if (notificationsEnabled !== undefined) update['preferences.notificationsEnabled'] = !!notificationsEnabled;
+    if (profileVisibility !== undefined) update['preferences.profileVisibility'] = !!profileVisibility;
+    if (activityLogging !== undefined) update['preferences.activityLogging'] = !!activityLogging;
+    if (locationServicesEnabled !== undefined) update['preferences.locationServicesEnabled'] = !!locationServicesEnabled;
+
+    const user = await User.findByIdAndUpdate(userId, { $set: update }, { new: true }).select('preferences');
+    if (!user) return res.status(404).json({ status: "error", message: "User not found" });
+    res.json({ status: "ok", message: "Settings updated", preferences: user.preferences });
+  } catch (error) {
+    console.error("Update Settings Error:", error);
+    res.status(500).json({ status: "error", message: "Failed to update settings" });
+  }
+});
+
+// ====== CHANGE PASSWORD (authenticated) ======
+app.post("/api/user/change-password", async (req, res) => {
+  try {
+    const { userId, currentPassword, newPassword } = req.body;
+    if (!userId || !currentPassword || !newPassword) {
+      return res.status(400).json({ status: "error", message: "userId, currentPassword and newPassword are required" });
+    }
+    const passwordCheck = validatePassword(newPassword);
+    if (!passwordCheck.isValid) {
+      return res.status(400).json({ status: "error", message: passwordCheck.errors[0], errors: passwordCheck.errors });
+    }
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ status: "error", message: "User not found" });
+    if (!user.password) {
+      return res.status(400).json({ status: "error", message: "Password change is unavailable for Google-only accounts" });
+    }
+    const matches = await bcrypt.compare(currentPassword, user.password);
+    if (!matches) {
+      return res.status(400).json({ status: "error", message: "Current password is incorrect" });
+    }
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+    res.json({ status: "ok", message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Change Password Error:", error);
+    res.status(500).json({ status: "error", message: "Failed to change password" });
+  }
+});
+
+// ====== CONTACT SUPPORT ======
+app.post("/api/contact/send-message", async (req, res) => {
+  try {
+    const { userId, userName, userEmail, subject, message } = req.body;
+    if (!subject || !message) {
+      return res.status(400).json({ status: "error", message: "Subject and message are required" });
+    }
+    const saved = await ContactMessage.create({
+      userId: userId || null,
+      userName: userName || 'Anonymous',
+      userEmail: userEmail || '',
+      subject: String(subject).trim(),
+      message: String(message).trim(),
+    });
+
+    // Best-effort email forward to support inbox; don't fail the request if it doesn't go through
+    try {
+      if (process.env.EMAIL_USER) {
+        await transporter.sendMail({
+          from: `"AgroSetu Support" <${process.env.EMAIL_USER}>`,
+          to: process.env.EMAIL_USER,
+          replyTo: userEmail || process.env.EMAIL_USER,
+          subject: `[AgroSetu Support] ${subject}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 16px;">
+              <h3>New support message</h3>
+              <p><b>From:</b> ${userName || 'Anonymous'} &lt;${userEmail || 'unknown'}&gt;</p>
+              <p><b>User ID:</b> ${userId || 'not signed in'}</p>
+              <hr/>
+              <p>${String(message).replace(/</g, '&lt;').replace(/\n/g, '<br/>')}</p>
+            </div>`
+        });
+      }
+    } catch (mailErr) {
+      console.warn("[CONTACT] email forward failed:", mailErr.message);
+    }
+
+    res.json({ status: "ok", message: "Message sent. Our team will get back to you soon.", id: saved._id });
+  } catch (error) {
+    console.error("Contact Support Error:", error);
+    res.status(500).json({ status: "error", message: "Failed to send message" });
+  }
+});
+
+// ====== USER DATA EXPORT (Privacy: Download Your Data) ======
+app.get("/api/user/export-data/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).select('-password -verificationCode -verificationExpires');
+    if (!user) return res.status(404).json({ status: "error", message: "User not found" });
+
+    const [posts, history, notifications] = await Promise.all([
+      Post.find({ "author.id": userId }).lean(),
+      DiseaseHistory.find({ userId }).lean(),
+      Notification.find({ recipientId: userId }).lean(),
+    ]);
+
+    res.json({
+      status: "ok",
+      exportedAt: new Date().toISOString(),
+      profile: user,
+      posts,
+      diseaseHistory: history,
+      notifications,
+    });
+  } catch (error) {
+    console.error("Export Data Error:", error);
+    res.status(500).json({ status: "error", message: "Failed to export data" });
   }
 });
 
@@ -805,7 +1037,8 @@ app.post("/login", async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        isAdmin: !!user.isAdmin,
       }
     });
   } catch (error) {
@@ -891,7 +1124,7 @@ app.post('/api/auth/google', async (req, res) => {
       message: 'Google login successful',
       data: {
         token,
-        user: { id: user._id, name: user.name, email: user.email },
+        user: { id: user._id, name: user.name, email: user.email, isAdmin: !!user.isAdmin },
       },
     });
   } catch (err) {
@@ -1377,6 +1610,322 @@ app.post("/api/password-reset/verify", async (req, res) => {
   }
 });
 
+// ====== ADMIN PANEL API ======
+
+// Admin login — same as /login but only accepts isAdmin users.
+app.post("/api/admin/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ status: "error", message: "Email and password required" });
+    }
+    const normalized = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalized });
+    if (!user || !user.isActive) {
+      return res.status(401).json({ status: "error", message: "Invalid credentials" });
+    }
+    if (!user.password) {
+      return res.status(400).json({ status: "error", message: "Use email/password login for admin" });
+    }
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) {
+      return res.status(401).json({ status: "error", message: "Invalid credentials" });
+    }
+    if (!user.isAdmin) {
+      return res.status(403).json({ status: "error", message: "Not an admin account" });
+    }
+    const token = jwt.sign(
+      { userId: user._id, identity: user.email, isAdmin: true },
+      process.env.JWT_SECRET,
+      { expiresIn: "8h" }
+    );
+    res.json({
+      status: "ok",
+      token,
+      user: { id: user._id, name: user.name, email: user.email },
+    });
+  } catch (e) {
+    console.error("Admin Login Error:", e);
+    res.status(500).json({ status: "error", message: "Admin login failed" });
+  }
+});
+
+// Aggregate dashboard stats + service health.
+app.get("/api/admin/stats", requireAdmin, async (req, res) => {
+  try {
+    const [totalUsers, activeUsers, totalPosts, totalDetections] = await Promise.all([
+      User.countDocuments({}),
+      User.countDocuments({ isActive: true }),
+      Post.countDocuments({}),
+      DiseaseHistory.countDocuments({}),
+    ]);
+
+    let flaskHealthy = false;
+    let flaskLatency = null;
+    try {
+      const t0 = Date.now();
+      const r = await axios.get("http://127.0.0.1:8000/health", { timeout: 3000 });
+      flaskLatency = Date.now() - t0;
+      flaskHealthy = r.data && r.data.status === "online";
+    } catch (_) {
+      flaskHealthy = false;
+    }
+
+    res.json({
+      status: "ok",
+      stats: {
+        totalUsers,
+        activeUsers,
+        suspendedUsers: totalUsers - activeUsers,
+        totalPosts,
+        totalDetections,
+      },
+      health: {
+        mongodb: mongoose.connection.readyState === 1,
+        flask: flaskHealthy,
+        flaskLatencyMs: flaskLatency,
+        groqConfigured: !!process.env.GROQ_API_KEY,
+      },
+    });
+  } catch (e) {
+    console.error("Admin Stats Error:", e);
+    res.status(500).json({ status: "error", message: "Failed to load stats" });
+  }
+});
+
+// Time series of detections per day for last N days (default 30).
+app.get("/api/admin/detections-timeseries", requireAdmin, async (req, res) => {
+  try {
+    const days = Math.min(90, Math.max(1, parseInt(req.query.days || "30", 10)));
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const rows = await DiseaseHistory.aggregate([
+      { $match: { createdAt: { $gte: since } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    res.json({ status: "ok", series: rows.map(r => ({ date: r._id, count: r.count })) });
+  } catch (e) {
+    console.error("Admin Timeseries Error:", e);
+    res.status(500).json({ status: "error", message: "Failed to load timeseries" });
+  }
+});
+
+// Paginated user list.
+app.get("/api/admin/users", requireAdmin, async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page || "1", 10));
+    const limit = Math.min(100, parseInt(req.query.limit || "25", 10));
+    const search = (req.query.search || "").trim();
+
+    const filter = {};
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      User.find(filter)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .select("-password -verificationCode -verificationExpires"),
+      User.countDocuments(filter),
+    ]);
+
+    // Add post + detection counts for each visible user.
+    const ids = items.map(u => u._id);
+    const [postCounts, detectionCounts] = await Promise.all([
+      Post.aggregate([
+        { $match: { "author.id": { $in: ids } } },
+        { $group: { _id: "$author.id", count: { $sum: 1 } } },
+      ]),
+      DiseaseHistory.aggregate([
+        { $match: { userId: { $in: ids.map(String) } } },
+        { $group: { _id: "$userId", count: { $sum: 1 } } },
+      ]),
+    ]);
+    const pcMap = Object.fromEntries(postCounts.map(p => [String(p._id), p.count]));
+    const dcMap = Object.fromEntries(detectionCounts.map(d => [String(d._id), d.count]));
+
+    const enriched = items.map(u => ({
+      id: u._id,
+      name: u.name,
+      email: u.email,
+      isActive: u.isActive,
+      isAdmin: u.isAdmin,
+      isVerified: u.isVerified,
+      location: u.location || null,
+      createdAt: u.createdAt,
+      postCount: pcMap[String(u._id)] || 0,
+      detectionCount: dcMap[String(u._id)] || 0,
+    }));
+
+    res.json({ status: "ok", users: enriched, total, page, limit });
+  } catch (e) {
+    console.error("Admin Users Error:", e);
+    res.status(500).json({ status: "error", message: "Failed to load users" });
+  }
+});
+
+// Suspend a user (soft — flips isActive false). Login then refuses access.
+app.post("/api/admin/users/:id/suspend", requireAdmin, async (req, res) => {
+  try {
+    if (String(req.adminUser._id) === String(req.params.id)) {
+      return res.status(400).json({ status: "error", message: "You cannot suspend yourself" });
+    }
+    const u = await User.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+    if (!u) return res.status(404).json({ status: "error", message: "User not found" });
+    res.json({ status: "ok", message: "User suspended", user: { id: u._id, isActive: u.isActive } });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: "Suspend failed" });
+  }
+});
+
+app.post("/api/admin/users/:id/activate", requireAdmin, async (req, res) => {
+  try {
+    const u = await User.findByIdAndUpdate(req.params.id, { isActive: true }, { new: true });
+    if (!u) return res.status(404).json({ status: "error", message: "User not found" });
+    res.json({ status: "ok", message: "User activated", user: { id: u._id, isActive: u.isActive } });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: "Activate failed" });
+  }
+});
+
+// Hard-delete a user + their posts/notifications/disease history.
+app.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
+  try {
+    if (String(req.adminUser._id) === String(req.params.id)) {
+      return res.status(400).json({ status: "error", message: "You cannot delete yourself" });
+    }
+    const u = await User.findById(req.params.id);
+    if (!u) return res.status(404).json({ status: "error", message: "User not found" });
+
+    await User.findByIdAndDelete(req.params.id);
+    await Post.deleteMany({ "author.id": req.params.id });
+    await Notification.deleteMany({ recipientId: req.params.id });
+    await DiseaseHistory.deleteMany({ userId: String(req.params.id) });
+    if (u.email) {
+      await PasswordReset.deleteMany({ email: u.email });
+    }
+    res.json({ status: "ok", message: "User and all related data deleted" });
+  } catch (e) {
+    console.error("Admin Delete User Error:", e);
+    res.status(500).json({ status: "error", message: "Delete failed" });
+  }
+});
+
+// Paginated post list (newest first, pinned first).
+app.get("/api/admin/posts", requireAdmin, async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page || "1", 10));
+    const limit = Math.min(50, parseInt(req.query.limit || "20", 10));
+
+    const [items, total] = await Promise.all([
+      Post.find({})
+        .sort({ pinned: -1, createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .select("title description category author imageUrl likes comments solved pinned createdAt"),
+      Post.countDocuments({}),
+    ]);
+
+    res.json({
+      status: "ok",
+      total,
+      page,
+      limit,
+      posts: items.map(p => ({
+        id: p._id,
+        title: p.title,
+        description: p.description,
+        category: p.category,
+        author: p.author,
+        imageUrl: p.imageUrl,
+        likeCount: (p.likes || []).length,
+        commentCount: (p.comments || []).length,
+        solved: p.solved,
+        pinned: p.pinned,
+        createdAt: p.createdAt,
+      })),
+    });
+  } catch (e) {
+    console.error("Admin Posts Error:", e);
+    res.status(500).json({ status: "error", message: "Failed to load posts" });
+  }
+});
+
+app.delete("/api/admin/posts/:id", requireAdmin, async (req, res) => {
+  try {
+    const p = await Post.findByIdAndDelete(req.params.id);
+    if (!p) return res.status(404).json({ status: "error", message: "Post not found" });
+    res.json({ status: "ok", message: "Post deleted" });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: "Delete failed" });
+  }
+});
+
+app.post("/api/admin/posts/:id/pin", requireAdmin, async (req, res) => {
+  try {
+    const { pinned } = req.body;
+    const p = await Post.findByIdAndUpdate(
+      req.params.id,
+      { pinned: !!pinned },
+      { new: true }
+    );
+    if (!p) return res.status(404).json({ status: "error", message: "Post not found" });
+    res.json({ status: "ok", pinned: p.pinned });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: "Pin failed" });
+  }
+});
+
+// Paginated disease detections — the "prove the AI works" panel.
+app.get("/api/admin/detections", requireAdmin, async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page || "1", 10));
+    const limit = Math.min(100, parseInt(req.query.limit || "25", 10));
+
+    const [items, total] = await Promise.all([
+      DiseaseHistory.find({})
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      DiseaseHistory.countDocuments({}),
+    ]);
+
+    // Resolve userIds to names for display.
+    const userIds = [...new Set(items.map(i => i.userId).filter(Boolean))];
+    const users = await User.find({ _id: { $in: userIds } }).select("name email");
+    const userMap = Object.fromEntries(users.map(u => [String(u._id), { name: u.name, email: u.email }]));
+
+    res.json({
+      status: "ok",
+      total,
+      page,
+      limit,
+      detections: items.map(d => ({
+        id: d._id,
+        userId: d.userId,
+        user: userMap[String(d.userId)] || null,
+        disease: d.disease,
+        confidence: d.confidence,
+        solutions: d.solutions,
+        createdAt: d.createdAt,
+      })),
+    });
+  } catch (e) {
+    console.error("Admin Detections Error:", e);
+    res.status(500).json({ status: "error", message: "Failed to load detections" });
+  }
+});
+
 // ====== DISEASE HISTORY API ======
 
 app.get("/api/disease-history/:userId", async (req, res) => {
@@ -1420,6 +1969,11 @@ app.post("/api/disease-history/sync", async (req, res) => {
 async function startServer() {
   const PORT = process.env.PORT || 3000;
   const HOST = '0.0.0.0';
+
+  // Admin SPA — mount BEFORE vite/dist catch-all so /admin/* serves the panel.
+  const adminPath = path.join(__dirname, "admin");
+  app.use("/admin", express.static(adminPath));
+  app.get("/admin", (req, res) => res.sendFile(path.join(adminPath, "index.html")));
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
