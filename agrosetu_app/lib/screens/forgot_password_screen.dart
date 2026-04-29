@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
@@ -47,9 +48,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (response['status'] == 'ok') {
         setState(() => _resetCodeSent = true);
         
-        // Show dev code if available (for testing)
+        // Show dev code only in debug builds. In release we never expose
+        // it on-screen even if the backend leaks it in the response.
         final devCode = response['data']?['_devCode'];
-        if (devCode != null) {
+        if (devCode != null && kDebugMode) {
           debugPrint('[ForgotPassword] 🔐 Dev reset code: $devCode');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

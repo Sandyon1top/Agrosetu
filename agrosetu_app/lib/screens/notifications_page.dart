@@ -24,6 +24,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   Future<void> _loadNotifications() async {
     final notifs = await NotificationService.getNotifications();
+    if (!mounted) return;
     setState(() {
       _notifications = notifs;
       _isLoading = false;

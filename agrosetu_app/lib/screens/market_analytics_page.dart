@@ -151,85 +151,36 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
       final cached = prefs.getString('climate_cache');
 
       if (cached != null) {
-        final decoded = jsonDecode(cached) as Map<String, dynamic>;
-        setState(() {
-          _monthlyRainfall = decoded['rainfall'].map<int, double>(
-              (k, v) => MapEntry(int.parse(k), (v as num).toDouble()));
-          _monthlyTemp = decoded['temp'].map<int, double>(
-              (k, v) => MapEntry(int.parse(k), (v as num).toDouble()));
-        });
-        return;
-      }
-
-      final csv = await rootBundle.loadString('data/Nepal_Climate_Data.csv');
-      final lines = csv.split('\n');
-      if (lines.isEmpty) return;
-
-      // Find column indices from header
-      // Strip BOM and normalize header names
-      final rawHeader = lines[0].replaceAll('\r', '').replaceAll('\uFEFF', '');
-      final headers = rawHeader.split(',').map((h) => h.trim()).toList();
-
-      // Debug: print headers to console so we can see exact names
-      debugPrint('🌦️ Climate CSV headers: $headers');
-
-      // Try common variations of column names
-      int dateIdx = headers.indexWhere(
-          (h) => h.toLowerCase() == 'date');
-      int precipIdx = headers.indexWhere(
-          (h) => h.toLowerCase().contains('precip'));
-      int tempIdx = headers.indexWhere(
-          (h) => h.toLowerCase() == 'temp_2m' || h.toLowerCase() == 'temperature');
-
-      debugPrint('🌦️ Indices — date:$dateIdx precip:$precipIdx temp:$tempIdx');
-
-      if (dateIdx == -1 || precipIdx == -1 || tempIdx == -1) {
-        debugPrint('🌦️ Could not find required columns. Available: $headers');
-        return;
-      }
-
-      // Bucket by month
-      final Map<int, List<double>> rainfallBuckets = {};
-      final Map<int, List<double>> tempBuckets = {};
-
-      for (int i = 1; i < lines.length; i++) {
-        final line = lines[i].trim();
-        if (line.isEmpty) continue;
-        final parts = line.split(',');
-        if (parts.length <= tempIdx) continue;
-
-        final dateStr = parts[dateIdx].trim();
-        final precip  = double.tryParse(parts[precipIdx].trim()) ?? 0;
-        final temp    = double.tryParse(parts[tempIdx].trim()) ?? 0;
-
-        // Parse month (handles YYYY-MM-DD and M/D/YYYY)
-        int month = 0;
-        if (dateStr.contains('-')) {
-          month = int.tryParse(dateStr.split('-')[1]) ?? 0;
-        } else if (dateStr.contains('/')) {
-          month = int.tryParse(dateStr.split('/')[0]) ?? 0;
-        }
-        if (month < 1 || month > 12) continue;
-
-        rainfallBuckets.putIfAbsent(month, () => []).add(precip);
-        tempBuckets.putIfAbsent(month, () => []).add(temp);
-      }
-
-      // Average per month
-      final Map<int, double> rainfall = {};
-      final Map<int, double> temp = {};
-      for (int m = 1; m <= 12; m++) {
-        if (rainfallBuckets.containsKey(m)) {
-          final vals = rainfallBuckets[m]!;
-          rainfall[m] = vals.reduce((a, b) => a + b) / vals.length;
-        }
-        if (tempBuckets.containsKey(m)) {
-          final vals = tempBuckets[m]!;
-          temp[m] = vals.reduce((a, b) => a + b) / vals.length;
+        try {
+          final decoded = jsonDecode(cached) as Map<String, dynamic>;
+          final rainfall = (decoded['rainfall'] as Map).map<int, double>(
+              (k, v) => MapEntry(int.parse(k.toString()), (v as num).toDouble()));
+          final temp = (decoded['temp'] as Map).map<int, double>(
+              (k, v) => MapEntry(int.parse(k.toString()), (v as num).toDouble()));
+          if (mounted) {
+            setState(() {
+              _monthlyRainfall = rainfall;
+              _monthlyTemp = temp;
+            });
+          }
+          return;
+        } catch (e) {
+          debugPrint('🌦️ Climate cache corrupted, refetching: $e');
+          await prefs.remove('climate_cache');
         }
       }
 
-      // Cache it
+      // Pre-aggregated monthly averages (12 entries × 2 series, ~700 bytes).
+      // Source CSV (111 MB) was OOM-killing the app on iPhone 11; we now ship
+      // the rolled-up monthly data instead. Regenerate with the Python snippet
+      // in the repo notes if Nepal_Climate_Data.csv is updated.
+      final jsonStr = await rootBundle.loadString('data/climate_monthly.json');
+      final decoded = jsonDecode(jsonStr) as Map<String, dynamic>;
+      final rainfall = (decoded['rainfall'] as Map).map<int, double>(
+          (k, v) => MapEntry(int.parse(k as String), (v as num).toDouble()));
+      final temp = (decoded['temp'] as Map).map<int, double>(
+          (k, v) => MapEntry(int.parse(k as String), (v as num).toDouble()));
+
       await prefs.setString('climate_cache', jsonEncode({
         'rainfall': rainfall.map((k, v) => MapEntry(k.toString(), v)),
         'temp':     temp.map((k, v) => MapEntry(k.toString(), v)),

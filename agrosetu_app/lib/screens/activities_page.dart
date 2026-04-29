@@ -50,11 +50,12 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
                 itemCount: _items.length,
                 itemBuilder: (context, idx) {
                   final it = _items[idx];
+                  // Activities are read-only log entries — no detail screen
+                  // to drill into yet, so we omit onTap and the chevron icon
+                  // so the row doesn't look interactive.
                   return ListTile(
                     title: Text(it['title'] ?? '', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                     subtitle: Text(_formatTime(it['timestamp']), style: GoogleFonts.poppins(fontSize: 12)),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {},
                   );
                 },
               ),
