@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../l10n/app_translations.dart';
+import '../services/api_service.dart';
+import '../services/user_service.dart';
 
 class ContactSupportPage extends StatefulWidget {
   const ContactSupportPage({super.key});
@@ -23,36 +26,45 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
   }
 
   Future<void> _submitMessage() async {
-    if (_subjectController.text.isEmpty || _messageController.text.isEmpty) {
+    final subject = _subjectController.text.trim();
+    final message = _messageController.text.trim();
+
+    if (subject.isEmpty || message.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields')),
+        SnackBar(content: Text('support.fill_all'.tr)),
       );
       return;
     }
 
     setState(() => _isSubmitting = true);
-    
-    try {
-      // Simulate sending message
-      await Future.delayed(const Duration(seconds: 2));
-      
-      if (!mounted) return;
-      
-      setState(() => _isSubmitting = false);
-      
+
+    final user = await UserService.getUser();
+    final res = await ApiService.sendSupportMessage(
+      userId: user?['id']?.toString(),
+      userName: user?['name']?.toString(),
+      userEmail: user?['email']?.toString(),
+      subject: subject,
+      message: message,
+    );
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    if (res['status'] == 'ok') {
+      _subjectController.clear();
+      _messageController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Message sent successfully!'),
+        SnackBar(
+          content: Text(res['message']?.toString() ?? 'support.sent_ok'.tr),
           backgroundColor: Colors.green,
         ),
       );
-      
-      _subjectController.clear();
-      _messageController.clear();
-    } catch (e) {
-      setState(() => _isSubmitting = false);
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(
+          content: Text(res['message']?.toString() ?? 'Failed to send message'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -83,7 +95,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Contact Support',
+          'support.title'.tr,
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -98,7 +110,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Get in Touch',
+                'support.get_in_touch'.tr,
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -123,22 +135,22 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
                   children: [
                     _buildContactOption(
                       Iconsax.call,
-                      'Phone',
+                      'support.phone'.tr,
                       '+977-1-4123456',
                       () => _launchPhone('+97714123456'),
                     ),
                     const Divider(height: 20),
                     _buildContactOption(
                       Iconsax.sms,
-                      'Email',
+                      'support.email'.tr,
                       'support@agrosetu.com',
                       () => _launchEmail('support@agrosetu.com'),
                     ),
                     const Divider(height: 20),
                     _buildContactOption(
                       Iconsax.location,
-                      'Address',
-                      'Kathmandu, Nepal',
+                      'support.address'.tr,
+                      'support.address_value'.tr,
                       null,
                     ),
                   ],
@@ -146,7 +158,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Send us a Message',
+                'support.send_us'.tr,
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -171,7 +183,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Subject',
+                      'support.subject'.tr,
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -182,7 +194,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
                     TextField(
                       controller: _subjectController,
                       decoration: InputDecoration(
-                        hintText: 'Enter subject',
+                        hintText: 'support.subject_hint'.tr,
                         hintStyle: GoogleFonts.poppins(
                           fontSize: 13,
                           color: Colors.grey.shade400,
@@ -199,7 +211,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Message',
+                      'support.message'.tr,
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -211,7 +223,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
                       controller: _messageController,
                       maxLines: 5,
                       decoration: InputDecoration(
-                        hintText: 'Type your message here...',
+                        hintText: 'support.message_hint'.tr,
                         hintStyle: GoogleFonts.poppins(
                           fontSize: 13,
                           color: Colors.grey.shade400,
@@ -249,7 +261,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
                                 ),
                               )
                             : Text(
-                                'Send Message',
+                                'support.send'.tr,
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,

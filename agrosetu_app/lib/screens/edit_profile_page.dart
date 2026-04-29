@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import '../l10n/app_translations.dart';
+import '../services/api_service.dart';
 import '../services/user_service.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -51,9 +53,26 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _saveProfile() async {
-    if (_nameController.text.isEmpty) {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+    final location = _locationController.text.trim();
+    final farmSize = _farmSizeController.text.trim();
+    final crops = _cropsController.text
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Name is required')),
+        SnackBar(content: Text('edit_profile.name_required'.tr)),
+      );
+      return;
+    }
+    if (email.isNotEmpty && !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('edit_profile.invalid_email'.tr)),
       );
       return;
     }
@@ -62,28 +81,59 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     final updatedData = {
       ...widget.userData,
-      'name': _nameController.text,
-      'email': _emailController.text,
-      'phone': _phoneController.text,
-      'location': _locationController.text,
-      'farmSize': _farmSizeController.text,
-      'mainCrops': _cropsController.text.split(',').map((e) => e.trim()).toList(),
+      'name': name,
+      'email': email,
+      'phone': phone,
+      'location': location,
+      'farmSize': farmSize,
+      'mainCrops': crops,
     };
 
+    // Save locally first so the UI is responsive even if the network is slow.
     await UserService.updateUser(updatedData);
-    
+
+    String? backendError;
+    final userId = widget.userData['id']?.toString();
+    if (userId != null && userId != 'N/A') {
+      final res = await ApiService.updateProfile(
+        userId: userId,
+        name: name,
+        email: email.isEmpty ? null : email,
+        phone: phone,
+        location: location,
+        farmSize: farmSize,
+        mainCrops: crops,
+      );
+      if (res['status'] == 'ok' && res['user'] is Map) {
+        final remote = Map<String, dynamic>.from(res['user']);
+        updatedData['name'] = remote['name'] ?? updatedData['name'];
+        updatedData['email'] = remote['email'] ?? updatedData['email'];
+        updatedData['phone'] = remote['phone'] ?? updatedData['phone'];
+        updatedData['location'] = remote['location'] ?? updatedData['location'];
+        updatedData['farmSize'] = remote['farmSize'] ?? updatedData['farmSize'];
+        if (remote['mainCrops'] is List) {
+          updatedData['mainCrops'] = List<String>.from(remote['mainCrops']);
+        }
+        await UserService.updateUser(updatedData);
+      } else if (res['status'] != 'ok') {
+        backendError = res['message']?.toString();
+      }
+    }
+
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (mounted) {
-      widget.onSave(updatedData);
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+    widget.onSave(updatedData);
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(backendError == null
+            ? 'edit_profile.updated'.tr
+            : '${'edit_profile.saved_local'.tr} $backendError'),
+        backgroundColor: backendError == null ? Colors.green : Colors.orange,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
@@ -98,7 +148,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Edit Profile',
+          'edit_profile.title'.tr,
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -110,18 +160,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            _buildTextField('Name', _nameController, Iconsax.user),
+            _buildTextField('edit_profile.name'.tr, _nameController, Iconsax.user),
             const SizedBox(height: 16),
-            _buildTextField('Email', _emailController, Iconsax.sms, isEmail: true),
+            _buildTextField('edit_profile.email'.tr, _emailController, Iconsax.sms, isEmail: true),
             const SizedBox(height: 16),
-            _buildTextField('Phone', _phoneController, Iconsax.call),
+            _buildTextField('edit_profile.phone'.tr, _phoneController, Iconsax.call),
             const SizedBox(height: 16),
-            _buildTextField('Location', _locationController, Iconsax.location),
+            _buildTextField('edit_profile.location'.tr, _locationController, Iconsax.location),
             const SizedBox(height: 16),
-            _buildTextField('Farm Size (hectares)', _farmSizeController, Iconsax.home),
+            _buildTextField('edit_profile.farm_size'.tr, _farmSizeController, Iconsax.home),
             const SizedBox(height: 16),
             _buildTextField(
-              'Main Crops (comma separated)',
+              'edit_profile.crops'.tr,
               _cropsController,
               Iconsax.menu,
               maxLines: 3,
@@ -150,7 +200,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                       )
                     : Text(
-                        'Save Changes',
+                        'edit_profile.save'.tr,
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,

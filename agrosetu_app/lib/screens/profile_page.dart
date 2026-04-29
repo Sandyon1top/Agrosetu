@@ -6,8 +6,10 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'login_screen.dart';
+import '../l10n/app_translations.dart';
 import '../services/user_service.dart';
 import '../services/api_service.dart';
+import '../services/user_preferences_service.dart';
 import 'edit_profile_page.dart';
 import 'settings_page.dart';
 import 'privacy_security_page.dart';
@@ -23,6 +25,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   bool _notificationsEnabled = true;
+  bool _togglingNotifications = false;
   Map<String, dynamic>? _userData;
   Uint8List? _profileImage;
   bool _isLoading = true;
@@ -32,6 +35,40 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     _loadUserData();
     _loadProfileImage();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await UserPreferencesService.load();
+    if (!mounted) return;
+    setState(() => _notificationsEnabled = prefs.notificationsEnabled);
+    // Reconcile with backend in the background.
+    UserPreferencesService.refreshFromBackend().then((p) {
+      if (!mounted) return;
+      setState(() => _notificationsEnabled = p.notificationsEnabled);
+    });
+  }
+
+  Future<void> _toggleNotifications(bool value) async {
+    setState(() {
+      _notificationsEnabled = value;
+      _togglingNotifications = true;
+    });
+    final updated =
+        await UserPreferencesService.update(notificationsEnabled: value);
+    if (!mounted) return;
+    setState(() {
+      _notificationsEnabled = updated.notificationsEnabled;
+      _togglingNotifications = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(value
+            ? 'profile.notifications_enabled'.tr
+            : 'profile.notifications_muted'.tr),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> _loadUserData() async {
@@ -52,12 +89,12 @@ class _ProfilePageState extends State<ProfilePage> {
         );
         return;
       }
-      
+
       debugPrint('[ProfilePage] User data loaded: ${user['name']}');
       setState(() {
         _userData = {
           'id': user['id'] ?? 'N/A',
-          'name': user['name'] ?? 'User',
+          'name': user['name'] ?? 'profile.user_default'.tr,
           'email': user['email'] ?? 'user@agrosetu.com',
           'phone': user['phone'] ?? '+977 9800000000',
           'location': user['location'] ?? 'Kathmandu, Nepal',
@@ -112,9 +149,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile picture updated'),
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: Text('profile.picture_updated'.tr),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -158,12 +195,12 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
 
-  final List<Map<String, dynamic>> _menuItems = [
-    {'icon': Iconsax.setting, 'label': 'Settings', 'action': 'settings'},
-    {'icon': Iconsax.shield_tick, 'label': 'Privacy & Security', 'action': 'privacy'},
-    {'icon': Iconsax.document, 'label': 'Terms & Conditions', 'action': 'terms'},
-    {'icon': Iconsax.call, 'label': 'Contact Support', 'action': 'support'},
-  ];
+  List<Map<String, dynamic>> get _menuItems => [
+        {'icon': Iconsax.setting, 'label': 'profile.menu.settings'.tr, 'action': 'settings'},
+        {'icon': Iconsax.shield_tick, 'label': 'profile.menu.privacy'.tr, 'action': 'privacy'},
+        {'icon': Iconsax.document, 'label': 'profile.menu.terms'.tr, 'action': 'terms'},
+        {'icon': Iconsax.call, 'label': 'profile.menu.support'.tr, 'action': 'support'},
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -267,7 +304,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 16),
           Text(
-            _userData?['name'] ?? 'User',
+            _userData?['name'] ?? 'profile.user_default'.tr,
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -285,7 +322,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(width: 4),
               Text(
-                _userData?['location'] ?? 'Location',
+                _userData?['location'] ?? 'profile.location'.tr,
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   color: Colors.grey.shade600,
@@ -321,7 +358,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               child: Text(
-                'Edit Profile',
+                'profile.edit'.tr,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -336,9 +373,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildStatsSection() {
     final stats = [
-      {'label': 'Detections', 'value': '${_userData?['detections'] ?? 0}', 'icon': Iconsax.camera},
-      {'label': 'Discussions', 'value': '${_userData?['discussions'] ?? 0}', 'icon': Iconsax.message},
-      {'label': 'Market Tips', 'value': '${_userData?['marketTips'] ?? 0}', 'icon': Iconsax.chart},
+      {'label': 'profile.detections'.tr, 'value': '${_userData?['detections'] ?? 0}', 'icon': Iconsax.camera},
+      {'label': 'profile.discussions'.tr, 'value': '${_userData?['discussions'] ?? 0}', 'icon': Iconsax.message},
+      {'label': 'profile.market_tips'.tr, 'value': '${_userData?['marketTips'] ?? 0}', 'icon': Iconsax.chart},
     ];
 
     return Container(
@@ -416,7 +453,7 @@ class _ProfilePageState extends State<ProfilePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Farm Information',
+            'profile.farm_information'.tr,
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -424,11 +461,11 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildInfoRow('Farm Size', _userData?['farmSize'] ?? '0 hectares', Iconsax.home),
+          _buildInfoRow('profile.farm_size'.tr, _userData?['farmSize'] ?? '0 hectares', Iconsax.home),
           const SizedBox(height: 12),
-          _buildInfoRow('Main Crops', (_userData?['mainCrops'] as List?)?.join(', ') ?? 'None', Iconsax.menu),
+          _buildInfoRow('profile.main_crops'.tr, (_userData?['mainCrops'] as List?)?.join(', ') ?? '-', Iconsax.menu),
           const SizedBox(height: 12),
-          _buildInfoRow('Member Since', _userData?['joinDate'] ?? 'Unknown', Iconsax.calendar),
+          _buildInfoRow('profile.member_since'.tr, _userData?['joinDate'] ?? '-', Iconsax.calendar),
         ],
       ),
     );
@@ -498,7 +535,7 @@ class _ProfilePageState extends State<ProfilePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Preferences',
+            'profile.preferences'.tr,
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -507,11 +544,9 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 12),
           _buildPreferenceRow(
-            'Notifications',
+            'profile.notifications'.tr,
             _notificationsEnabled,
-            (value) {
-              setState(() => _notificationsEnabled = value);
-            },
+            _togglingNotifications ? null : _toggleNotifications,
           ),
         ],
       ),
@@ -521,7 +556,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildPreferenceRow(
     String label,
     bool value,
-    Function(bool) onChanged,
+    ValueChanged<bool>? onChanged,
   ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -613,7 +648,7 @@ class _ProfilePageState extends State<ProfilePage> {
         },
         icon: const Icon(Iconsax.logout),
         label: Text(
-          'Logout',
+          'auth.logout'.tr,
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -636,18 +671,18 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          'Logout',
+          'auth.logout'.tr,
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         ),
         content: Text(
-          'Are you sure you want to logout? You will be returned to the login screen.',
+          'auth.logout_confirm'.tr,
           style: GoogleFonts.poppins(fontSize: 13),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cancel',
+              'auth.cancel'.tr,
               style: GoogleFonts.poppins(
                 color: Colors.grey.shade600,
               ),
@@ -679,7 +714,7 @@ class _ProfilePageState extends State<ProfilePage> {
               backgroundColor: Colors.red,
             ),
             child: Text(
-              'Logout',
+              'auth.logout'.tr,
               style: GoogleFonts.poppins(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
