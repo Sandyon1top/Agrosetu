@@ -21,7 +21,7 @@ dependencies:
   geolocator: ^10.0.0 
   url_launcher: ^6.1.14
   image_picker: ^1.0.0
-  file_picker: ^8.0.0
+  file_picker: ^11.0.2
   fl_chart: ^0.65.0
   share_plus: ^7.2.1
   google_sign_in: ^7.2.0
@@ -31,6 +31,7 @@ dependencies:
   speech_to_text: ^7.0.0
   flutter_tts: ^4.2.3
   avatar_glow: ^3.0.1
+  record: ^6.0.0
   
   
   # Utilities
@@ -40,6 +41,7 @@ dependencies:
   image_gallery_saver: ^2.0.3
   audioplayers: ^6.6.0
   socket_io_client: ^3.1.4
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:
@@ -51,5 +53,5 @@ flutter:
   
   assets:
     - data/Kalimati_Tarkari_Dataset.csv
-    - data/Nepal_Climate_Data.csv
+    - data/climate_monthly.json
     

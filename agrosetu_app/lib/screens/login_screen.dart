@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
+import 'admin/admin_shell.dart';
 import '../widgets/animated_background.dart';
 import 'dashboard_screen.dart';
 import '../services/user_service.dart';
@@ -119,6 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
             'name': userInfo['name'] ?? 'User',
             'email': userInfo['email'] ?? email,
             'token': token,
+            'isAdmin': userInfo['isAdmin'] == true,
             'phone': '+977 9800000000',
             'location': 'Kathmandu, Nepal',
             'farmSize': '2.0 hectares',
@@ -147,20 +152,32 @@ class _LoginScreenState extends State<LoginScreen> {
           
           await _saveRememberedCredentials();
 
-          // Save explicitly for offline fallback regardless of remember me
+          // Save explicitly for offline fallback regardless of remember me.
+          // We store the SHA-256 hash (with a per-device salt) of the password
+          // — never plaintext — so that a device-level read of SharedPreferences
+          // doesn't expose the credential. Remove any legacy plaintext entry.
           final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('offline_password'); // legacy plaintext key
           await prefs.setString('offline_email', email.toLowerCase());
-          await prefs.setString('offline_password', password); // We store it explicitly for offline check
+          final salt = await _getOrCreateOfflineSalt(prefs);
+          final hash =
+              sha256.convert(utf8.encode('$salt::$password')).toString();
+          await prefs.setString('offline_password_hash', hash);
 
           await Future.delayed(const Duration(milliseconds: 800));
-          
+
           if (mounted) {
+            final isAdmin = userInfo['isAdmin'] == true;
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const DashboardScreen()),
+              MaterialPageRoute(
+                builder: (context) => isAdmin
+                    ? const AdminShell()
+                    : const DashboardScreen(),
+              ),
             );
           }
-          
+
         } catch (dataError) {
           debugPrint('[LoginScreen] ❌ Error processing user data: $dataError');
           _showErrorDialog('Data Error', 'Failed to process login response: $dataError');
@@ -213,13 +230,20 @@ class _LoginScreenState extends State<LoginScreen> {
       try {
         final prefs = await SharedPreferences.getInstance();
         final savedEmail = prefs.getString('offline_email');
-        final savedPassword = prefs.getString('offline_password');
-        
+        final savedHash = prefs.getString('offline_password_hash');
+
         final inputEmail = _emailController.text.trim().toLowerCase();
         final inputPassword = _passwordController.text.trim();
 
-        if (savedEmail != null && savedPassword != null && 
-            savedEmail == inputEmail && savedPassword == inputPassword) {
+        bool credentialsValid = false;
+        if (savedEmail != null && savedHash != null && savedEmail == inputEmail) {
+          final salt = await _getOrCreateOfflineSalt(prefs);
+          final candidate =
+              sha256.convert(utf8.encode('$salt::$inputPassword')).toString();
+          credentialsValid = candidate == savedHash;
+        }
+
+        if (credentialsValid) {
           
           final savedUser = await UserService.getUser();
           if (savedUser != null) {
@@ -234,8 +258,14 @@ class _LoginScreenState extends State<LoginScreen> {
             
             await Future.delayed(const Duration(milliseconds: 800));
             if (mounted) {
+              final cachedUser = await UserService.getUser();
+              final isAdmin = cachedUser?['isAdmin'] == true;
               navigator.pushReplacement(
-                MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                MaterialPageRoute(
+                  builder: (context) => isAdmin
+                      ? const AdminShell()
+                      : const DashboardScreen(),
+                ),
               );
             }
             return;
@@ -294,6 +324,7 @@ class _LoginScreenState extends State<LoginScreen> {
             'name': userInfo['name'] ?? 'User',
             'email': userInfo['email'] ?? '',
             'token': token,
+            'isAdmin': userInfo['isAdmin'] == true,
             'phone': '+977 9800000000',
             'location': 'Kathmandu, Nepal',
             'farmSize': '2.0 hectares',
@@ -317,11 +348,16 @@ class _LoginScreenState extends State<LoginScreen> {
           }
 
           await Future.delayed(const Duration(milliseconds: 800));
-          
+
           if (mounted) {
+            final isAdmin = userInfo['isAdmin'] == true;
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const DashboardScreen()),
+              MaterialPageRoute(
+                builder: (context) => isAdmin
+                    ? const AdminShell()
+                    : const DashboardScreen(),
+              ),
             );
           }
         } catch (dataError) {
@@ -339,6 +375,21 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
   
+  /// Returns a stable per-device salt used to hash the offline password.
+  /// Generated once on first login and persisted; not derivable from the user's
+  /// password, so an attacker who reads SharedPreferences still cannot brute
+  /// force the original password without knowing the salt's storage location
+  /// AND running on the same device.
+  Future<String> _getOrCreateOfflineSalt(SharedPreferences prefs) async {
+    var salt = prefs.getString('offline_salt');
+    if (salt != null && salt.isNotEmpty) return salt;
+    final rng = Random.secure();
+    final bytes = List<int>.generate(16, (_) => rng.nextInt(256));
+    salt = base64Url.encode(bytes);
+    await prefs.setString('offline_salt', salt);
+    return salt;
+  }
+
   void _showErrorDialog(String title, String message) {
     showDialog(
       context: context,
@@ -734,14 +785,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 _buildSocialButton(
-                                  icon: Icons.g_mobiledata, 
+                                  icon: Icons.g_mobiledata,
                                   color: const Color(0xFFDB4437),
                                   onTap: _handleGoogleLogin,
                                 ),
-                                const SizedBox(width: 16),
-                                _buildSocialButton(icon: Icons.facebook, color: const Color(0xFF4267B2)),
-                                const SizedBox(width: 16),
-                                _buildSocialButton(icon: Icons.apple, color: Colors.black),
                               ],
                             ),
 
@@ -795,6 +842,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 textAlign: TextAlign.center,
                               ),
                             ),
+
                           ],
                         ),
                       ),
