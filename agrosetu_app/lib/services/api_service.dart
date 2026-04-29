@@ -9,18 +9,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum BackendTarget { localhost, emulator, ngrok, custom }
 
 class ApiService {
-  static const String baseUrl = 'http://10.22.8.50:5001';
+  static const String baseUrl = 'http://192.168.101.4:5001';
 
   // NOTE: `flaskBaseUrl` is configurable at runtime so you can switch
   // easily between local, emulator and ngrok when testing on devices.
   // Default (local machine running Flask):
-  static String flaskBaseUrl = 'http://10.22.8.50:8000';
+  static String flaskBaseUrl = 'http://192.168.101.4:8000';
 
   // Helper to change target backend quickly from code:
   static void setBackendTarget(BackendTarget target, {String? ngrokUrl, String? customUrl}) {
     switch (target) {
       case BackendTarget.localhost:
-        flaskBaseUrl = 'http://10.22.8.50:8000';
+        flaskBaseUrl = 'http://192.168.101.4:8000';
         break;
       case BackendTarget.emulator:
         // Android emulator special host mapping
@@ -64,7 +64,7 @@ class ApiService {
           'email': email,
           'password': password,
         }),
-      );
+      ).timeout(const Duration(seconds: 15));
       
       final responseData = jsonDecode(response.body);
       
@@ -156,7 +156,7 @@ class ApiService {
           'email': email,
           'password': password,
         }),
-      );
+      ).timeout(const Duration(seconds: 15));
       
       final responseData = jsonDecode(response.body);
       
@@ -195,7 +195,7 @@ class ApiService {
           'identity': email,
           'otp': otp,
         }),
-      );
+      ).timeout(const Duration(seconds: 15));
       
       final responseData = jsonDecode(response.body);
       
@@ -227,7 +227,7 @@ class ApiService {
         body: jsonEncode({
           'identity': email,
         }),
-      );
+      ).timeout(const Duration(seconds: 15));
       
       final responseData = jsonDecode(response.body);
       
@@ -259,7 +259,7 @@ class ApiService {
         body: jsonEncode({
           'email': email,
         }),
-      );
+      ).timeout(const Duration(seconds: 15));
       
       final responseData = jsonDecode(response.body);
       
@@ -339,10 +339,10 @@ class ApiService {
       final response = await http.get(
         Uri.parse(url),
         headers: getHeaders(),
-      );
-      
+      ).timeout(const Duration(seconds: 15));
+
       final responseData = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {
           'status': 'ok',
@@ -368,7 +368,7 @@ class ApiService {
       final response = await http.get(
         Uri.parse('$baseUrl/api/community/post-detail/$postId'),
         headers: getHeaders(),
-      );
+      ).timeout(const Duration(seconds: 15));
       
       final responseData = jsonDecode(response.body);
       
@@ -410,7 +410,7 @@ class ApiService {
           'author': author,
           'image_data': imageData,
         }),
-      );
+      ).timeout(const Duration(seconds: 30));
       
       final responseData = jsonDecode(response.body);
       
@@ -440,7 +440,7 @@ class ApiService {
       final response = await http.get(
         Uri.parse('$baseUrl/api/users/search?query=$query'),
         headers: getHeaders(),
-      );
+      ).timeout(const Duration(seconds: 10));
       
       final responseData = jsonDecode(response.body);
       
@@ -476,7 +476,7 @@ class ApiService {
           'userId': userId,
           'userName': userName,
         }),
-      );
+      ).timeout(const Duration(seconds: 10));
       
       final responseData = jsonDecode(response.body);
       
@@ -518,7 +518,7 @@ class ApiService {
           'userEmail': userEmail,
           'text': text,
         }),
-      );
+      ).timeout(const Duration(seconds: 15));
       
       final responseData = jsonDecode(response.body);
       
@@ -553,7 +553,7 @@ class ApiService {
         body: jsonEncode({
           'userId': userId,
         }),
-      );
+      ).timeout(const Duration(seconds: 15));
       
       final responseData = jsonDecode(response.body);
       
@@ -875,6 +875,299 @@ class ApiService {
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // ====== USER PROFILE / SETTINGS / SUPPORT ======
+
+  static Future<Map<String, dynamic>> updateProfile({
+    required String userId,
+    String? name,
+    String? email,
+    String? phone,
+    String? location,
+    String? farmSize,
+    List<String>? mainCrops,
+  }) async {
+    try {
+      final token = await getToken();
+      final body = <String, dynamic>{'userId': userId};
+      if (name != null) body['name'] = name;
+      if (email != null) body['email'] = email;
+      if (phone != null) body['phone'] = phone;
+      if (location != null) body['location'] = location;
+      if (farmSize != null) body['farmSize'] = farmSize;
+      if (mainCrops != null) body['mainCrops'] = mainCrops;
+
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/api/user/update'),
+            headers: getHeaders(token: token),
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 15));
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'status': 'ok', 'user': data['user'], 'message': data['message'] ?? 'Profile updated'};
+      }
+      return {'status': 'error', 'message': data['message'] ?? 'Failed to update profile'};
+    } on SocketException {
+      return {'status': 'error', 'message': 'No internet connection'};
+    } catch (e) {
+      return {'status': 'error', 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getUserSettings(String userId) async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl/api/user/settings/$userId'), headers: getHeaders())
+          .timeout(const Duration(seconds: 10));
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'status': 'ok', 'preferences': data['preferences'] ?? {}};
+      }
+      return {'status': 'error', 'message': data['message'] ?? 'Failed to load settings'};
+    } catch (e) {
+      return {'status': 'error', 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateUserSettings({
+    required String userId,
+    String? language,
+    bool? notificationsEnabled,
+    bool? profileVisibility,
+    bool? activityLogging,
+    bool? locationServicesEnabled,
+  }) async {
+    try {
+      final body = <String, dynamic>{'userId': userId};
+      if (language != null) body['language'] = language;
+      if (notificationsEnabled != null) body['notificationsEnabled'] = notificationsEnabled;
+      if (profileVisibility != null) body['profileVisibility'] = profileVisibility;
+      if (activityLogging != null) body['activityLogging'] = activityLogging;
+      if (locationServicesEnabled != null) body['locationServicesEnabled'] = locationServicesEnabled;
+
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/api/user/settings'),
+            headers: getHeaders(),
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 10));
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'status': 'ok', 'preferences': data['preferences'] ?? {}};
+      }
+      return {'status': 'error', 'message': data['message'] ?? 'Failed to update settings'};
+    } catch (e) {
+      return {'status': 'error', 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> changePassword({
+    required String userId,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/user/change-password'),
+            headers: getHeaders(),
+            body: jsonEncode({
+              'userId': userId,
+              'currentPassword': currentPassword,
+              'newPassword': newPassword,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'status': 'ok', 'message': data['message'] ?? 'Password changed'};
+      }
+      return {
+        'status': 'error',
+        'message': data['message'] ?? 'Failed to change password',
+        'errors': data['errors'],
+      };
+    } catch (e) {
+      return {'status': 'error', 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> deactivateAccount(String userId) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/user/deactivate'),
+            headers: getHeaders(),
+            body: jsonEncode({'userId': userId}),
+          )
+          .timeout(const Duration(seconds: 15));
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'status': 'ok', 'message': data['message'] ?? 'Account deleted'};
+      }
+      return {'status': 'error', 'message': data['message'] ?? 'Failed to delete account'};
+    } catch (e) {
+      return {'status': 'error', 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> sendSupportMessage({
+    String? userId,
+    String? userName,
+    String? userEmail,
+    required String subject,
+    required String message,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/contact/send-message'),
+            headers: getHeaders(),
+            body: jsonEncode({
+              'userId': userId,
+              'userName': userName,
+              'userEmail': userEmail,
+              'subject': subject,
+              'message': message,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'status': 'ok', 'message': data['message'] ?? 'Message sent'};
+      }
+      return {'status': 'error', 'message': data['message'] ?? 'Failed to send message'};
+    } catch (e) {
+      return {'status': 'error', 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> exportUserData(String userId) async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/api/user/export-data/$userId'),
+            headers: getHeaders(),
+          )
+          .timeout(const Duration(seconds: 30));
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'status': 'ok', 'data': data};
+      }
+      return {'status': 'error', 'message': data['message'] ?? 'Failed to export data'};
+    } catch (e) {
+      return {'status': 'error', 'message': 'Network error: $e'};
+    }
+  }
+
+  // ====== ADMIN PANEL APIS ======
+
+  static Future<Map<String, dynamic>> adminLogin(String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/admin/login'),
+        headers: getHeaders(),
+        body: jsonEncode({'email': email, 'password': password}),
+      ).timeout(const Duration(seconds: 15));
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['status'] == 'ok') {
+        return {'status': 'ok', 'token': data['token'], 'user': data['user']};
+      }
+      return {'status': 'error', 'message': data['message'] ?? 'Admin login failed'};
+    } catch (e) {
+      return {'status': 'error', 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> adminGetStats() async {
+    return _adminGet('/api/admin/stats');
+  }
+
+  static Future<Map<String, dynamic>> adminGetTimeseries({int days = 30}) async {
+    return _adminGet('/api/admin/detections-timeseries?days=$days');
+  }
+
+  static Future<Map<String, dynamic>> adminGetUsers({int page = 1, int limit = 20, String search = ''}) async {
+    final encodedSearch = Uri.encodeQueryComponent(search);
+    return _adminGet('/api/admin/users?page=$page&limit=$limit&search=$encodedSearch');
+  }
+
+  static Future<Map<String, dynamic>> adminSuspendUser(String userId) async {
+    return _adminPost('/api/admin/users/$userId/suspend');
+  }
+
+  static Future<Map<String, dynamic>> adminActivateUser(String userId) async {
+    return _adminPost('/api/admin/users/$userId/activate');
+  }
+
+  static Future<Map<String, dynamic>> adminDeleteUser(String userId) async {
+    return _adminDelete('/api/admin/users/$userId');
+  }
+
+  static Future<Map<String, dynamic>> adminGetPosts({int page = 1, int limit = 15}) async {
+    return _adminGet('/api/admin/posts?page=$page&limit=$limit');
+  }
+
+  static Future<Map<String, dynamic>> adminDeletePost(String postId) async {
+    return _adminDelete('/api/admin/posts/$postId');
+  }
+
+  static Future<Map<String, dynamic>> adminPinPost(String postId, bool pinned) async {
+    return _adminPost('/api/admin/posts/$postId/pin', body: {'pinned': pinned});
+  }
+
+  static Future<Map<String, dynamic>> adminGetDetections({int page = 1, int limit = 25}) async {
+    return _adminGet('/api/admin/detections?page=$page&limit=$limit');
+  }
+
+  static Future<Map<String, dynamic>> _adminGet(String path) async {
+    try {
+      final token = await getToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl$path'),
+        headers: getHeaders(token: token),
+      ).timeout(const Duration(seconds: 15));
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return {'status': 'ok', ...data};
+      return {'status': 'error', 'code': response.statusCode, 'message': data['message'] ?? 'Request failed'};
+    } catch (e) {
+      return {'status': 'error', 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> _adminPost(String path, {Map<String, dynamic>? body}) async {
+    try {
+      final token = await getToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl$path'),
+        headers: getHeaders(token: token),
+        body: body == null ? null : jsonEncode(body),
+      ).timeout(const Duration(seconds: 15));
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return {'status': 'ok', ...data};
+      return {'status': 'error', 'code': response.statusCode, 'message': data['message'] ?? 'Request failed'};
+    } catch (e) {
+      return {'status': 'error', 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> _adminDelete(String path) async {
+    try {
+      final token = await getToken();
+      final response = await http.delete(
+        Uri.parse('$baseUrl$path'),
+        headers: getHeaders(token: token),
+      ).timeout(const Duration(seconds: 15));
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return {'status': 'ok', ...data};
+      return {'status': 'error', 'code': response.statusCode, 'message': data['message'] ?? 'Request failed'};
+    } catch (e) {
+      return {'status': 'error', 'message': 'Network error: $e'};
     }
   }
 
