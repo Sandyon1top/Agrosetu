@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'l10n/app_translations.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'services/user_service.dart';
@@ -6,7 +8,31 @@ import 'services/user_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await UserService.initialize();
+  await AppTranslations.initFromPrefs();
   runApp(const AgroSetuApp());
+
+  // Configure audio session AFTER first frame so a misbehaving audio plugin
+  // can't block app startup. iOS default is "ambient" (silenced by ringer +
+  // other apps); we want "playback" so TTS responses are audible.
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    try {
+      await AudioPlayer.global.setAudioContext(AudioContext(
+        iOS: AudioContextIOS(
+          // playback category routes to speaker by default and bypasses the
+          // ringer switch. defaultToSpeaker is only valid with playAndRecord
+          // and triggers OSStatus -50 if combined with playback.
+          category: AVAudioSessionCategory.playback,
+          options: const {},
+        ),
+        android: AudioContextAndroid(
+          contentType: AndroidContentType.speech,
+          usageType: AndroidUsageType.assistant,
+        ),
+      ));
+    } catch (e) {
+      debugPrint('[main] Audio context init failed: $e');
+    }
+  });
 }
 
 class AgroSetuApp extends StatelessWidget {
@@ -14,7 +40,15 @@ class AgroSetuApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder<String>(
+      valueListenable: AppTranslations.currentLocale,
+      builder: (context, locale, _) => _buildApp(locale),
+    );
+  }
+
+  Widget _buildApp(String locale) {
     return MaterialApp(
+      key: ValueKey('app_$locale'),
       title: 'AgroSetu',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -87,17 +121,17 @@ class _SplashRouterState extends State<_SplashRouter> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF1B5E20),
+    return Scaffold(
+      backgroundColor: const Color(0xFF1B5E20),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.park, size: 80, color: Colors.white),
-            SizedBox(height: 16),
+            const Icon(Icons.park, size: 80, color: Colors.white),
+            const SizedBox(height: 16),
             Text(
-              'AGROSETU',
-              style: TextStyle(
+              'app.name'.tr,
+              style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
@@ -105,10 +139,10 @@ class _SplashRouterState extends State<_SplashRouter> {
                 letterSpacing: 2,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
-              'HAMRO LAGI',
-              style: TextStyle(
+              'app.tagline'.tr,
+              style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -116,8 +150,8 @@ class _SplashRouterState extends State<_SplashRouter> {
                 letterSpacing: 2,
               ),
             ),
-            SizedBox(height: 40),
-            CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+            const SizedBox(height: 40),
+            const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
           ],
         ),
       ),
