@@ -58,5 +58,26 @@
 	<string>666169833803-ukurcn8csd642q65r126f76uulqo1dbh.apps.googleusercontent.com</string>
 	<key>GIDServerClientID</key>
 	<string>666169833803-mdpcvgsfvt6r1itejpd0f4pjprncvk4u.apps.googleusercontent.com</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Agrosetu uses the microphone to record your voice for the AI assistant and voice queries.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Agrosetu uses speech recognition to transcribe your voice for the AI assistant.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Agrosetu uses the camera to capture photos of crops for plant disease detection.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Agrosetu uses your photo library so you can select existing crop photos for disease detection.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Agrosetu may save processed crop images and reports to your photo library.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Agrosetu uses your location to fetch local weather and farm-relevant climate data.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Agrosetu connects to your local development server for backend features.</string>
 </dict>
 </plist>

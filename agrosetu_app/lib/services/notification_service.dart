@@ -9,7 +9,7 @@ class NotificationService {
   static const String _notificationsKey = 'notifications_list';
 
   // ADDED: Backend URL helper (Adjust port if necessary)
-  static const String baseUrl = 'http://10.22.8.50:5001/api';
+  static const String baseUrl = 'http://192.168.101.4:5001/api';
 
   static Future<void> addNotification(Map<String, dynamic> notification) async {
     final prefs = await SharedPreferences.getInstance();

@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class WeatherService {
   // Update this to your machine's IP if testing on a real device
-  static const String backendUrl = 'http://10.22.8.50:5001';
+  static const String backendUrl = 'http://192.168.101.4:5001';
   static const String _cacheKey = 'agro_weather_cache';
   static const String _forecastKey = 'agro_forecast_cache';
 
