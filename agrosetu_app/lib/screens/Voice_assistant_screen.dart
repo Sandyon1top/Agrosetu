@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:file_picker/file_picker.dart'; 
+import 'package:file_picker/file_picker.dart';
+import 'package:record/record.dart';
 import '../services/api_service.dart';
 
 class VoiceAssistantScreen extends StatefulWidget {
@@ -20,6 +23,8 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
     with SingleTickerProviderStateMixin {
   final SpeechToText _speechToText = SpeechToText();
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  String? _recordingPath;
 
   bool _speechEnabled = false;
   bool _isListening = false;
@@ -91,10 +96,10 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
 
   Future<void> _pickAndUploadAudio() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      FilePickerResult? result = await FilePicker.pickFiles(
         type: FileType.audio,
         allowMultiple: false,
-        withData: true, 
+        withData: true,
       );
 
       if (result == null || result.files.isEmpty) return;
@@ -160,11 +165,10 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
     }
   }
 
+  // Live mic recording → backend Whisper. iOS 26 does not ship a Nepali
+  // speech recognizer, so we bypass on-device STT entirely and let Whisper
+  // (which handles Nepali natively) do the transcription on the server.
   Future<void> _startListening() async {
-    if (!_speechEnabled) {
-      _showError('Speech recognition not available. Please check browser permissions.');
-      return;
-    }
     setState(() {
       _recognizedText = '';
       _answerText = '';
@@ -173,25 +177,76 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
       _submitInProgress = false;
     });
     _silenceTimer?.cancel();
-    await _speechToText.listen(
-      onResult: _onSpeechResult,
-      localeId: 'ne_NP',
-      listenOptions: SpeechListenOptions(
-        listenMode: ListenMode.dictation,
-        cancelOnError: false,
-        partialResults: true,
-      ),
-      pauseFor: const Duration(seconds: 3),
-    );
-    setState(() => _isListening = true);
+
+    try {
+      if (!await _audioRecorder.hasPermission()) {
+        _showError('Microphone permission denied. Enable it in Settings → Agrosetu → Microphone.');
+        return;
+      }
+      final dir = await getTemporaryDirectory();
+      // WAV (PCM) — Whisper reads it even if the file isn't perfectly
+      // finalized. AAC/M4A was failing on backend with "moov atom not found"
+      // because the container metadata is written at the END of recording,
+      // and any abrupt stop left the file unreadable to ffmpeg.
+      _recordingPath = '${dir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.wav';
+      await _audioRecorder.start(
+        const RecordConfig(encoder: AudioEncoder.wav, numChannels: 1, sampleRate: 16000),
+        path: _recordingPath!,
+      );
+      setState(() {
+        _isListening = true;
+        _recognizedText = '🔴 रेकर्डिङ हुँदैछ… (बोल्न रोक्न Stop थिच्नुहोस्)';
+      });
+
+      // Hard stop after 30 s in case user forgets to tap stop.
+      _silenceTimer = Timer(const Duration(seconds: 30), () {
+        if (_isListening && mounted) _stopListening();
+      });
+    } catch (e) {
+      _showError('Could not start recording: $e');
+    }
   }
 
   Future<void> _stopListening() async {
     _silenceTimer?.cancel();
-    await _speechToText.stop();
+    if (!await _audioRecorder.isRecording()) return;
+    final path = await _audioRecorder.stop();
     setState(() => _isListening = false);
-    if (_recognizedText.isNotEmpty && !_isLoading && !_submitInProgress) {
-      await _submitQuery(_recognizedText);
+    if (path == null) return;
+    await _uploadRecording(path);
+  }
+
+  Future<void> _uploadRecording(String filePath) async {
+    setState(() {
+      _isLoading = true;
+      _recognizedText = 'अडियो प्रशोधन हुँदैछ…';
+      _answerText = '';
+      _audioBase64 = '';
+    });
+    try {
+      final uri = Uri.parse('${ApiService.baseUrl}/api/voice/audio-query');
+      final token = await ApiService.getToken();
+      final request = http.MultipartRequest('POST', uri);
+      if (token != null) request.headers['Authorization'] = 'Bearer $token';
+      request.files.add(await http.MultipartFile.fromPath('audio', filePath, filename: 'rec.m4a'));
+      request.fields['userId'] = 'mobile_user';
+      final streamed = await request.send().timeout(const Duration(seconds: 60));
+      final response = await http.Response.fromStream(streamed);
+      if (response.statusCode != 200) {
+        _showError('Server error: ${response.statusCode}');
+        return;
+      }
+      final data = jsonDecode(response.body);
+      setState(() {
+        _recognizedText = data['recognizedText'] ?? data['transcript'] ?? '';
+        _answerText = data['answer'] ?? '';
+        _audioBase64 = data['audioBase64'] ?? '';
+      });
+      if (_audioBase64.isNotEmpty) await _speakAnswer();
+    } catch (e) {
+      _showError('Could not get answer: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -206,7 +261,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
     });
 
     _silenceTimer?.cancel();
-    _silenceTimer = Timer(const Duration(seconds: 3), () {
+    _silenceTimer = Timer(const Duration(seconds: 4), () {
       if (_isListening && mounted) {
         _stopListening();
       }
@@ -262,15 +317,30 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
   }
 
   Future<void> _speakAnswer() async {
-    if (_audioBase64.isNotEmpty) {
-      try {
-        setState(() => _isSpeaking = true);
-        final bytes = base64Decode(_audioBase64);
-        await _audioPlayer.play(BytesSource(bytes));
-      } catch (e) {
-        debugPrint('Error playing TTS audio: $e');
-        setState(() => _isSpeaking = false);
-      }
+    if (_audioBase64.isEmpty) return;
+    try {
+      setState(() => _isSpeaking = true);
+      await _audioPlayer.setAudioContext(AudioContext(
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.playback,
+          options: const {},
+        ),
+        android: AudioContextAndroid(
+          contentType: AndroidContentType.speech,
+          usageType: AndroidUsageType.assistant,
+        ),
+      ));
+      await _audioPlayer.setReleaseMode(ReleaseMode.release);
+      await _audioPlayer.setVolume(1.0);
+
+      final bytes = base64Decode(_audioBase64);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/tts_${DateTime.now().millisecondsSinceEpoch}.mp3');
+      await file.writeAsBytes(bytes, flush: true);
+      await _audioPlayer.play(DeviceFileSource(file.path));
+    } catch (e) {
+      debugPrint('[VoiceAssistant] TTS error: $e');
+      if (mounted) setState(() => _isSpeaking = false);
     }
   }
 
@@ -281,11 +351,27 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
 
   void _showError(String message) {
     if (!mounted) return;
+    final lower = message.toLowerCase();
+    final isOffline = lower.contains('socketexception') ||
+        lower.contains('failed host lookup') ||
+        lower.contains('timeoutexception') ||
+        lower.contains('timed out') ||
+        lower.contains('network error') ||
+        lower.contains('no internet') ||
+        lower.contains('connection') ||
+        lower.contains('unreachable');
+
+    final shown = isOffline
+        ? '📡 इन्टरनेट छैन। पछि फेरि प्रयास गर्नुहोस्।\nVoice assistant needs internet. Try again when online.'
+        : message;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: GoogleFonts.poppins()),
-        backgroundColor: Colors.red.shade700,
+        content: Text(shown, style: GoogleFonts.poppins()),
+        backgroundColor:
+            isOffline ? Colors.orange.shade700 : Colors.red.shade700,
         behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: isOffline ? 4 : 3),
       ),
     );
   }

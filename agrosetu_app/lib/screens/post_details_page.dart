@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -22,6 +23,24 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
   Map<String, dynamic>? _currentUser;
   final TextEditingController _commentController = TextEditingController();
   bool _isSubmittingComment = false;
+
+  /// Safe base64 decode for post images. Returns null when the value is
+  /// missing, empty, or not valid base64 — keeps a corrupt image from
+  /// crashing the entire post page.
+  Uint8List? _safeDecodeBase64(dynamic raw) {
+    if (raw == null) return null;
+    final str = raw.toString();
+    if (str.isEmpty) return null;
+    try {
+      final cleaned = str.startsWith('data:')
+          ? str.substring(str.indexOf(',') + 1)
+          : str;
+      return base64Decode(cleaned);
+    } catch (e) {
+      debugPrint('[PostDetails] base64 decode failed: $e');
+      return null;
+    }
+  }
 
   @override
   void initState() {
@@ -124,7 +143,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
 
       if (response['status'] == 'ok') {
         _commentController.clear();
-        FocusScope.of(context).unfocus();
+        if (mounted) FocusScope.of(context).unfocus();
         await _fetchPostDetails(); // Refresh comments
       }
     } catch (e) {
@@ -293,14 +312,15 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
             height: 1.6,
           ),
         ),
-        if (_post!['imageUrl'] != null && _post!['imageUrl'].toString().isNotEmpty) ...[
+        if (_safeDecodeBase64(_post!['imageUrl']) != null) ...[
           const SizedBox(height: 20),
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Image.memory(
-              base64Decode(_post!['imageUrl']),
+              _safeDecodeBase64(_post!['imageUrl'])!,
               fit: BoxFit.cover,
               width: double.infinity,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
             ),
           ),
         ],

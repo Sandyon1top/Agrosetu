@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../services/user_service.dart';
 import 'post_details_page.dart';
@@ -16,9 +17,12 @@ class CommunityPage extends StatefulWidget {
 }
 
 class _CommunityPageState extends State<CommunityPage> {
+  static const _kPostsCachePrefix = 'community_posts_cache_';
+
   int _selectedTab = 0;
   List<Map<String, dynamic>> _discussions = [];
   bool _isLoading = true;
+  bool _showingCachedFallback = false;
   String? _currentUserId;
   Map<String, dynamic>? _currentUser;
 
@@ -56,26 +60,106 @@ class _CommunityPageState extends State<CommunityPage> {
   Future<void> _fetchPosts() async {
     try {
       setState(() => _isLoading = true);
-      
+
       final category = _selectedTab == 0 ? 'All' : _categories[_selectedTab];
+
+      // Show cached posts immediately (so the UI is never blank when offline).
+      final cached = await _loadCachedPosts(category);
+      if (cached.isNotEmpty && mounted) {
+        setState(() {
+          _discussions = cached;
+          _showingCachedFallback = true;
+          _isLoading = false;
+        });
+      }
+
       final response = await ApiService.getPosts(category);
-      
-      setState(() {
-        if (response['status'] == 'ok') {
-          _discussions = List<Map<String, dynamic>>.from(response['posts'] ?? []);
-        }
-        _isLoading = false;
-      });
+
+      if (!mounted) return;
+      if (response['status'] == 'ok') {
+        final fresh = List<Map<String, dynamic>>.from(response['posts'] ?? []);
+        await _savePostsToCache(category, fresh);
+        setState(() {
+          _discussions = fresh;
+          _showingCachedFallback = false;
+          _isLoading = false;
+        });
+      } else if (cached.isEmpty) {
+        // Network failed and we have nothing to show.
+        setState(() => _isLoading = false);
+        _showOfflineToast();
+      }
     } catch (e) {
       debugPrint('Error fetching posts: $e');
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to load posts: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (_discussions.isEmpty) _showOfflineToast();
+    }
+  }
+
+  Widget _buildOfflineBanner() {
+    return Container(
+      width: double.infinity,
+      color: Colors.orange.shade100,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Row(
+        children: [
+          Icon(Iconsax.wifi_square, size: 14, color: Colors.orange.shade800),
+          const SizedBox(width: 6),
+          Text(
+            'Showing cached posts (offline)',
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              color: Colors.orange.shade900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showOfflineToast() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('📡 Offline. Showing what we have.'),
+        backgroundColor: Colors.orange,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> _loadCachedPosts(String category) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('$_kPostsCachePrefix$category');
+      if (raw == null) return [];
+      final list = jsonDecode(raw);
+      if (list is! List) return [];
+      return list.cast<Map<String, dynamic>>();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> _savePostsToCache(
+      String category, List<Map<String, dynamic>> posts) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Strip image data from cache to keep it lightweight.
+      final lightweight = posts.map((p) {
+        final copy = Map<String, dynamic>.from(p);
+        copy.remove('image_data');
+        if (copy['imageUrl'] is String &&
+            (copy['imageUrl'] as String).length > 1024) {
+          copy['imageUrl'] = '';
+        }
+        return copy;
+      }).toList();
+      await prefs.setString(
+          '$_kPostsCachePrefix$category', jsonEncode(lightweight));
+    } catch (e) {
+      debugPrint('[Community] cache write skipped: $e');
     }
   }
 
@@ -88,6 +172,7 @@ class _CommunityPageState extends State<CommunityPage> {
           children: [
             _buildHeader(),
             _buildCategoryTabs(),
+            if (_showingCachedFallback) _buildOfflineBanner(),
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -612,6 +697,24 @@ class _DiscussionCard extends StatefulWidget {
 class _DiscussionCardState extends State<_DiscussionCard> {
   bool _isLiked = false;
 
+  /// Safely decodes a base64 image string. Returns null when the value is
+  /// missing, empty, or not valid base64 — so a corrupt post can never crash
+  /// the entire feed.
+  Uint8List? _safeDecodeBase64(dynamic raw) {
+    if (raw == null) return null;
+    final str = raw.toString();
+    if (str.isEmpty) return null;
+    try {
+      final cleaned = str.startsWith('data:')
+          ? str.substring(str.indexOf(',') + 1)
+          : str;
+      return base64Decode(cleaned);
+    } catch (e) {
+      debugPrint('[Community] base64 decode failed: $e');
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -761,7 +864,7 @@ class _DiscussionCardState extends State<_DiscussionCard> {
           const SizedBox(height: 12),
           
           // Image Preview (if exists)
-          if (widget.discussion['imageUrl'] != null && widget.discussion['imageUrl'].toString().isNotEmpty)
+          if (_safeDecodeBase64(widget.discussion['imageUrl']) != null)
             Container(
               margin: const EdgeInsets.only(bottom: 12),
               height: 200,
@@ -769,8 +872,10 @@ class _DiscussionCardState extends State<_DiscussionCard> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 image: DecorationImage(
-                  image: MemoryImage(base64Decode(widget.discussion['imageUrl'])),
+                  image: MemoryImage(
+                      _safeDecodeBase64(widget.discussion['imageUrl'])!),
                   fit: BoxFit.cover,
+                  onError: (_, __) {},
                 ),
               ),
             ),
@@ -810,16 +915,28 @@ class _DiscussionCardState extends State<_DiscussionCard> {
                     return;
                   }
                   
+                  // Optimistic UI: flip locally first, then attempt server sync.
+                  // Roll back if the server call fails so the heart never lies
+                  // about persistence.
+                  final messenger = ScaffoldMessenger.of(context);
                   setState(() => _isLiked = !_isLiked);
-                  
-                  try {
-                    await ApiService.likePost(
-                      postId: widget.discussion['id'],
-                      userId: widget.currentUserId!,
-                      userName: widget.currentUserName ?? 'Someone',
+
+                  final result = await ApiService.likePost(
+                    postId: widget.discussion['id'],
+                    userId: widget.currentUserId!,
+                    userName: widget.currentUserName ?? 'Someone',
+                  );
+                  if (!mounted) return;
+                  if (result['status'] != 'ok') {
+                    setState(() => _isLiked = !_isLiked);
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(result['message']?.toString() ??
+                            'Could not save your like. Try again.'),
+                        backgroundColor: Colors.red.shade700,
+                        duration: const Duration(seconds: 2),
+                      ),
                     );
-                  } catch (e) {
-                    debugPrint('Error liking post: $e');
                   }
                 },
                 child: Row(

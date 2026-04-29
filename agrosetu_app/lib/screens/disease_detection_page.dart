@@ -115,7 +115,7 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
       String? imagePath;
 
       if (isDesktopOrWeb) {
-        final result = await FilePicker.platform.pickFiles(
+        final result = await FilePicker.pickFiles(
           type: FileType.image,
           allowMultiple: false,
           withData: true,
@@ -211,9 +211,23 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
 
         _addToRecentDetections();
       } else {
+        // Detect network failures from ApiService and show a clearer message.
+        final raw = (result['message'] ?? '').toString();
+        final isNetwork = raw.contains('Network error') ||
+            raw.contains('Flask server not running') ||
+            raw.contains('SocketException') ||
+            raw.contains('Failed host lookup') ||
+            raw.contains('Connection') ||
+            raw.contains('timed out') ||
+            raw.contains('TimeoutException');
+
+        final friendly = isNetwork
+            ? '📡 Disease detection needs an internet connection. Your past results are still available below.'
+            : (raw.isNotEmpty ? raw : 'Failed to detect disease');
+
         setState(() {
           _isProcessing = false;
-          _errorMessage = result['message'] ?? 'Unknown error occurred';
+          _errorMessage = friendly;
           _detectedDisease = null;
           _confidence = null;
           _solutions = null;
@@ -223,15 +237,20 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
           _description = null;
           _modelResults = null;
         });
-        _showErrorSnackBar(_errorMessage ?? 'Failed to detect disease');
+        _showErrorSnackBar(friendly);
       }
     } catch (e) {
       debugPrint('[Disease Detection] Exception: $e');
+      final msg = e.toString().contains('SocketException') ||
+              e.toString().contains('Failed host lookup') ||
+              e.toString().contains('TimeoutException')
+          ? '📡 Disease detection needs an internet connection. Your past results are still available below.'
+          : 'Error: $e';
       setState(() {
         _isProcessing = false;
-        _errorMessage = 'Error: $e';
+        _errorMessage = msg;
       });
-      _showErrorSnackBar('Error sending image to server: $e');
+      _showErrorSnackBar(msg);
     }
   }
 
