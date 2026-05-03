@@ -7,9 +7,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:record/record.dart';
+import '../l10n/app_translations.dart';
 import '../services/api_service.dart';
 
 class VoiceAssistantScreen extends StatefulWidget {
@@ -63,7 +64,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
           if (mounted) {
             setState(() => _isListening = false);
             if (error.errorMsg != 'error_no_match') {
-              _showError('Speech error: ${error.errorMsg}');
+              _showError('${'voice.speech_error'.tr}${error.errorMsg}');
             }
           }
         },
@@ -80,15 +81,15 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
       if (mounted) setState(() {});
     } catch (e) {
       debugPrint('[STT] Init failed: $e');
-      if (mounted) _showError('Speech recognition not available on this device.');
+      if (mounted) _showError('voice.speech_unavailable'.tr);
     }
   }
 
   void _setupTts() {
-    _audioPlayer.onPlayerStateChanged.listen((state) {
+    _audioPlayer.playerStateStream.listen((state) {
       if (mounted) {
         setState(() {
-          _isSpeaking = state == PlayerState.playing;
+          _isSpeaking = state.playing && state.processingState != ProcessingState.completed;
         });
       }
     });
@@ -106,7 +107,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
 
       setState(() {
         _isLoading = true;
-        _recognizedText = "अडियो फाइल प्रशोधन हुँदैछ..."; 
+        _recognizedText = 'voice.processing_audio'.tr;
         _answerText = '';
         _audioBase64 = '';
       });
@@ -138,7 +139,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
           ),
         );
       } else {
-        throw Exception("Could not read file data");
+        throw Exception('disease.cant_read_file'.tr);
       }
       
       request.fields['userId'] = 'web_user';
@@ -149,17 +150,17 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          _recognizedText = data['recognizedText'] ?? data['transcript'] ?? 'अडियो प्राप्त भयो'; 
+          _recognizedText = data['recognizedText'] ?? data['transcript'] ?? 'voice.audio_received'.tr;
           _answerText = data['answer'] ?? '';
           _audioBase64 = data['audioBase64'] ?? '';
         });
         if (_audioBase64.isNotEmpty) await _speakAnswer();
       } else {
-        _showError('Upload failed: ${response.statusCode}');
+        _showError('${'voice.upload_failed'.tr}${response.statusCode}');
       }
     } catch (e) {
       debugPrint("Audio Upload Error: $e");
-      _showError('Error uploading audio: $e');
+      _showError('${'voice.upload_error'.tr}$e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -180,7 +181,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
 
     try {
       if (!await _audioRecorder.hasPermission()) {
-        _showError('Microphone permission denied. Enable it in Settings → Agrosetu → Microphone.');
+        _showError('voice.mic_denied'.tr);
         return;
       }
       final dir = await getTemporaryDirectory();
@@ -195,7 +196,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
       );
       setState(() {
         _isListening = true;
-        _recognizedText = '🔴 रेकर्डिङ हुँदैछ… (बोल्न रोक्न Stop थिच्नुहोस्)';
+        _recognizedText = 'voice.recording'.tr;
       });
 
       // Hard stop after 30 s in case user forgets to tap stop.
@@ -203,7 +204,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
         if (_isListening && mounted) _stopListening();
       });
     } catch (e) {
-      _showError('Could not start recording: $e');
+      _showError('${'voice.cant_record'.tr}$e');
     }
   }
 
@@ -219,7 +220,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
   Future<void> _uploadRecording(String filePath) async {
     setState(() {
       _isLoading = true;
-      _recognizedText = 'अडियो प्रशोधन हुँदैछ…';
+      _recognizedText = 'voice.processing_audio'.tr;
       _answerText = '';
       _audioBase64 = '';
     });
@@ -233,7 +234,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
       final streamed = await request.send().timeout(const Duration(seconds: 60));
       final response = await http.Response.fromStream(streamed);
       if (response.statusCode != 200) {
-        _showError('Server error: ${response.statusCode}');
+        _showError('${'voice.server_error'.tr}${response.statusCode}');
         return;
       }
       final data = jsonDecode(response.body);
@@ -244,7 +245,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
       });
       if (_audioBase64.isNotEmpty) await _speakAnswer();
     } catch (e) {
-      _showError('Could not get answer: $e');
+      _showError('${'voice.cant_get_answer'.tr}$e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -290,7 +291,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
       ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode != 200) {
-        _showError('Server error: ${response.statusCode}');
+        _showError('${'voice.server_error'.tr}${response.statusCode}');
         return;
       }
 
@@ -304,10 +305,10 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
         });
         if (_audioBase64.isNotEmpty) await _speakAnswer();
       } else {
-        _showError(result['message'] ?? result['error'] ?? 'Server error');
+        _showError(result['message'] ?? result['error'] ?? 'voice.server_error'.tr);
       }
     } catch (e) {
-      _showError('Failed to get answer: $e');
+      _showError('${'voice.failed_answer'.tr}$e');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -320,24 +321,14 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
     if (_audioBase64.isEmpty) return;
     try {
       setState(() => _isSpeaking = true);
-      await _audioPlayer.setAudioContext(AudioContext(
-        iOS: AudioContextIOS(
-          category: AVAudioSessionCategory.playback,
-          options: const {},
-        ),
-        android: AudioContextAndroid(
-          contentType: AndroidContentType.speech,
-          usageType: AndroidUsageType.assistant,
-        ),
-      ));
-      await _audioPlayer.setReleaseMode(ReleaseMode.release);
       await _audioPlayer.setVolume(1.0);
 
       final bytes = base64Decode(_audioBase64);
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/tts_${DateTime.now().millisecondsSinceEpoch}.mp3');
       await file.writeAsBytes(bytes, flush: true);
-      await _audioPlayer.play(DeviceFileSource(file.path));
+      await _audioPlayer.setFilePath(file.path);
+      await _audioPlayer.play();
     } catch (e) {
       debugPrint('[VoiceAssistant] TTS error: $e');
       if (mounted) setState(() => _isSpeaking = false);
@@ -362,7 +353,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
         lower.contains('unreachable');
 
     final shown = isOffline
-        ? '📡 इन्टरनेट छैन। पछि फेरि प्रयास गर्नुहोस्।\nVoice assistant needs internet. Try again when online.'
+        ? 'voice.no_internet'.tr
         : message;
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -411,7 +402,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Voice Assistant',
+          'voice.title'.tr,
           style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18),
         ),
         actions: [
@@ -437,7 +428,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'माइक थिचेर वा अडियो अपलोड गरेर प्रश्न सोध्नुहोस्',
+                      'voice.tip'.tr,
                       style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF1B5E20), fontWeight: FontWeight.w500),
                     ),
                   ),
@@ -480,7 +471,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
 
             const SizedBox(height: 20),
             Text(
-              _isLoading ? 'प्रशोधन हुँदैछ...' : _isListening ? 'सुनिरहेको छ...' : 'माइक थिचेर सुरु गर्नुहोस्',
+              _isLoading ? 'voice.processing'.tr : _isListening ? 'voice.listening'.tr : 'voice.tap_mic'.tr,
               style: GoogleFonts.poppins(fontSize: 15, color: _isListening ? Colors.red : Colors.grey.shade700, fontWeight: FontWeight.w500),
               textAlign: TextAlign.center,
             ),
@@ -496,7 +487,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
               ),
               icon: const Icon(Icons.upload_file, color: Color(0xFF2E7D32)),
               label: Text(
-                'अडियो फाइल अपलोड गर्नुहोस्',
+                'voice.upload_audio'.tr,
                 style: GoogleFonts.poppins(color: const Color(0xFF2E7D32), fontWeight: FontWeight.w600),
               ),
             ),
@@ -515,13 +506,13 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
             if (!hasResult && !_isListening && !_isLoading)
               Column(
                 children: [
-                  Text('उदाहरण प्रश्नहरू:', style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade500)),
+                  Text('voice.example_prompts'.tr, style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade500)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8, runSpacing: 8, alignment: WrapAlignment.center,
                     children: [
-                      _buildExampleChip('मेरो आलु कुहिएको छ'),
-                      _buildExampleChip('मकैमा किरा लाग्यो'),
+                      _buildExampleChip('voice.example_potato'.tr),
+                      _buildExampleChip('voice.example_corn'.tr),
                     ],
                   ),
                 ],
@@ -529,11 +520,11 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
 
             if (hasResult) ...[
               if (_recognizedText.isNotEmpty) ...[
-                _buildResultCard(title: '🎤 सन्देश:', content: _recognizedText, color: Colors.blue.shade50, borderColor: Colors.blue.shade200, textColor: Colors.blue.shade900),
+                _buildResultCard(title: 'voice.message_label'.tr, content: _recognizedText, color: Colors.blue.shade50, borderColor: Colors.blue.shade200, textColor: Colors.blue.shade900),
                 const SizedBox(height: 16),
               ],
               if (_answerText.isNotEmpty) ...[
-                _buildResultCard(title: '🌱 उत्तर:', content: _answerText, color: const Color(0xFF2E7D32).withValues(alpha: 0.06), borderColor: const Color(0xFF2E7D32).withValues(alpha: 0.3), textColor: const Color(0xFF1B5E20)),
+                _buildResultCard(title: 'voice.answer_label'.tr, content: _answerText, color: const Color(0xFF2E7D32).withValues(alpha: 0.06), borderColor: const Color(0xFF2E7D32).withValues(alpha: 0.3), textColor: const Color(0xFF1B5E20)),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity, height: 52,
@@ -545,7 +536,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)) // ✅ Fixed: Correct Shape
                     ),
                     icon: Icon(_isSpeaking ? Icons.stop : Icons.volume_up, size: 22),
-                    label: Text(_isSpeaking ? 'रोक्नुहोस्' : 'उत्तर सुन्नुहोस्', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
+                    label: Text(_isSpeaking ? 'voice.stop'.tr : 'voice.listen_answer'.tr, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],
