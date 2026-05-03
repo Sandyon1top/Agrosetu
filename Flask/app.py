@@ -42,7 +42,18 @@ def after_request(response):
 #  Set your key in environment:
 #    export GROQ_API_KEY="gsk_xxxxxxxxxxxx"
 # ──────────────────────────────────────────────
-GROQ_CLIENT = Groq(api_key="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")
+_GROQ_KEY = os.environ.get("GROQ_API_KEY", "").strip()
+if not _GROQ_KEY:
+    # Fall back to backend/.env if Flask was launched without env var set
+    _backend_env = Path(__file__).parent.parent / "backend" / ".env"
+    if _backend_env.exists():
+        for _ln in _backend_env.read_text().splitlines():
+            _ln = _ln.strip()
+            if _ln.startswith("GROQ_API_KEY=") and "=" in _ln:
+                _GROQ_KEY = _ln.split("=", 1)[1].strip().strip('"').strip("'")
+                break
+GROQ_CLIENT = Groq(api_key=_GROQ_KEY) if _GROQ_KEY else None
+print(f"[GROQ] key loaded: {'yes (' + _GROQ_KEY[:8] + '...)' if _GROQ_KEY else 'NO — set GROQ_API_KEY env var'}")
 GROQ_MODEL  = "llama-3.3-70b-versatile"   # fast + powerful; change to mixtral-8x7b if preferred
 
 # ──────────────────────────────────────────────
@@ -347,6 +358,9 @@ Provide a detailed, actionable JSON response with these exact keys:
 Be specific, practical, and farmer-friendly. Use metric units.
 Respond with ONLY valid JSON, no markdown, no extra text."""
 
+    if GROQ_CLIENT is None:
+        print("[GROQ] no API key configured — returning fallback")
+        return _fallback_disease_info(disease_display_name)
     try:
         response = GROQ_CLIENT.chat.completions.create(
             model=GROQ_MODEL,
@@ -355,7 +369,6 @@ Respond with ONLY valid JSON, no markdown, no extra text."""
             max_tokens=1024,
         )
         raw = response.choices[0].message.content.strip()
-        # Strip any accidental markdown fences
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
@@ -365,7 +378,7 @@ Respond with ONLY valid JSON, no markdown, no extra text."""
         print(f"[GROQ] JSON parse error: {e}")
         return _fallback_disease_info(disease_display_name)
     except Exception as e:
-        print(f"[GROQ] Error: {e}")
+        print(f"[GROQ] API error ({type(e).__name__}): {e}")
         return _fallback_disease_info(disease_display_name)
 
 
@@ -696,7 +709,7 @@ def health():
         "num_classes":     NUM_CLASSES,
         "device":          str(DEVICE),
         "groq_model":      GROQ_MODEL,
-        "groq_ready":      bool(os.environ.get("GROQ_API_KEY")),
+        "groq_ready":      GROQ_CLIENT is not None,
         "validator":       "active" if IMAGENET_VALIDATOR else "color-check-only",
     }), 200
 
