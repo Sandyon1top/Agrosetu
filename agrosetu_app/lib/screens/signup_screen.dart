@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 import 'dart:async'; // Added for Timer
+import '../l10n/app_translations.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
 
@@ -66,30 +67,30 @@ class _SignupScreenState extends State<SignupScreen> {
   // Password validation
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your password';
+      return 'signup.pw_required'.tr;
     }
-    
+
     final RegExp hasUpperCase = RegExp(r'[A-Z]');
     final RegExp hasLowerCase = RegExp(r'[a-z]');
     final RegExp hasNumbers = RegExp(r'[0-9]');
     final RegExp hasSpecialChar = RegExp(r'[!@#$%^&*()_+=\[\]{};:`~<>,./\-]');
-    
+
     if (value.length < 8) {
-      return 'Password must be at least 8 characters';
+      return 'signup.pw_min_length'.tr;
     }
     if (!hasUpperCase.hasMatch(value)) {
-      return 'Password must contain at least one uppercase letter';
+      return 'signup.pw_upper'.tr;
     }
     if (!hasLowerCase.hasMatch(value)) {
-      return 'Password must contain at least one lowercase letter';
+      return 'signup.pw_lower'.tr;
     }
     if (!hasNumbers.hasMatch(value)) {
-      return 'Password must contain at least one number';
+      return 'signup.pw_number'.tr;
     }
     if (!hasSpecialChar.hasMatch(value)) {
-      return 'Password must contain at least one special character (!@#\$%^&*etc)';
+      return 'signup.pw_special'.tr;
     }
-    
+
     return null;
   }
 
@@ -118,14 +119,14 @@ class _SignupScreenState extends State<SignupScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('OTP sent to ${_emailController.text.trim()}! Check your inbox.'),
+                content: Text('${'signup.otp_sent_prefix'.tr}${_emailController.text.trim()}${'signup.otp_sent_suffix'.tr}'),
                 backgroundColor: Colors.blue,
                 duration: const Duration(seconds: 4),
               ),
             );
           }
         } else {
-          final errorMsg = response['message'] ?? 'Signup failed';
+          final errorMsg = response['message'] ?? 'signup.signup_failed'.tr;
           final backendErrors = response['errors'];
           
           if (mounted) {
@@ -133,18 +134,18 @@ class _SignupScreenState extends State<SignupScreen> {
             if (backendErrors is List && backendErrors.isNotEmpty) {
               fullErrorMsg += '\n\n${backendErrors.join('\n')}';
             }
-            _showErrorDialog('Registration Failed', fullErrorMsg);
+            _showErrorDialog('signup.registration_failed'.tr, fullErrorMsg);
           }
         }
       } on SocketException {
         if (mounted) {
           setState(() => _isLoading = false);
-          _showErrorDialog('Network Error', 'No internet connection.');
+          _showErrorDialog('login.network_error'.tr, 'signup.no_internet'.tr);
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isLoading = false);
-          _showErrorDialog('Error', 'An error occurred: $e');
+          _showErrorDialog('common.error'.tr, '${'signup.error_occurred'.tr} $e');
         }
       }
     }
@@ -166,10 +167,10 @@ class _SignupScreenState extends State<SignupScreen> {
         if (response['status'] == 'ok') {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Email verified successfully! Please log in.'),
+              SnackBar(
+                content: Text('signup.email_verified'.tr),
                 backgroundColor: Colors.green,
-                duration: Duration(seconds: 3),
+                duration: const Duration(seconds: 3),
               ),
             );
             Navigator.pushReplacement(
@@ -178,12 +179,12 @@ class _SignupScreenState extends State<SignupScreen> {
             );
           }
         } else {
-          _showErrorDialog('Verification Failed', response['message'] ?? 'Invalid OTP code. Please try again.');
+          _showErrorDialog('signup.verification_failed'.tr, response['message'] ?? 'signup.invalid_otp'.tr);
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isLoading = false);
-          _showErrorDialog('Error', 'Verification error: $e');
+          _showErrorDialog('common.error'.tr, '${'signup.verification_error'.tr} $e');
         }
       }
     }
@@ -205,12 +206,12 @@ class _SignupScreenState extends State<SignupScreen> {
       _startTimer();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('A new OTP has been sent to ${_emailController.text.trim()}.'),
+          content: Text('${'signup.otp_resent_prefix'.tr}${_emailController.text.trim()}${'signup.otp_resent_suffix'.tr}'),
           backgroundColor: Colors.blue,
         ),
       );
     } else {
-      _showErrorDialog('Error', response['message'] ?? 'Failed to resend code. Please try again.');
+      _showErrorDialog('common.error'.tr, response['message'] ?? 'signup.failed_resend'.tr);
     }
   }
   
@@ -235,7 +236,7 @@ class _SignupScreenState extends State<SignupScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32))),
+            child: Text('common.ok'.tr, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32))),
           ),
         ],
       ),
@@ -245,27 +246,27 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget _buildPasswordStrengthIndicator() {
     final password = _passwordController.text;
     Color strengthColor = Colors.grey;
-    String strengthText = 'Strength: Weak';
-    
+    String strengthText = 'signup.pw_strength_weak'.tr;
+
     if (password.isEmpty) return const SizedBox.shrink();
-    
+
     final hasUpperCase = RegExp(r'[A-Z]').hasMatch(password);
     final hasLowerCase = RegExp(r'[a-z]').hasMatch(password);
     final hasNumbers = RegExp(r'[0-9]').hasMatch(password);
     final hasSpecialChar = RegExp(r'[!@#$%^&*()_+=\[\]{};:`~<>,./\-]').hasMatch(password);
     final isLengthEnough = password.length >= 8;
-    
+
     int strength = 0;
     if (hasUpperCase) strength++;
     if (hasLowerCase) strength++;
     if (hasNumbers) strength++;
     if (hasSpecialChar) strength++;
     if (isLengthEnough) strength++;
-    
-    if (strength <= 2) { strengthColor = Colors.red; strengthText = 'Strength: Weak'; }
-    else if (strength <= 3) { strengthColor = Colors.orange; strengthText = 'Strength: Fair'; }
-    else if (strength <= 4) { strengthColor = Colors.amber; strengthText = 'Strength: Good'; }
-    else { strengthColor = Colors.green; strengthText = 'Strength: Strong'; }
+
+    if (strength <= 2) { strengthColor = Colors.red; strengthText = 'signup.pw_strength_weak'.tr; }
+    else if (strength <= 3) { strengthColor = Colors.orange; strengthText = 'signup.pw_strength_fair'.tr; }
+    else if (strength <= 4) { strengthColor = Colors.amber; strengthText = 'signup.pw_strength_good'.tr; }
+    else { strengthColor = Colors.green; strengthText = 'signup.pw_strength_strong'.tr; }
     
     return Row(
       children: [
@@ -302,13 +303,13 @@ class _SignupScreenState extends State<SignupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Password Requirements:', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+          Text('signup.pw_requirements'.tr, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
           const SizedBox(height: 8),
-          _buildRequirementRow('At least 8 characters', isLengthEnough),
-          _buildRequirementRow('Uppercase letter (A-Z)', hasUpperCase),
-          _buildRequirementRow('Lowercase letter (a-z)', hasLowerCase),
-          _buildRequirementRow('Number (0-9)', hasNumbers),
-          _buildRequirementRow('Special character (!@#\$%)', hasSpecialChar),
+          _buildRequirementRow('signup.pw_req_length'.tr, isLengthEnough),
+          _buildRequirementRow('signup.pw_req_upper'.tr, hasUpperCase),
+          _buildRequirementRow('signup.pw_req_lower'.tr, hasLowerCase),
+          _buildRequirementRow('signup.pw_req_number'.tr, hasNumbers),
+          _buildRequirementRow('signup.pw_req_special'.tr, hasSpecialChar),
         ],
       ),
     );
@@ -361,7 +362,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       Expanded(
                         child: Text(
-                          _isVerifying ? 'Verify Email' : 'Create Account',
+                          _isVerifying ? 'signup.verify_email'.tr : 'signup.create_account'.tr,
                           style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                           textAlign: TextAlign.center,
                         ),
@@ -418,13 +419,13 @@ class _SignupScreenState extends State<SignupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Enter OTP Code', style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: const Color(0xFF1B5E20))),
+          Text('signup.otp_title'.tr, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: const Color(0xFF1B5E20))),
           const SizedBox(height: 8),
           RichText(
             text: TextSpan(
               style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600),
               children: [
-                const TextSpan(text: 'We sent a 6-digit code to\n'),
+                TextSpan(text: 'signup.otp_sent_to'.tr),
                 TextSpan(
                   text: _emailController.text.trim(),
                   style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32)),
@@ -459,8 +460,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 contentPadding: const EdgeInsets.symmetric(vertical: 18),
               ),
               validator: (value) {
-                if (value == null || value.trim().isEmpty) return 'Please enter the OTP';
-                if (value.trim().length < 6) return 'OTP must be 6 digits';
+                if (value == null || value.trim().isEmpty) return 'signup.otp_required'.tr;
+                if (value.trim().length < 6) return 'signup.otp_short'.tr;
                 return null;
               },
             ),
@@ -474,7 +475,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   onPressed: _isLoading ? null : _resendCode,
                   icon: const Icon(Icons.refresh, color: Color(0xFF2E7D32)),
                   label: Text(
-                    'Resend Code',
+                    'signup.resend'.tr,
                     style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF2E7D32)),
                   ),
                 )
@@ -484,7 +485,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     const Icon(Icons.timer_outlined, size: 16, color: Colors.grey),
                     const SizedBox(width: 6),
                     Text(
-                      'Resend code in $_start seconds',
+                      '${'signup.resend_in'.tr} $_start ${'signup.seconds'.tr}',
                       style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade600),
                     ),
                   ],
@@ -508,7 +509,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     height: 24, width: 24,
                     child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                   )
-                : Text('Verify & Continue', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
+                : Text('signup.verify_continue'.tr, style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
             ),
           ),
           const SizedBox(height: 16),
@@ -519,7 +520,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 setState(() => _isVerifying = false);
               },
               child: Text(
-                'Wrong email? Go back',
+                'signup.wrong_email'.tr,
                 style: GoogleFonts.poppins(color: Colors.grey.shade600, fontSize: 13),
               ),
             ),
@@ -536,44 +537,44 @@ class _SignupScreenState extends State<SignupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Create Your Account', style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: const Color(0xFF1B5E20))),
+          Text('signup.create_your_account'.tr, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: const Color(0xFF1B5E20))),
           const SizedBox(height: 8),
-          Text('Join AgroSetu and grow with us', style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600)),
+          Text('signup.tagline'.tr, style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600)),
           const SizedBox(height: 28),
-          
-          Text('Full Name', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
+
+          Text('signup.full_name'.tr, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
           const SizedBox(height: 8),
-          _buildTextField(_nameController, 'Enter your full name', Icons.person_outline),
-          
+          _buildTextField(_nameController, 'signup.full_name_hint'.tr, Icons.person_outline),
+
           const SizedBox(height: 20),
-          
-          Text('Email Address', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
+
+          Text('signup.email'.tr, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
           const SizedBox(height: 8),
-          _buildTextField(_emailController, 'you@example.com', Icons.email_outlined, isEmail: true),
-          
+          _buildTextField(_emailController, 'signup.email_hint'.tr, Icons.email_outlined, isEmail: true),
+
           const SizedBox(height: 24),
-          
-          Text('Password', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
+
+          Text('signup.password'.tr, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
           const SizedBox(height: 8),
           _buildPasswordField(
             _passwordController,
-            'Create a strong password',
+            'signup.password_hint'.tr,
             _showPassword,
             (val) => setState(() => _showPassword = !_showPassword),
           ),
-          
+
           const SizedBox(height: 14),
           _buildPasswordStrengthIndicator(),
           const SizedBox(height: 14),
           _buildPasswordRequirements(),
-          
+
           const SizedBox(height: 24),
-          
-          Text('Confirm Password', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
+
+          Text('signup.confirm_password'.tr, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
           const SizedBox(height: 8),
           _buildPasswordField(
             _confirmPasswordController,
-            'Re-enter your password',
+            'signup.confirm_hint'.tr,
             _showConfirmPassword,
             (val) => setState(() => _showConfirmPassword = !_showConfirmPassword),
             isConfirm: true,
@@ -597,7 +598,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     height: 24, width: 24,
                     child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                   )
-                : Text('Create Account', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
+                : Text('signup.button'.tr, style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
             ),
           ),
           
@@ -631,8 +632,8 @@ class _SignupScreenState extends State<SignupScreen> {
           prefixIcon: Icon(icon, color: Colors.grey.shade500),
         ),
         validator: (value) {
-          if (value == null || value.trim().isEmpty) return 'This field is required';
-          if (isEmail && !value.contains('@')) return 'Please enter a valid email';
+          if (value == null || value.trim().isEmpty) return 'signup.field_required'.tr;
+          if (isEmail && !value.contains('@')) return 'signup.email_invalid'.tr;
           return null;
         },
       ),
@@ -672,8 +673,8 @@ class _SignupScreenState extends State<SignupScreen> {
         ),
         validator: isConfirm
           ? (value) {
-              if (value == null || value.isEmpty) return 'Please confirm your password';
-              if (value != _passwordController.text) return 'Passwords do not match';
+              if (value == null || value.isEmpty) return 'signup.confirm_required'.tr;
+              if (value != _passwordController.text) return 'signup.pw_mismatch'.tr;
               return null;
             }
           : _validatePassword,
@@ -685,14 +686,14 @@ class _SignupScreenState extends State<SignupScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text("Already have an account? ", style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600)),
+        Text('signup.have_account'.tr, style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600)),
         GestureDetector(
           onTap: () => Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const LoginScreen()),
           ),
           child: Text(
-            'Sign In',
+            'signup.signin'.tr,
             style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF2E7D32), fontWeight: FontWeight.w700),
           ),
         ),

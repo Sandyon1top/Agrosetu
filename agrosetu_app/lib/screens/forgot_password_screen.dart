@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
+import '../l10n/app_translations.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
 
@@ -28,12 +29,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final email = _emailController.text.trim();
     
     if (email.isEmpty) {
-      _showErrorDialog('Required', 'Please enter your email address');
+      _showErrorDialog('forgot.required'.tr, 'forgot.email_required'.tr);
       return;
     }
-    
+
     if (!email.contains('@')) {
-      _showErrorDialog('Invalid Email', 'Please enter a valid email address');
+      _showErrorDialog('forgot.invalid_email_title'.tr, 'forgot.invalid_email'.tr);
       return;
     }
 
@@ -55,32 +56,32 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           debugPrint('[ForgotPassword] 🔐 Dev reset code: $devCode');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Reset code (dev): $devCode'),
+              content: Text('${'forgot.code_dev'.tr}$devCode'),
               backgroundColor: Colors.orange,
               duration: const Duration(seconds: 5),
             ),
           );
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Reset code sent to your email. Check your inbox.'),
+            content: Text('forgot.code_sent'.tr),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
           ),
         );
       } else {
         _showErrorDialog(
-          'Request Failed',
-          response['message'] ?? 'Unable to process password reset request',
+          'forgot.request_failed'.tr,
+          response['message'] ?? 'forgot.request_failed_msg'.tr,
         );
       }
     } on SocketException {
       setState(() => _isLoading = false);
-      _showErrorDialog('Network Error', 'No internet connection. Ensure backend server is running.');
+      _showErrorDialog('login.network_error'.tr, 'forgot.no_internet'.tr);
     } catch (e) {
       setState(() => _isLoading = false);
-      _showErrorDialog('Error', 'An unexpected error occurred: $e');
+      _showErrorDialog('common.error'.tr, '${'forgot.unexpected'.tr} $e');
       debugPrint('[ForgotPassword] Error: $e');
     }
   }
@@ -92,17 +93,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final confirmPassword = _confirmPasswordController.text.trim();
 
     if (code.isEmpty) {
-      _showErrorDialog('Required', 'Please enter the reset code');
+      _showErrorDialog('forgot.required'.tr, 'forgot.code_required'.tr);
       return;
     }
 
     if (newPassword.isEmpty || confirmPassword.isEmpty) {
-      _showErrorDialog('Required', 'Please enter and confirm your new password');
+      _showErrorDialog('forgot.required'.tr, 'forgot.passwords_required'.tr);
       return;
     }
 
     if (newPassword != confirmPassword) {
-      _showErrorDialog('Mismatch', 'Passwords do not match');
+      _showErrorDialog('forgot.mismatch'.tr, 'forgot.passwords_mismatch'.tr);
       return;
     }
 
@@ -115,8 +116,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar || !isLengthEnough) {
       _showErrorDialog(
-        'Weak Password',
-        'Password must be at least 8 characters with uppercase, lowercase, number, and special character',
+        'forgot.weak'.tr,
+        'forgot.weak_msg'.tr,
       );
       return;
     }
@@ -133,10 +134,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         setState(() => _resetComplete = true);
         
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password reset successfully! Redirecting to login...'),
+          SnackBar(
+            content: Text('forgot.success_msg'.tr),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
 
@@ -149,14 +150,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           );
         }
       } else {
-        _showErrorDialog('Reset Failed', response['message'] ?? 'Unable to reset password');
+        _showErrorDialog('forgot.failed'.tr, response['message'] ?? 'forgot.failed_msg'.tr);
       }
     } on SocketException {
       setState(() => _isLoading = false);
-      _showErrorDialog('Network Error', 'No internet connection');
+      _showErrorDialog('login.network_error'.tr, 'forgot.no_internet_short'.tr);
     } catch (e) {
       setState(() => _isLoading = false);
-      _showErrorDialog('Error', 'An unexpected error occurred');
+      _showErrorDialog('common.error'.tr, 'forgot.unexpected_short'.tr);
     }
   }
 
@@ -198,7 +199,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'OK',
+              'common.ok'.tr,
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF2E7D32),
@@ -230,7 +231,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Reset Password',
+          'forgot.title'.tr,
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -288,8 +289,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           Expanded(
             child: Text(
               _resetCodeSent
-                  ? 'Step 2: Reset Your Password'
-                  : 'Step 1: Verify Your Email',
+                  ? 'forgot.step2'.tr
+                  : 'forgot.step1'.tr,
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -307,7 +308,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Enter Your Email',
+          'forgot.enter_email'.tr,
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -316,7 +317,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'We\'ll send you a reset code to verify your identity',
+          'forgot.enter_email_subtitle'.tr,
           style: GoogleFonts.poppins(
             fontSize: 14,
             color: Colors.grey.shade600,
@@ -324,7 +325,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 24),
         Text(
-          'Email Address',
+          'forgot.email_label'.tr,
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -393,7 +394,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        'Sending...',
+                        'forgot.sending'.tr,
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -402,7 +403,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ],
                   )
                 : Text(
-                    'Send Reset Code',
+                    'forgot.send_code'.tr,
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -419,7 +420,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Reset Your Password',
+          'forgot.reset_password'.tr,
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -428,17 +429,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Enter the code sent to your email and create a new password',
+          'forgot.reset_subtitle'.tr,
           style: GoogleFonts.poppins(
             fontSize: 14,
             color: Colors.grey.shade600,
           ),
         ),
         const SizedBox(height: 24),
-        
+
         // Reset Code
         Text(
-          'Reset Code',
+          'forgot.reset_code'.tr,
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -462,7 +463,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               color: Colors.grey.shade800,
             ),
             decoration: InputDecoration(
-              hintText: 'Enter 6-digit code',
+              hintText: 'forgot.reset_code_hint'.tr,
               hintStyle: GoogleFonts.poppins(
                 color: Colors.grey.shade400,
               ),
@@ -482,7 +483,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
         // New Password
         Text(
-          'New Password',
+          'forgot.new_password'.tr,
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -507,7 +508,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               color: Colors.grey.shade800,
             ),
             decoration: InputDecoration(
-              hintText: 'Create strong password',
+              hintText: 'forgot.new_password_hint'.tr,
               hintStyle: GoogleFonts.poppins(
                 color: Colors.grey.shade400,
               ),
@@ -540,7 +541,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
         // Confirm Password
         Text(
-          'Confirm Password',
+          'forgot.confirm_password'.tr,
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -565,7 +566,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               color: Colors.grey.shade800,
             ),
             decoration: InputDecoration(
-              hintText: 'Confirm password',
+              hintText: 'forgot.confirm_hint'.tr,
               hintStyle: GoogleFonts.poppins(
                 color: Colors.grey.shade400,
               ),
@@ -623,7 +624,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        'Resetting...',
+                        'forgot.resetting'.tr,
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -632,7 +633,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ],
                   )
                 : Text(
-                    'Reset Password',
+                    'forgot.reset_password'.tr,
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -664,7 +665,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 32),
           Text(
-            'Password Reset Successfully!',
+            'forgot.success_title'.tr,
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -674,7 +675,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Your password has been updated. You can now log in with your new password.',
+            'forgot.success_subtitle'.tr,
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: Colors.grey.shade600,
@@ -701,7 +702,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 elevation: 6,
               ),
               child: Text(
-                'Go to Login',
+                'forgot.go_login'.tr,
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_translations.dart';
 import '../../../services/weather_service.dart';
 
 class WeatherDetailPopup extends StatefulWidget {
@@ -82,7 +83,7 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: 'Search location (e.g. Kathmandu)',
+          hintText: 'weather.search_hint'.tr,
           prefixIcon: Icon(Icons.search, color: Colors.green),
           suffixIcon: IconButton(
             icon: Icon(Icons.send),
@@ -120,7 +121,7 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Weather Forecast', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+              Text('weather.title'.tr, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey[800])),
               IconButton(icon: Icon(Icons.close), onPressed: () => Navigator.pop(context)),
             ],
           ),
@@ -149,7 +150,7 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
           
           SizedBox(height: 25),
           
-          Text("7-Day Forecast", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+          Text('weather.seven_day'.tr, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[800])),
           SizedBox(height: 12),
           
           ListView.builder(
@@ -172,7 +173,7 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
                     SizedBox(
                       width: 90,
                       child: Text(
-                        index == 0 ? "Today" : DateFormat('EEEE').format(DateTime.parse(day['date'])),
+                        index == 0 ? 'weather.today'.tr : DateFormat('EEEE').format(DateTime.parse(day['date'])),
                         style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700]),
                       ),
                     ),
@@ -229,9 +230,9 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildMobileStat('Humidity', weather['humidity'], Icons.water_drop),
-              _buildMobileStat('Wind', weather['windSpeed'], Icons.air),
-              _buildMobileStat('Rain', weather['rainChance'], Icons.umbrella),
+              _buildMobileStat('weather.humidity'.tr, weather['humidity'], Icons.water_drop),
+              _buildMobileStat('weather.wind'.tr, weather['windSpeed'], Icons.air),
+              _buildMobileStat('weather.rain'.tr, weather['rainChance'], Icons.umbrella),
             ],
           )
         ],
@@ -277,7 +278,7 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text("Updated: ${DateFormat('hh:mm a').format(DateTime.now())}", style: TextStyle(color: Colors.grey, fontSize: 12)),
+          Text("${'weather.updated'.tr}${DateFormat('hh:mm a').format(DateTime.now())}", style: TextStyle(color: Colors.grey, fontSize: 12)),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
@@ -285,7 +286,7 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
-              weather['source'] == 'api' ? "LIVE" : "OFFLINE",
+              weather['source'] == 'api' ? 'weather.live'.tr : 'weather.offline'.tr,
               style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
             ),
           )
@@ -301,7 +302,7 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
         children: [
           CircularProgressIndicator(color: Colors.green),
           SizedBox(height: 16),
-          Text('Fetching weather...', style: TextStyle(color: Colors.grey[600])),
+          Text('weather.fetching'.tr, style: TextStyle(color: Colors.grey[600])),
         ],
       ),
     );
@@ -314,12 +315,12 @@ class _WeatherDetailPopupState extends State<WeatherDetailPopup> {
         children: [
           Icon(Icons.cloud_off, size: 50, color: Colors.grey[400]),
           SizedBox(height: 16),
-          Text('Connection Error', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Text('weather.connection_error'.tr, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           SizedBox(height: 10),
           ElevatedButton(
             onPressed: () => _loadWeatherData(),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: Text('Retry'),
+            child: Text('weather.retry'.tr),
           )
         ],
       ),

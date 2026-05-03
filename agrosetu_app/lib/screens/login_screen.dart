@@ -8,6 +8,7 @@ import 'package:crypto/crypto.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
 import 'admin/admin_shell.dart';
+import '../l10n/app_translations.dart';
 import '../widgets/animated_background.dart';
 import 'dashboard_screen.dart';
 import '../services/user_service.dart';
@@ -82,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final password = _passwordController.text.trim();
 
       if (email.isEmpty || password.isEmpty) {
-        _showErrorDialog('Validation Error', 'Please fill in all fields');
+        _showErrorDialog('login.validation_error'.tr, 'login.fill_all'.tr);
         setState(() => _isLoading = false);
         return;
       }
@@ -109,18 +110,18 @@ class _LoginScreenState extends State<LoginScreen> {
           debugPrint('[LoginScreen] token: $token');
           
           if (userInfo == null || userInfo['id'] == null) {
-            _showErrorDialog('Login Error', 'Invalid user data received from server');
+            _showErrorDialog('login.error_title'.tr, 'login.invalid_user_data'.tr);
             return;
           }
-          
+
           if (token == null || token.isEmpty) {
-            _showErrorDialog('Login Error', 'No authentication token received');
+            _showErrorDialog('login.error_title'.tr, 'login.no_token'.tr);
             return;
           }
-          
+
           final userToSave = {
             'id': userInfo['id'].toString(),
-            'name': userInfo['name'] ?? 'User',
+            'name': userInfo['name'] ?? 'profile.user_default'.tr,
             'email': userInfo['email'] ?? email,
             'token': token,
             'isAdmin': userInfo['isAdmin'] == true,
@@ -143,13 +144,13 @@ class _LoginScreenState extends State<LoginScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Welcome, ${userInfo['name']}! 🌱'),
+                content: Text('${'login.welcome_user'.tr}, ${userInfo['name']}! 🌱'),
                 backgroundColor: Colors.green,
                 duration: const Duration(seconds: 2),
               ),
             );
           }
-          
+
           await _saveRememberedCredentials();
 
           // Save explicitly for offline fallback regardless of remember me.
@@ -180,7 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         } catch (dataError) {
           debugPrint('[LoginScreen] ❌ Error processing user data: $dataError');
-          _showErrorDialog('Data Error', 'Failed to process login response: $dataError');
+          _showErrorDialog('login.data_error'.tr, '${'login.failed_process'.tr} $dataError');
         }
 
       } else if (response['status'] == 'unverified') {
@@ -192,17 +193,17 @@ class _LoginScreenState extends State<LoginScreen> {
             builder: (context) => AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               title: Text(
-                'Account Not Verified',
+                'login.account_not_verified'.tr,
                 style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.orange),
               ),
               content: Text(
-                'Your account is not verified yet. Please check your email for the OTP code and verify your account.',
+                'login.unverified_msg'.tr,
                 style: GoogleFonts.poppins(fontSize: 14),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey)),
+                  child: Text('common.cancel'.tr, style: GoogleFonts.poppins(color: Colors.grey)),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -213,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32)),
-                  child: Text('Verify Now', style: GoogleFonts.poppins(color: Colors.white)),
+                  child: Text('login.verify_now'.tr, style: GoogleFonts.poppins(color: Colors.white)),
                 ),
               ],
             ),
@@ -221,8 +222,8 @@ class _LoginScreenState extends State<LoginScreen> {
         }
 
       } else {
-        final errorMsg = response['message'] ?? 'Login failed';
-        _showErrorDialog('Login Failed', errorMsg);
+        final errorMsg = response['message'] ?? 'login.failed'.tr;
+        _showErrorDialog('login.failed'.tr, errorMsg);
       }
 
     } on SocketException {
@@ -250,8 +251,8 @@ class _LoginScreenState extends State<LoginScreen> {
             // Treat as successful login
             setState(() => _isLoading = false);
             messenger.showSnackBar(
-              const SnackBar(
-                content: Text('Offline Login Successful 🌱'),
+              SnackBar(
+                content: Text('login.offline_login'.tr),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -276,11 +277,11 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       
       setState(() => _isLoading = false);
-      _showErrorDialog('Network Error', 'No internet connection and no offline profile found. Please check your connection.');
+      _showErrorDialog('login.network_error'.tr, 'login.no_offline'.tr);
     } catch (e) {
       setState(() => _isLoading = false);
       debugPrint('Login error: $e');
-      _showErrorDialog('Error', 'An unexpected error occurred: $e');
+      _showErrorDialog('common.error'.tr, '${'login.unexpected'.tr} $e');
     }
   }
 
@@ -289,9 +290,9 @@ class _LoginScreenState extends State<LoginScreen> {
     
     // Immediate visual feedback to prove the code is running
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Starting Google Sign-In...'),
-        duration: Duration(seconds: 1),
+      SnackBar(
+        content: Text('login.starting_google'.tr),
+        duration: const Duration(seconds: 1),
       ),
     );
 
@@ -310,18 +311,18 @@ class _LoginScreenState extends State<LoginScreen> {
           final token = backendData['token'] as String?;
 
           if (userInfo == null || userInfo['id'] == null) {
-            _showErrorDialog('Login Error', 'Invalid user data received from server');
+            _showErrorDialog('login.error_title'.tr, 'login.invalid_user_data'.tr);
             return;
           }
-          
+
           if (token == null || token.isEmpty) {
-            _showErrorDialog('Login Error', 'No authentication token received');
+            _showErrorDialog('login.error_title'.tr, 'login.no_token'.tr);
             return;
           }
 
           final userToSave = {
             'id': userInfo['id'].toString(),
-            'name': userInfo['name'] ?? 'User',
+            'name': userInfo['name'] ?? 'profile.user_default'.tr,
             'email': userInfo['email'] ?? '',
             'token': token,
             'isAdmin': userInfo['isAdmin'] == true,
@@ -340,7 +341,7 @@ class _LoginScreenState extends State<LoginScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Welcome, ${userInfo['name']}! 🌱'),
+                content: Text('${'login.welcome_user'.tr}, ${userInfo['name']}! 🌱'),
                 backgroundColor: Colors.green,
                 duration: const Duration(seconds: 2),
               ),
@@ -362,16 +363,16 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         } catch (dataError) {
           debugPrint('[LoginScreen] ❌ Error processing google login data: $dataError');
-          _showErrorDialog('Data Error', 'Failed to process login response: $dataError');
+          _showErrorDialog('login.data_error'.tr, '${'login.failed_process'.tr} $dataError');
         }
       } else {
-        final errorMsg = response['message'] ?? 'Google Login failed';
-        _showErrorDialog('Login Failed', errorMsg);
+        final errorMsg = response['message'] ?? 'login.google_failed'.tr;
+        _showErrorDialog('login.failed'.tr, errorMsg);
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
       debugPrint('Google Login error: $e');
-      _showErrorDialog('Error', 'An unexpected error occurred during Google Sign-In: $e');
+      _showErrorDialog('common.error'.tr, '${'login.google_unexpected'.tr} $e');
     }
   }
   
@@ -400,7 +401,7 @@ class _LoginScreenState extends State<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text('common.ok'.tr),
           ),
         ],
       ),
@@ -517,7 +518,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Column(
                                 children: [
                                   Text(
-                                    'Welcome Back',
+                                    'login.welcome_back'.tr,
                                     style: GoogleFonts.poppins(
                                       fontSize: 32,
                                       fontWeight: FontWeight.w600,
@@ -527,7 +528,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'Log in to continue your journey',
+                                    'login.subtitle'.tr,
                                     style: GoogleFonts.poppins(
                                       fontSize: 16,
                                       color: Colors.grey.shade600,
@@ -542,7 +543,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             // Email field
                             Text(
-                              'Email Address',
+                              'login.email_label'.tr,
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -567,7 +568,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   color: Colors.grey.shade800,
                                 ),
                                 decoration: InputDecoration(
-                                  hintText: 'you@example.com',
+                                  hintText: 'login.email_hint'.tr,
                                   hintStyle: GoogleFonts.poppins(
                                     color: Colors.grey.shade400,
                                   ),
@@ -583,10 +584,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return 'Please enter your email';
+                                    return 'login.email_required'.tr;
                                   }
                                   if (!value.contains('@')) {
-                                    return 'Please enter a valid email';
+                                    return 'login.email_invalid'.tr;
                                   }
                                   return null;
                                 },
@@ -597,7 +598,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             // Password field
                             Text(
-                              'Password',
+                              'login.password_label'.tr,
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -651,10 +652,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return 'Please enter your password';
+                                    return 'login.password_required'.tr;
                                   }
                                   if (value.length < 6) {
-                                    return 'Password must be at least 6 characters';
+                                    return 'login.password_short'.tr;
                                   }
                                   return null;
                                 },
@@ -688,7 +689,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                       ),
                                       Text(
-                                        'Remember me',
+                                        'login.remember_me'.tr,
                                         style: GoogleFonts.poppins(
                                           fontSize: 14,
                                           color: Colors.grey.shade600,
@@ -707,7 +708,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     );
                                   },
                                   child: Text(
-                                    'Forgot Password?',
+                                    'login.forgot_password'.tr,
                                     style: GoogleFonts.poppins(
                                       fontSize: 14,
                                       color: const Color(0xFF2E7D32),
@@ -748,7 +749,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           Text(
-                                            'Log In',
+                                            'login.button'.tr,
                                             style: GoogleFonts.poppins(
                                               fontSize: 18,
                                               fontWeight: FontWeight.w600,
@@ -770,7 +771,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 16),
                                   child: Text(
-                                    'or',
+                                    'login.or'.tr,
                                     style: GoogleFonts.poppins(color: Colors.grey.shade500, fontSize: 14),
                                   ),
                                 ),
@@ -800,7 +801,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    "Don't have an account?",
+                                    'login.no_account'.tr,
                                     style: GoogleFonts.poppins(
                                       fontSize: 15,
                                       color: Colors.grey.shade600,
@@ -817,7 +818,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       );
                                     },
                                     child: Text(
-                                      'Sign Up',
+                                      'login.signup_link'.tr,
                                       style: GoogleFonts.poppins(
                                         fontSize: 15,
                                         color: const Color(0xFF1B5E20),
@@ -834,7 +835,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             // Privacy text
                             Center(
                               child: Text(
-                                'By signing in, you agree to our Terms & Privacy',
+                                'login.terms'.tr,
                                 style: GoogleFonts.poppins(
                                   fontSize: 12,
                                   color: Colors.grey.shade500,

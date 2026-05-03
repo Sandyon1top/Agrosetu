@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import '../l10n/app_translations.dart';
 import '../services/api_service.dart';
 import '../services/user_service.dart';
 import 'package:intl/intl.dart';
@@ -81,7 +82,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response['message'] ?? 'Failed to load post')),
+            SnackBar(content: Text(response['message'] ?? 'post.failed_load'.tr)),
           );
         }
       }
@@ -91,7 +92,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
   }
 
   String _formatTime(String? timestamp) {
-    if (timestamp == null) return 'Recently';
+    if (timestamp == null) return 'post.recently'.tr;
     try {
       final dt = DateTime.parse(timestamp);
       return DateFormat('MMM d, h:mm a').format(dt);
@@ -103,7 +104,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
   Future<void> _handleLike() async {
     if (_currentUserId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in to like posts')),
+        SnackBar(content: Text('post.login_to_like'.tr)),
       );
       return;
     }
@@ -126,7 +127,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
     if (_commentController.text.trim().isEmpty) return;
     if (_currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in to comment')),
+        SnackBar(content: Text('post.login_to_comment'.tr)),
       );
       return;
     }
@@ -165,7 +166,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Post Details',
+          'post.details'.tr,
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -212,14 +213,14 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
           const Icon(Iconsax.info_circle, size: 64, color: Colors.grey),
           const SizedBox(height: 16),
           Text(
-            'Post not found',
+            'post.not_found'.tr,
             style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 12),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32)),
-            child: const Text('Go Back', style: TextStyle(color: Colors.white)),
+            child: Text('post.go_back'.tr, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -227,7 +228,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
   }
 
   Widget _buildAuthorSection() {
-    final authorName = _post!['author']?['name'] ?? 'Anonymous';
+    final authorName = _post!['author']?['name'] ?? 'post.anonymous'.tr;
     return Row(
       children: [
         Container(
@@ -278,7 +279,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
-            _post!['category'] ?? 'General',
+            _post!['category'] ?? 'community.cat_general'.tr,
             style: GoogleFonts.poppins(
               fontSize: 11,
               fontWeight: FontWeight.w500,
@@ -295,7 +296,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _post!['title'] ?? 'No Title',
+          _post!['title'] ?? 'post.no_title'.tr,
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w700,
@@ -346,7 +347,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                   const Icon(Iconsax.verify, size: 18, color: Colors.blue),
                   const SizedBox(width: 4),
                   Text(
-                    'Solved',
+                    'post.solved'.tr,
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -397,7 +398,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
     return Row(
       children: [
         Text(
-          'Comments',
+          'post.comments'.tr,
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -427,7 +428,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Text(
-            'No comments yet. Start the conversation!',
+            'post.no_comments'.tr,
             style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey),
           ),
         ),
@@ -441,7 +442,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
       separatorBuilder: (_, __) => const SizedBox(height: 20),
       itemBuilder: (context, index) {
         final comment = comments[index];
-        final name = comment['userName'] ?? 'User';
+        final name = comment['userName'] ?? 'post.user'.tr;
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -525,10 +526,10 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
               ),
               child: TextField(
                 controller: _commentController,
-                decoration: const InputDecoration(
-                  hintText: 'Write a comment...',
+                decoration: InputDecoration(
+                  hintText: 'post.write_comment'.tr,
                   border: InputBorder.none,
-                  hintStyle: TextStyle(fontSize: 14),
+                  hintStyle: const TextStyle(fontSize: 14),
                 ),
                 maxLines: null,
               ),

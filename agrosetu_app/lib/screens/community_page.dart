@@ -2,12 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_translations.dart';
 import '../services/api_service.dart';
 import '../services/user_service.dart';
 import 'post_details_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:typed_data';
+
+String _localizedCategory(String key) {
+  switch (key) {
+    case 'All':
+      return 'community.cat_all'.tr;
+    case 'Rice':
+      return 'community.cat_rice'.tr;
+    case 'Wheat':
+      return 'community.cat_wheat'.tr;
+    case 'Corn':
+      return 'community.cat_corn'.tr;
+    case 'Market':
+      return 'community.cat_market'.tr;
+    case 'General':
+      return 'community.cat_general'.tr;
+    default:
+      return key;
+  }
+}
 
 class CommunityPage extends StatefulWidget {
   const CommunityPage({super.key});
@@ -32,7 +52,7 @@ class _CommunityPageState extends State<CommunityPage> {
   List<Map<String, dynamic>> _searchResults = [];
   bool _isSearchLoading = false;
 
-  final List<String> _categories = ['All', 'Rice', 'Wheat', 'Corn', 'Market', 'General'];
+  final List<String> _categories = const ['All', 'Rice', 'Wheat', 'Corn', 'Market', 'General'];
 
   @override
   void initState() {
@@ -107,7 +127,7 @@ class _CommunityPageState extends State<CommunityPage> {
           Icon(Iconsax.wifi_square, size: 14, color: Colors.orange.shade800),
           const SizedBox(width: 6),
           Text(
-            'Showing cached posts (offline)',
+            'community.cached_offline'.tr,
             style: GoogleFonts.poppins(
               fontSize: 11,
               color: Colors.orange.shade900,
@@ -121,10 +141,10 @@ class _CommunityPageState extends State<CommunityPage> {
 
   void _showOfflineToast() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('📡 Offline. Showing what we have.'),
+      SnackBar(
+        content: Text('community.offline_toast'.tr),
         backgroundColor: Colors.orange,
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -187,8 +207,8 @@ class _CommunityPageState extends State<CommunityPage> {
         onPressed: () {
           if (_currentUser == null) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Please log in to post'),
+              SnackBar(
+                content: Text('community.login_to_post'.tr),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -260,7 +280,7 @@ class _CommunityPageState extends State<CommunityPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Farmer Community',
+                        'community.title'.tr,
                         style: GoogleFonts.poppins(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -268,7 +288,7 @@ class _CommunityPageState extends State<CommunityPage> {
                         ),
                       ),
                       Text(
-                        'Share knowledge & tips',
+                        'community.subtitle'.tr,
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           color: Colors.white70,
@@ -285,7 +305,7 @@ class _CommunityPageState extends State<CommunityPage> {
                     autofocus: true,
                     style: GoogleFonts.poppins(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'Search farmers...',
+                      hintText: 'community.search_hint'.tr,
                       hintStyle: GoogleFonts.poppins(color: Colors.white70),
                       border: InputBorder.none,
                       suffixIcon: IconButton(
@@ -343,7 +363,7 @@ class _CommunityPageState extends State<CommunityPage> {
                           onTap: () {
                             // Can add "View Profile" logic here later
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Profile view for ${user['name']} coming soon!')),
+                              SnackBar(content: Text('${'community.profile_view_soon_prefix'.tr}${user['name']}${'community.profile_view_soon_suffix'.tr}')),
                             );
                             setState(() {
                               _isSearching = false;
@@ -373,7 +393,7 @@ class _CommunityPageState extends State<CommunityPage> {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: FilterChip(
-                label: Text(category),
+                label: Text(_localizedCategory(category)),
                 selected: isSelected,
                 onSelected: (_) {
                   setState(() => _selectedTab = index);
@@ -413,7 +433,7 @@ class _CommunityPageState extends State<CommunityPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No posts yet',
+            'community.no_posts'.tr,
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -422,7 +442,7 @@ class _CommunityPageState extends State<CommunityPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Be the first to start a discussion!',
+            'community.first_post'.tr,
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: Colors.grey.shade500,
@@ -488,7 +508,7 @@ class _CommunityPageState extends State<CommunityPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Start a Discussion',
+                        'community.start_discussion'.tr,
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -505,7 +525,7 @@ class _CommunityPageState extends State<CommunityPage> {
                   TextField(
                     controller: titleController,
                     decoration: InputDecoration(
-                      hintText: 'Title',
+                      hintText: 'community.title_hint'.tr,
                       filled: true,
                       fillColor: Colors.grey.shade50,
                       border: OutlineInputBorder(
@@ -523,7 +543,7 @@ class _CommunityPageState extends State<CommunityPage> {
                   TextField(
                     controller: descriptionController,
                     decoration: InputDecoration(
-                      hintText: 'What\'s your question or thought?',
+                      hintText: 'community.desc_hint'.tr,
                       filled: true,
                       fillColor: Colors.grey.shade50,
                       border: OutlineInputBorder(
@@ -545,7 +565,7 @@ class _CommunityPageState extends State<CommunityPage> {
                     children: [
                       const Icon(Iconsax.category, size: 18, color: Color(0xFF2E7D32)),
                       const SizedBox(width: 8),
-                      Text('Category:', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500)),
+                      Text('community.category_label'.tr, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500)),
                       const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButton<String>(
@@ -553,7 +573,7 @@ class _CommunityPageState extends State<CommunityPage> {
                           value: selectedCategory,
                           underline: const SizedBox(),
                           items: _categories.skip(1).map((cat) {
-                            return DropdownMenuItem(value: cat, child: Text(cat, style: GoogleFonts.poppins(fontSize: 14)));
+                            return DropdownMenuItem(value: cat, child: Text(_localizedCategory(cat), style: GoogleFonts.poppins(fontSize: 14)));
                           }).toList(),
                           onChanged: (value) => setDialogState(() => selectedCategory = value ?? 'General'),
                         ),
@@ -609,7 +629,7 @@ class _CommunityPageState extends State<CommunityPage> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     icon: const Icon(Iconsax.image, size: 20),
-                    label: Text(dialogImageBytes == null ? 'Add Photo' : 'Change Photo'),
+                    label: Text(dialogImageBytes == null ? 'community.add_photo'.tr : 'community.change_photo'.tr),
                   ),
                   
                   const SizedBox(height: 24),
@@ -620,7 +640,7 @@ class _CommunityPageState extends State<CommunityPage> {
                       onPressed: () async {
                         if (titleController.text.isEmpty || descriptionController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please fill all fields'), backgroundColor: Colors.orange),
+                            SnackBar(content: Text('community.fill_all'.tr), backgroundColor: Colors.orange),
                           );
                           return;
                         }
@@ -644,16 +664,16 @@ class _CommunityPageState extends State<CommunityPage> {
                             navigator.pop();
                             await _fetchPosts();
                             messenger.showSnackBar(
-                              const SnackBar(content: Text('Post created successfully!'), backgroundColor: Colors.green),
+                              SnackBar(content: Text('community.created_ok'.tr), backgroundColor: Colors.green),
                             );
                           } else {
                             messenger.showSnackBar(
-                              SnackBar(content: Text(response['message'] ?? 'Failed'), backgroundColor: Colors.red),
+                              SnackBar(content: Text(response['message'] ?? 'community.failed'.tr), backgroundColor: Colors.red),
                             );
                           }
                         } catch (e) {
                           messenger.showSnackBar(
-                            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                            SnackBar(content: Text('${'community.error_prefix'.tr}$e'), backgroundColor: Colors.red),
                           );
                         }
                       },
@@ -664,7 +684,7 @@ class _CommunityPageState extends State<CommunityPage> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
-                      child: Text('Post Discussion', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      child: Text('community.post_button'.tr, style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ],
@@ -764,7 +784,7 @@ class _DiscussionCardState extends State<_DiscussionCard> {
                       children: [
                         Expanded(
                           child: Text(
-                            widget.discussion['author']?['name'] ?? 'Anonymous',
+                            widget.discussion['author']?['name'] ?? 'community.anonymous'.tr,
                             style: GoogleFonts.poppins(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -783,7 +803,7 @@ class _DiscussionCardState extends State<_DiscussionCard> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            widget.discussion['category'] ?? 'General',
+                            _localizedCategory(widget.discussion['category'] ?? 'General'),
                             style: GoogleFonts.poppins(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
@@ -794,7 +814,7 @@ class _DiscussionCardState extends State<_DiscussionCard> {
                       ],
                     ),
                     Text(
-                      widget.discussion['timestamp'] ?? 'Just now',
+                      widget.discussion['timestamp'] ?? 'community.just_now'.tr,
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         color: Colors.grey.shade600,
@@ -822,7 +842,7 @@ class _DiscussionCardState extends State<_DiscussionCard> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Solved',
+                        'community.solved'.tr,
                         style: GoogleFonts.poppins(
                           fontSize: 10,
                           fontWeight: FontWeight.w500,
@@ -839,7 +859,7 @@ class _DiscussionCardState extends State<_DiscussionCard> {
           
           // Title
           Text(
-            widget.discussion['title'] ?? 'No title',
+            widget.discussion['title'] ?? 'community.no_title'.tr,
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -851,7 +871,7 @@ class _DiscussionCardState extends State<_DiscussionCard> {
           
           // Description
           Text(
-            widget.discussion['description'] ?? 'No description',
+            widget.discussion['description'] ?? 'community.no_description'.tr,
             style: GoogleFonts.poppins(
               fontSize: 12,
               color: Colors.grey.shade700,
@@ -907,8 +927,8 @@ class _DiscussionCardState extends State<_DiscussionCard> {
                   if (widget.currentUserId == null) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please log in to like'),
+                      SnackBar(
+                        content: Text('community.login_to_like'.tr),
                         backgroundColor: Colors.orange,
                       ),
                     );
@@ -932,7 +952,7 @@ class _DiscussionCardState extends State<_DiscussionCard> {
                     messenger.showSnackBar(
                       SnackBar(
                         content: Text(result['message']?.toString() ??
-                            'Could not save your like. Try again.'),
+                            'community.like_failed'.tr),
                         backgroundColor: Colors.red.shade700,
                         duration: const Duration(seconds: 2),
                       ),

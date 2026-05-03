@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import '../l10n/app_translations.dart';
 import '../services/notification_service.dart';
 import 'package:intl/intl.dart';
 import 'post_details_page.dart';
@@ -37,14 +38,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
       final now = DateTime.now();
       final diff = now.difference(dt);
 
-      if (diff.inMinutes < 1) return 'Now';
-      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-      if (diff.inHours < 24) return '${diff.inHours}h ago';
-      if (diff.inDays < 7) return '${diff.inDays}d ago';
+      if (diff.inMinutes < 1) return 'notif.now'.tr;
+      if (diff.inMinutes < 60) return '${diff.inMinutes}${'notif.minute_ago'.tr}';
+      if (diff.inHours < 24) return '${diff.inHours}${'notif.hour_ago'.tr}';
+      if (diff.inDays < 7) return '${diff.inDays}${'notif.day_ago'.tr}';
 
       return DateFormat('MMM d, yyyy').format(dt);
     } catch (e) {
-      return 'Unknown';
+      return 'notif.unknown'.tr;
     }
   }
 
@@ -58,9 +59,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
         return Iconsax.cloud;
       case 'activity':
         return Iconsax.activity;
-      case 'like': // ADDED
+      case 'like':
         return Iconsax.heart;
-      case 'comment': // ADDED
+      case 'comment':
         return Iconsax.message_text;
       default:
         return Iconsax.notification;
@@ -77,9 +78,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
         return Colors.blue;
       case 'activity':
         return Colors.green;
-      case 'like': // ADDED
+      case 'like':
         return Colors.red;
-      case 'comment': // ADDED
+      case 'comment':
         return Colors.blueAccent;
       default:
         return Colors.grey;
@@ -103,7 +104,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Notifications',
+          'notif.title'.tr,
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -111,7 +112,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
           ),
         ),
         actions: [
-          // ADDED: Refresh Button to manually trigger sync
           IconButton(
             icon: const Icon(Iconsax.refresh, color: Color(0xFF2E7D32), size: 20),
             onPressed: () {
@@ -125,12 +125,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text('Clear all notifications?'),
-                    content: const Text('This action cannot be undone.'),
+                    title: Text('notif.clear_all_title'.tr),
+                    content: Text('notif.clear_undone'.tr),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
+                        child: Text('common.cancel'.tr),
                       ),
                       TextButton(
                         onPressed: () {
@@ -138,9 +138,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           Navigator.pop(context);
                           _loadNotifications();
                         },
-                        child: const Text(
-                          'Clear',
-                          style: TextStyle(color: Colors.red),
+                        child: Text(
+                          'notif.clear'.tr,
+                          style: const TextStyle(color: Colors.red),
                         ),
                       ),
                     ],
@@ -149,19 +149,19 @@ class _NotificationsPageState extends State<NotificationsPage> {
               },
               icon: const Icon(Iconsax.trash, size: 18),
               label: Text(
-                'Clear',
+                'notif.clear'.tr,
                 style: GoogleFonts.poppins(fontSize: 12),
               ),
             ),
         ],
       ),
-      body: RefreshIndicator( // ADDED: Pull to refresh
+      body: RefreshIndicator(
         onRefresh: _loadNotifications,
         color: const Color(0xFF2E7D32),
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _notifications.isEmpty
-                ? SingleChildScrollView( // Changed to scrollable for RefreshIndicator
+                ? SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: Container(
                       height: MediaQuery.of(context).size.height * 0.7,
@@ -176,7 +176,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No notifications yet',
+                            'notif.empty'.tr,
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -196,14 +196,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       final notif = _notifications[index];
                       final isRead = notif['read'] == true;
                       final String? type = notif['type'];
-                      final String senderName = notif['senderName'] ?? 'Someone';
+                      final String senderName = notif['senderName'] ?? 'notif.someone'.tr;
                       final String? postTitle = notif['postTitle'];
 
-                      String dynamicTitle = notif['title'] ?? 'Notification';
+                      String dynamicTitle = notif['title'] ?? 'notif.notification'.tr;
                       if (type == 'like') {
-                        dynamicTitle = '$senderName liked your post';
+                        dynamicTitle = '$senderName${'notif.liked_your_post'.tr}';
                       } else if (type == 'comment') {
-                        dynamicTitle = '$senderName commented on your post';
+                        dynamicTitle = '$senderName${'notif.commented_post'.tr}';
                       }
 
                       return InkWell(
@@ -312,4 +312,4 @@ class _NotificationsPageState extends State<NotificationsPage> {
       ),
     );
   }
-} 
+}

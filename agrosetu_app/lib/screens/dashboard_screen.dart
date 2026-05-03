@@ -236,7 +236,7 @@ class _HomeDashboardState extends State<HomeDashboard>
       elevation: 6,
       icon: const Icon(Iconsax.microphone, color: Colors.white),
       label: Text(
-        'AI Voice',
+        'dash.ai_voice'.tr,
         style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.white),
       ),
     );
@@ -264,7 +264,7 @@ class _HomeDashboardState extends State<HomeDashboard>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Agrosetu',
+                  Text('dash.app_name'.tr,
                     style: GoogleFonts.poppins(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
@@ -272,7 +272,7 @@ class _HomeDashboardState extends State<HomeDashboard>
                       letterSpacing: -0.5,
                     ),
                   ),
-                  Text('Smart Farming',
+                  Text('dash.tagline'.tr,
                     style: GoogleFonts.poppins(
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
@@ -355,10 +355,12 @@ class _HomeDashboardState extends State<HomeDashboard>
       future: UserService.getUser(),
       builder: (context, snapshot) {
         final userName = (snapshot.hasData && snapshot.data != null)
-            ? snapshot.data!['name'] ?? 'Farmer'
-            : 'Farmer';
+            ? snapshot.data!['name'] ?? 'dash.farmer_default'.tr
+            : 'dash.farmer_default'.tr;
         final hour = DateTime.now().hour;
-        final greeting = hour < 12 ? 'Good Morning' : (hour < 18 ? 'Good Afternoon' : 'Good Evening');
+        final greeting = hour < 12
+            ? 'dash.greeting_morning'.tr
+            : (hour < 18 ? 'dash.greeting_afternoon'.tr : 'dash.greeting_evening'.tr);
 
         return Container(
           width: double.infinity,
@@ -409,7 +411,7 @@ class _HomeDashboardState extends State<HomeDashboard>
                         children: [
                           const Icon(Icons.stars, color: _C.greenMid, size: 14),
                           const SizedBox(width: 6),
-                          Text('Gold Level Farmer',
+                          Text('dash.badge_gold'.tr,
                             style: GoogleFonts.poppins(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
@@ -445,7 +447,7 @@ class _HomeDashboardState extends State<HomeDashboard>
                           color: _C.greenMid,
                         ),
                       ),
-                      Text('Tasks',
+                      Text('dash.tasks'.tr,
                         style: GoogleFonts.poppins(
                           fontSize: 8,
                           fontWeight: FontWeight.w500,
@@ -561,7 +563,7 @@ class _HomeDashboardState extends State<HomeDashboard>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _weatherData?['condition'] ?? 'Partly Cloudy',
+                          _weatherData?['condition'] ?? 'dash.weather_default_condition'.tr,
                           style: GoogleFonts.poppins(
                             color: Colors.white,
                             fontSize: 17,
@@ -583,9 +585,9 @@ class _HomeDashboardState extends State<HomeDashboard>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildWeatherMetric(Iconsax.wind,  _weatherData?['windSpeed'] ?? '12 km/h', 'Wind'),
-                    _buildWeatherMetric(Iconsax.drop,  _weatherData?['humidity']  ?? '65%',     'Humidity'),
-                    _buildWeatherMetric(Iconsax.sun_1, 'Low',                                    'UV Index'),
+                    _buildWeatherMetric(Iconsax.wind,  _weatherData?['windSpeed'] ?? '12 km/h', 'dash.weather_wind'.tr),
+                    _buildWeatherMetric(Iconsax.drop,  _weatherData?['humidity']  ?? '65%',     'dash.weather_humidity'.tr),
+                    _buildWeatherMetric(Iconsax.sun_1, 'dash.weather_uv_low'.tr,                'dash.weather_uv'.tr),
                   ],
                 ),
               ],
@@ -650,7 +652,7 @@ class _HomeDashboardState extends State<HomeDashboard>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Market Trends',
+              Text('dash.market_trends'.tr,
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -676,7 +678,7 @@ class _HomeDashboardState extends State<HomeDashboard>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Top: Big Tomato',
+                    Text('dash.top_tomato'.tr,
                       style: GoogleFonts.poppins(fontSize: 12, color: Colors.white60),
                     ),
                     const SizedBox(height: 4),
@@ -692,7 +694,7 @@ class _HomeDashboardState extends State<HomeDashboard>
                       children: [
                         const Icon(Icons.arrow_upward, color: _C.greenLight, size: 12),
                         const SizedBox(width: 2),
-                        Text('+4.2% today',
+                        Text('dash.today_change'.tr,
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -753,7 +755,7 @@ class _HomeDashboardState extends State<HomeDashboard>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Recent Activities',
+            Text('dash.recent_activities'.tr,
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -766,7 +768,7 @@ class _HomeDashboardState extends State<HomeDashboard>
                     MaterialPageRoute(builder: (_) => const ActivitiesPage()));
                 _loadActivities();
               },
-              child: Text('See all',
+              child: Text('dash.see_all'.tr,
                 style: GoogleFonts.poppins(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -795,7 +797,7 @@ class _HomeDashboardState extends State<HomeDashboard>
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: Text('No recent activity yet',
+                    child: Text('dash.no_activity'.tr,
                       style: GoogleFonts.poppins(color: Colors.grey.shade400),
                     ),
                   ),
@@ -824,10 +826,10 @@ class _HomeDashboardState extends State<HomeDashboard>
     final diff  = DateTime.now().difference(DateTime.parse(iso));
 
     final timeLabel = diff.inMinutes < 60
-        ? '${diff.inMinutes}m ago'
+        ? '${diff.inMinutes}${'dash.minute_ago'.tr}'
         : diff.inHours < 24
-            ? '${diff.inHours}h ago'
-            : '${diff.inDays}d ago';
+            ? '${diff.inHours}${'dash.hour_ago'.tr}'
+            : '${diff.inDays}${'dash.day_ago'.tr}';
 
     final IconData icon;
     final Color color;

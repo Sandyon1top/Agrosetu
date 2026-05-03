@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'l10n/app_translations.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -10,29 +9,6 @@ void main() async {
   await UserService.initialize();
   await AppTranslations.initFromPrefs();
   runApp(const AgroSetuApp());
-
-  // Configure audio session AFTER first frame so a misbehaving audio plugin
-  // can't block app startup. iOS default is "ambient" (silenced by ringer +
-  // other apps); we want "playback" so TTS responses are audible.
-  WidgetsBinding.instance.addPostFrameCallback((_) async {
-    try {
-      await AudioPlayer.global.setAudioContext(AudioContext(
-        iOS: AudioContextIOS(
-          // playback category routes to speaker by default and bypasses the
-          // ringer switch. defaultToSpeaker is only valid with playAndRecord
-          // and triggers OSStatus -50 if combined with playback.
-          category: AVAudioSessionCategory.playback,
-          options: const {},
-        ),
-        android: AudioContextAndroid(
-          contentType: AndroidContentType.speech,
-          usageType: AndroidUsageType.assistant,
-        ),
-      ));
-    } catch (e) {
-      debugPrint('[main] Audio context init failed: $e');
-    }
-  });
 }
 
 class AgroSetuApp extends StatelessWidget {

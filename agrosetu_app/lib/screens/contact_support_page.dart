@@ -62,7 +62,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(res['message']?.toString() ?? 'Failed to send message'),
+          content: Text(res['message']?.toString() ?? 'support.failed_send'.tr),
           backgroundColor: Colors.red,
         ),
       );

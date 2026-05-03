@@ -3,7 +3,36 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../l10n/app_translations.dart';
 import '../services/activity_service.dart';
+
+String _localizedSeason(String season) {
+  switch (season) {
+    case 'Winter':
+      return 'market.season_winter'.tr;
+    case 'Pre-Monsoon':
+      return 'market.season_pre_monsoon'.tr;
+    case 'Monsoon':
+      return 'market.season_monsoon'.tr;
+    case 'Post-Monsoon':
+      return 'market.season_post_monsoon'.tr;
+    default:
+      return season;
+  }
+}
+
+String _localizedRisk(String risk) {
+  switch (risk) {
+    case 'Low':
+      return 'market.risk_low'.tr;
+    case 'Medium':
+      return 'market.risk_medium'.tr;
+    case 'High':
+      return 'market.risk_high'.tr;
+    default:
+      return risk;
+  }
+}
 
 class MarketAnalyticsPage extends StatefulWidget {
   const MarketAnalyticsPage({super.key});
@@ -22,11 +51,11 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
   // ─── Tab Navigation ───────────────────────────────────────────────────────
   int _activeTab = 0;
   final List<Map<String, dynamic>> _tabs = [
-    {'icon': Icons.bar_chart_rounded,     'label': 'Season'},
-    {'icon': Icons.device_thermostat,     'label': 'Climate'},
-    {'icon': Icons.show_chart_rounded,    'label': 'Risk'},
-    {'icon': Icons.agriculture,           'label': 'Plant'},
-    {'icon': Icons.auto_graph_rounded,    'label': 'Forecast'},
+    {'icon': Icons.bar_chart_rounded,     'labelKey': 'market.tab_season'},
+    {'icon': Icons.device_thermostat,     'labelKey': 'market.tab_climate'},
+    {'icon': Icons.show_chart_rounded,    'labelKey': 'market.tab_risk'},
+    {'icon': Icons.agriculture,           'labelKey': 'market.tab_plant'},
+    {'icon': Icons.auto_graph_rounded,    'labelKey': 'market.tab_forecast'},
   ];
 
   // ─── Search ──────────────────────────────────────────────────────────────────
@@ -107,7 +136,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
   @override
   void initState() {
     super.initState();
-    ActivityService.addActivity('market', 'Viewed strategic market analytics');
+    ActivityService.addActivity('market', 'market.viewed_activity'.tr);
     _clearCacheAndLoad(); // clears stale cache on each dev reload
 
     _searchController.addListener(() {
@@ -449,7 +478,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             children: [
               const CircularProgressIndicator(color: Colors.white),
               const SizedBox(height: 20),
-              Text('Analysing 10 years of market data...',
+              Text('market.analyzing'.tr,
                   style: GoogleFonts.poppins(
                       color: Colors.white70, fontSize: 13)),
             ],
@@ -537,14 +566,14 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Smart Market Advisor',
+                    Text('market.title'.tr,
                         style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.white)),
                     Text(_selectedCrop.isNotEmpty
-                            ? 'Viewing: $_selectedCrop'
-                            : 'Select a crop to begin',
+                            ? '${'market.viewing'.tr}$_selectedCrop'
+                            : 'market.select_crop'.tr,
                         style: GoogleFonts.poppins(
                             fontSize: 11, color: Colors.white60)),
                   ],
@@ -569,7 +598,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                 style: GoogleFonts.poppins(
                     fontSize: 13, color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Search crop...',
+                  hintText: 'market.search_hint'.tr,
                   hintStyle: GoogleFonts.poppins(
                       fontSize: 13, color: Colors.white54),
                   prefixIcon: const Icon(Icons.search,
@@ -690,7 +719,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      tab['label'] as String,
+                      (tab['labelKey'] as String).tr,
                       style: GoogleFonts.poppins(
                         fontSize: 10,
                         fontWeight: isActive
@@ -741,7 +770,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                 child: Row(children: [
                   const Icon(Icons.search_off, color: Colors.grey, size: 20),
                   const SizedBox(width: 10),
-                  Text('No crops found for "$_searchQuery"',
+                  Text('${'market.no_results_prefix'.tr}$_searchQuery${'market.no_results_suffix'.tr}',
                       style: GoogleFonts.poppins(
                           fontSize: 13, color: Colors.grey)),
                 ]),
@@ -752,7 +781,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
                     child: Row(children: [
-                      Text('${results.length} results',
+                      Text('${results.length}${'market.results_count_suffix'.tr}',
                           style: GoogleFonts.poppins(
                               fontSize: 11, color: Colors.grey.shade500)),
                     ]),
@@ -841,7 +870,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             children: [
               const Icon(Icons.bar_chart_rounded, color: Color(0xFF2E7D32), size: 24),
               const SizedBox(width: 8),
-              Text('Seasonal Price Pattern',
+              Text('market.seasonal_pattern'.tr,
                   style: GoogleFonts.poppins(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -849,14 +878,14 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             ],
           ),
           const SizedBox(height: 4),
-          Text('Based on 10 years of Kalimati market data',
+          Text('market.based_on_10y'.tr,
               style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey.shade500)),
           const Divider(height: 24),
 
           // ── Season Bars ────────────────────────────────────────────────
           if (seasons.isEmpty)
             Center(
-              child: Text('No seasonal data available',
+              child: Text('market.no_seasonal'.tr,
                   style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey)),
             )
           else
@@ -879,7 +908,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                       children: [
                         Icon(_seasonIcons[season], size: 14, color: color),
                         const SizedBox(width: 6),
-                        Text(season,
+                        Text(_localizedSeason(season),
                             style: GoogleFonts.poppins(
                                 fontSize: 12,
                                 fontWeight: isBest ? FontWeight.w700 : FontWeight.w500,
@@ -892,7 +921,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                               color: color.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Text('BEST SELL',
+                            child: Text('market.best_sell'.tr,
                                 style: GoogleFonts.poppins(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w700,
@@ -927,10 +956,10 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
           Row(
             children: [
               Expanded(child: _insightChip(
-                Icons.trending_up, 'Peak Month', peakMonth, Colors.orange.shade700)),
+                Icons.trending_up, 'market.peak_month'.tr, peakMonth, Colors.orange.shade700)),
               const SizedBox(width: 10),
               Expanded(child: _insightChip(
-                Icons.eco_outlined, 'Plant In', plantMonth, const Color(0xFF2E7D32))),
+                Icons.eco_outlined, 'market.plant_in'.tr, plantMonth, const Color(0xFF2E7D32))),
             ],
           ),
           const SizedBox(height: 10),
@@ -949,7 +978,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Avoid selling in $worstSeason — prices average Rs.${worstPrice.toInt()}/kg',
+                      '${'market.avoid_selling_pre'.tr}${_localizedSeason(worstSeason)}${'market.avoid_selling_mid'.tr}${worstPrice.toInt()}${'market.avoid_selling_suffix'.tr}',
                       style: GoogleFonts.poppins(
                           fontSize: 11,
                           color: Colors.red.shade800),
@@ -1009,7 +1038,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
         child: Row(children: [
           const Icon(Icons.cloud_off, color: Colors.grey),
           const SizedBox(width: 10),
-          Text('Climate data not available',
+          Text('market.climate_unavailable'.tr,
               style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey)),
         ]),
       );
@@ -1038,11 +1067,11 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
       if (normTemp > 0.6 && normPrice > 0.5) tempHighPriceCount++;
     }
     final rainCorrelation = rainLowPriceCount >= 2
-        ? '🌧️ Heavy rain months tend to lower prices (oversupply)'
-        : '🌧️ Rainfall has little direct effect on price';
+        ? 'market.rain_high'.tr
+        : 'market.rain_low'.tr;
     final tempCorrelation = tempHighPriceCount >= 3
-        ? '🌡️ Warmer months tend to push prices higher'
-        : '🌡️ Temperature has a moderate effect on price';
+        ? 'market.temp_high'.tr
+        : 'market.temp_low'.tr;
 
     // Toggle state for rainfall vs temperature view
     return StatefulBuilder(
@@ -1053,7 +1082,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
           builder: (context, setToggle) {
             final climateData = showRainfall ? rainfall : temps;
             final maxClimate  = showRainfall ? maxRain  : maxTemp;
-            final climateLabel = showRainfall ? 'Rainfall (mm)' : 'Temp (°C)';
+            final climateLabel = showRainfall ? 'market.rainfall_label'.tr : 'market.temp_label'.tr;
             final climateColor = showRainfall
                 ? const Color(0xFF1565C0)
                 : const Color(0xFFE65100);
@@ -1077,7 +1106,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                       const Icon(Icons.device_thermostat,
                           color: Color(0xFF1565C0), size: 22),
                       const SizedBox(width: 8),
-                      Text('Climate vs Price',
+                      Text('market.climate_vs_price'.tr,
                           style: GoogleFonts.poppins(
                               fontSize: 17,
                               fontWeight: FontWeight.bold,
@@ -1107,7 +1136,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                showRainfall ? 'Rain' : 'Temp',
+                                showRainfall ? 'market.btn_rain'.tr : 'market.btn_temp'.tr,
                                 style: GoogleFonts.poppins(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
@@ -1123,7 +1152,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text('How $climateLabel affects $_selectedCrop price',
+                  Text('${'market.climate_subtitle_pre'.tr}$climateLabel${'market.climate_subtitle_mid'.tr}$_selectedCrop${'market.climate_subtitle_suffix'.tr}',
                       style: GoogleFonts.poppins(
                           fontSize: 11, color: Colors.grey.shade500)),
                   const SizedBox(height: 20),
@@ -1131,7 +1160,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                   // ── Legend ───────────────────────────────────────────────
                   Row(
                     children: [
-                      _legendDot(const Color(0xFF2E7D32), 'Price (Rs/kg)'),
+                      _legendDot(const Color(0xFF2E7D32), 'market.legend_price'.tr),
                       const SizedBox(width: 16),
                       _legendDot(climateColor, climateLabel),
                     ],
@@ -1282,17 +1311,17 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
     switch (riskLevel) {
       case 'Low':
         riskColor   = const Color(0xFF2E7D32);
-        riskMessage = 'Stable income crop — safe for small farmers';
+        riskMessage = 'market.risk_low_msg'.tr;
         riskIcon    = Icons.verified_rounded;
         break;
       case 'Medium':
         riskColor   = const Color(0xFFF57F17);
-        riskMessage = 'Moderate price swings — plan harvest timing carefully';
+        riskMessage = 'market.risk_med_msg'.tr;
         riskIcon    = Icons.warning_amber_rounded;
         break;
       default:
         riskColor   = const Color(0xFFC62828);
-        riskMessage = 'High volatility — prices fluctuate heavily, risky to grow';
+        riskMessage = 'market.risk_high_msg'.tr;
         riskIcon    = Icons.crisis_alert_rounded;
     }
 
@@ -1322,7 +1351,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             children: [
               Icon(Icons.show_chart_rounded, color: riskColor, size: 22),
               const SizedBox(width: 8),
-              Text('Price Volatility',
+              Text('market.volatility'.tr,
                   style: GoogleFonts.poppins(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -1342,7 +1371,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                   children: [
                     Icon(riskIcon, size: 13, color: riskColor),
                     const SizedBox(width: 4),
-                    Text('$riskLevel Risk',
+                    Text('${_localizedRisk(riskLevel)}${'market.risk_suffix'.tr}',
                         style: GoogleFonts.poppins(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -1353,7 +1382,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             ],
           ),
           const SizedBox(height: 4),
-          Text('Based on 10 years of daily price data',
+          Text('market.based_on_daily'.tr,
               style:
                   GoogleFonts.poppins(fontSize: 11, color: Colors.grey.shade500)),
           const Divider(height: 24),
@@ -1384,16 +1413,16 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
           // ── Stats row ────────────────────────────────────────────────────
           Row(
             children: [
-              _volStat('Avg Price', 'Rs.${avgPrice.toInt()}', Colors.black87),
-              _volStat('Lowest', 'Rs.${minPrice.toInt()}', const Color(0xFF2E7D32)),
-              _volStat('Highest', 'Rs.${maxPrice.toInt()}', const Color(0xFFC62828)),
-              _volStat('Price Swing', 'Rs.${priceSwing.toInt()}', const Color(0xFFF57F17)),
+              _volStat('market.avg_price'.tr, 'Rs.${avgPrice.toInt()}', Colors.black87),
+              _volStat('market.lowest'.tr, 'Rs.${minPrice.toInt()}', const Color(0xFF2E7D32)),
+              _volStat('market.highest'.tr, 'Rs.${maxPrice.toInt()}', const Color(0xFFC62828)),
+              _volStat('market.price_swing'.tr, 'Rs.${priceSwing.toInt()}', const Color(0xFFF57F17)),
             ],
           ),
           const SizedBox(height: 20),
 
           // ── Volatility gauge bar ─────────────────────────────────────────
-          Text('Volatility Score',
+          Text('market.volatility_score'.tr,
               style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -1434,13 +1463,13 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Stable',
+                Text('market.stable'.tr,
                     style: GoogleFonts.poppins(
                         fontSize: 9, color: const Color(0xFF2E7D32))),
-                Text('Moderate',
+                Text('market.moderate'.tr,
                     style: GoogleFonts.poppins(
                         fontSize: 9, color: const Color(0xFFF57F17))),
-                Text('Volatile',
+                Text('market.volatile'.tr,
                     style: GoogleFonts.poppins(
                         fontSize: 9, color: const Color(0xFFC62828))),
               ],
@@ -1449,7 +1478,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
           const Divider(height: 28),
 
           // ── Top 5 Safest Crops ───────────────────────────────────────────
-          Text('✅  5 Most Stable Crops to Grow',
+          Text('market.most_stable'.tr,
               style: GoogleFonts.poppins(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -1465,7 +1494,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
           const SizedBox(height: 16),
 
           // ── Top 5 Riskiest Crops ─────────────────────────────────────────
-          Text('⚠️  5 Most Volatile Crops',
+          Text('market.most_volatile'.tr,
               style: GoogleFonts.poppins(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -1545,7 +1574,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Text(risk,
+              child: Text(_localizedRisk(risk),
                   style: GoogleFonts.poppins(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -1582,15 +1611,15 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
     // Steps
     final steps = [
       {'icon': Icons.eco_outlined,       'color': const Color(0xFF2E7D32),
-       'title': 'Start Planting',        'value': plantMonth},
+       'title': 'market.start_planting'.tr,        'value': plantMonth},
       {'icon': Icons.water_drop_outlined,'color': const Color(0xFF1565C0),
-       'title': 'Grow Period',           'value': '~$days days'},
+       'title': 'market.grow_period'.tr,           'value': '${'market.grow_days_prefix'.tr}$days${'market.grow_days_suffix'.tr}'},
       {'icon': Icons.agriculture,        'color': const Color(0xFFF57F17),
-       'title': 'Harvest Ready',         'value': peakMonth},
+       'title': 'market.harvest_ready'.tr,         'value': peakMonth},
       {'icon': Icons.sell_outlined,      'color': const Color(0xFF6A1B9A),
-       'title': 'Best Season to Sell',   'value': bestSeason},
+       'title': 'market.best_to_sell'.tr,   'value': _localizedSeason(bestSeason)},
       {'icon': Icons.payments_outlined,  'color': const Color(0xFF2E7D32),
-       'title': 'Expected Price',        'value': 'Rs.${bestPrice.toInt()}/kg'},
+       'title': 'market.expected_price'.tr,        'value': 'Rs.${bestPrice.toInt()}/kg'},
     ];
 
     final Color riskColor = riskLevel == 'Low'
@@ -1615,7 +1644,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
           Row(children: [
             const Icon(Icons.agriculture, color: Color(0xFF2E7D32), size: 22),
             const SizedBox(width: 8),
-            Text('Planting Roadmap',
+            Text('market.planting_roadmap'.tr,
                 style: GoogleFonts.poppins(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
@@ -1627,7 +1656,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                 color: riskColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text('$riskLevel Risk',
+              child: Text('${_localizedRisk(riskLevel)}${'market.risk_suffix'.tr}',
                   style: GoogleFonts.poppins(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -1635,7 +1664,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             ),
           ]),
           const SizedBox(height: 4),
-          Text('Step-by-step guide for max profit',
+          Text('market.planting_subtitle'.tr,
               style: GoogleFonts.poppins(
                   fontSize: 11, color: Colors.grey.shade500)),
           const Divider(height: 24),
@@ -1741,7 +1770,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
     final startMonth = now.month; // 1-based
 
     // Trend direction
-    final trend     = b > 1 ? 'rising' : b < -1 ? 'falling' : 'stable';
+    final trend     = b > 1 ? 'market.trend_rising'.tr : b < -1 ? 'market.trend_falling'.tr : 'market.trend_stable'.tr;
     final trendIcon = b > 1 ? Icons.trending_up : b < -1
         ? Icons.trending_down : Icons.trending_flat;
     final trendColor = b > 1 ? const Color(0xFF2E7D32)
@@ -1769,7 +1798,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
           Row(children: [
             Icon(trendIcon, color: trendColor, size: 22),
             const SizedBox(width: 8),
-            Text('Price Forecast',
+            Text('market.forecast'.tr,
                 style: GoogleFonts.poppins(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
@@ -1793,7 +1822,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             ),
           ]),
           const SizedBox(height: 4),
-          Text('Next 6 months projection (linear trend)',
+          Text('market.forecast_subtitle'.tr,
               style: GoogleFonts.poppins(
                   fontSize: 11, color: Colors.grey.shade500)),
           const Divider(height: 24),
@@ -1869,9 +1898,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Best month to sell in next 6 months: $bestMonthName '
-                  '(projected Rs.${maxForecast.toInt()}/kg). '
-                  'Price trend is $trend.',
+                  '${'market.best_month_pre'.tr}$bestMonthName${'market.best_month_mid'.tr}${maxForecast.toInt()}${'market.best_month_suffix'.tr}$trend.',
                   style: GoogleFonts.poppins(
                       fontSize: 11,
                       color: Colors.purple.shade800),
@@ -1883,8 +1910,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
           const SizedBox(height: 10),
           // Disclaimer
           Text(
-            '⚠️ Forecast is based on historical seasonal patterns. '
-            'Actual prices may vary.',
+            'market.disclaimer'.tr,
             style: GoogleFonts.poppins(
                 fontSize: 10,
                 color: Colors.grey.shade400,

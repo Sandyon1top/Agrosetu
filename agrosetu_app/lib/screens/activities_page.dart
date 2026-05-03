@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_translations.dart';
 import '../services/activity_service.dart';
 
 class ActivitiesPage extends StatefulWidget {
@@ -28,8 +29,10 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
     final dt = DateTime.parse(iso);
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inDays == 0) return 'Today, ${TimeOfDay.fromDateTime(dt).format(context)}';
-    if (diff.inDays < 7) return '${diff.inDays} day(s) ago';
+    if (diff.inDays == 0) {
+      return '${'activities.today_prefix'.tr}${TimeOfDay.fromDateTime(dt).format(context)}';
+    }
+    if (diff.inDays < 7) return '${diff.inDays}${'activities.day_ago_suffix'.tr}';
     return '${dt.month}/${dt.day}/${dt.year}';
   }
 
@@ -37,7 +40,7 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('All Activities', style: GoogleFonts.poppins()),
+        title: Text('activities.title'.tr, style: GoogleFonts.poppins()),
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF1B5E20),
         elevation: 0,
@@ -45,14 +48,11 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: _items.isEmpty
-            ? Center(child: Text('No activities yet', style: GoogleFonts.poppins()))
+            ? Center(child: Text('activities.empty'.tr, style: GoogleFonts.poppins()))
             : ListView.builder(
                 itemCount: _items.length,
                 itemBuilder: (context, idx) {
                   final it = _items[idx];
-                  // Activities are read-only log entries — no detail screen
-                  // to drill into yet, so we omit onTap and the chevron icon
-                  // so the row doesn't look interactive.
                   return ListTile(
                     title: Text(it['title'] ?? '', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                     subtitle: Text(_formatTime(it['timestamp']), style: GoogleFonts.poppins(fontSize: 12)),
