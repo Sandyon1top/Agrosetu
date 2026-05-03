@@ -4,23 +4,24 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'env_config.dart';
 
 /// Backend selection enum for easy switching between targets.
 enum BackendTarget { localhost, emulator, ngrok, custom }
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.101.4:5001';
+  static String baseUrl = EnvConfig.nodeBaseUrl;
 
   // NOTE: `flaskBaseUrl` is configurable at runtime so you can switch
   // easily between local, emulator and ngrok when testing on devices.
   // Default (local machine running Flask):
-  static String flaskBaseUrl = 'http://192.168.101.4:8000';
+  static String flaskBaseUrl = EnvConfig.flaskBaseUrl;
 
   // Helper to change target backend quickly from code:
   static void setBackendTarget(BackendTarget target, {String? ngrokUrl, String? customUrl}) {
     switch (target) {
       case BackendTarget.localhost:
-        flaskBaseUrl = 'http://192.168.101.4:8000';
+        flaskBaseUrl = EnvConfig.flaskBaseUrl;
         break;
       case BackendTarget.emulator:
         // Android emulator special host mapping

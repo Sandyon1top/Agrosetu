@@ -3,13 +3,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http; // ADDED
 import 'api_service.dart'; // ADDED
+import 'env_config.dart';
 import 'user_service.dart'; // ADDED
 
 class NotificationService {
   static const String _notificationsKey = 'notifications_list';
 
-  // ADDED: Backend URL helper (Adjust port if necessary)
-  static const String baseUrl = 'http://192.168.101.4:5001/api';
+  static String get baseUrl => '${EnvConfig.nodeBaseUrl}/api';
 
   static Future<void> addNotification(Map<String, dynamic> notification) async {
     final prefs = await SharedPreferences.getInstance();

@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'env_config.dart';
 
 class WeatherService {
-  // Update this to your machine's IP if testing on a real device
-  static const String backendUrl = 'http://192.168.101.4:5001';
+  static String get backendUrl => EnvConfig.nodeBaseUrl;
   static const String _cacheKey = 'agro_weather_cache';
   static const String _forecastKey = 'agro_forecast_cache';
 
