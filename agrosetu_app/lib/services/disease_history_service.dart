@@ -81,6 +81,13 @@ class DiseaseHistoryService {
     }
   }
 
+  /// Wipes the local detection cache. Used on logout / account switch so the
+  /// next user does not see the previous user's history on this device.
+  static Future<void> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
+  }
+
   /// Sync manually (call this on App Startup or when internet reconnects)
   static Future<void> syncPendingDetections() async {
     try {

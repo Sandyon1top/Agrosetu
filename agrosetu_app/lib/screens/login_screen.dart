@@ -14,6 +14,10 @@ import 'dashboard_screen.dart';
 import '../services/user_service.dart';
 import '../services/api_service.dart';
 import '../services/social_auth_service.dart';
+import '../services/notification_service.dart';
+import '../services/disease_history_service.dart';
+import '../services/activity_service.dart';
+import '../services/user_preferences_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -49,6 +53,23 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text = password;
         _rememberMe = rememberMe;
       });
+    }
+  }
+
+  /// If the user about to be saved is different from the user previously
+  /// cached on this device, wipe per-user caches so the new user does not
+  /// inherit notifications / history / activities / preferences from the
+  /// previous user. Same-user re-login (e.g. token refresh) is a no-op and
+  /// preserves their offline data.
+  Future<void> _wipeCachesIfDifferentUser(String newUserId) async {
+    final prev = await UserService.getUser();
+    final prevId = prev?['id']?.toString();
+    if (prevId != null && prevId != newUserId) {
+      debugPrint('[LoginScreen] 🧹 Different user ($prevId → $newUserId). Wiping per-user caches.');
+      await NotificationService.clearAll();
+      await DiseaseHistoryService.clearAll();
+      await ActivityService.clearAll();
+      await UserPreferencesService.clearCacheOnly();
     }
   }
 
@@ -136,8 +157,9 @@ class _LoginScreenState extends State<LoginScreen> {
           };
           
           debugPrint('[LoginScreen] Saving user: ${userToSave['name']}');
+          await _wipeCachesIfDifferentUser(userToSave['id'] as String);
           await UserService.saveUser(userToSave);
-          
+
           final savedUser = await UserService.getUser();
           debugPrint('[LoginScreen] ✅ Saved user verified: ${savedUser?['name']}, token exists: ${savedUser?['token'] != null}');
 
@@ -336,6 +358,7 @@ class _LoginScreenState extends State<LoginScreen> {
             'marketTips': 0,
           };
 
+          await _wipeCachesIfDifferentUser(userToSave['id'] as String);
           await UserService.saveUser(userToSave);
 
           if (mounted) {

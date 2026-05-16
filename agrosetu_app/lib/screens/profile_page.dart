@@ -10,6 +10,9 @@ import '../l10n/app_translations.dart';
 import '../services/user_service.dart';
 import '../services/api_service.dart';
 import '../services/user_preferences_service.dart';
+import '../services/notification_service.dart';
+import '../services/disease_history_service.dart';
+import '../services/activity_service.dart';
 import 'edit_profile_page.dart';
 import 'settings_page.dart';
 import 'privacy_security_page.dart';
@@ -693,7 +696,12 @@ class _ProfilePageState extends State<ProfilePage> {
               final navigator = Navigator.of(context);
               Navigator.pop(context); // Close dialog
               
-              // Clear all session data
+              // Clear all session data + per-user caches so the next user
+              // does not inherit the previous user's data on this device.
+              await NotificationService.clearAll();
+              await DiseaseHistoryService.clearAll();
+              await ActivityService.clearAll();
+              await UserPreferencesService.clearCacheOnly();
               await UserService.logout();
               await ApiService.logout();
               final prefs = await SharedPreferences.getInstance();

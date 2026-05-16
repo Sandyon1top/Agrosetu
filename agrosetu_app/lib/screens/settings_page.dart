@@ -6,6 +6,8 @@ import '../services/api_service.dart';
 import '../services/notification_service.dart';
 import '../services/user_preferences_service.dart';
 import '../services/user_service.dart';
+import '../services/disease_history_service.dart';
+import '../services/activity_service.dart';
 import 'change_password_page.dart';
 import 'language_selection_page.dart';
 import 'location_services_page.dart';
@@ -124,6 +126,9 @@ class _SettingsPageState extends State<SettingsPage> {
       await UserService.clearAll();
       await ApiService.logout();
       await NotificationService.clearAll();
+      await DiseaseHistoryService.clearAll();
+      await ActivityService.clearAll();
+      await UserPreferencesService.clearCacheOnly();
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
