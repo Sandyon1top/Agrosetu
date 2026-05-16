@@ -7,6 +7,8 @@ import '../services/api_service.dart';
 import '../services/user_service.dart';
 import 'post_details_page.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -522,6 +524,15 @@ class _CommunityPageState extends State<CommunityPage> {
                     ],
                   ),
                   const SizedBox(height: 16),
+                  Text(
+                    'community.title_label'.tr + ' *',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.red.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
                   TextField(
                     controller: titleController,
                     decoration: InputDecoration(
@@ -530,16 +541,29 @@ class _CommunityPageState extends State<CommunityPage> {
                       fillColor: Colors.grey.shade50,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade200),
+                        borderSide: BorderSide(color: Colors.red.shade200),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade200),
+                        borderSide: BorderSide(color: Colors.red.shade100),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.red.shade400, width: 2),
                       ),
                       contentPadding: const EdgeInsets.all(16),
                     ),
                   ),
                   const SizedBox(height: 12),
+                  Text(
+                    'community.desc_label'.tr + ' *',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.red.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
                   TextField(
                     controller: descriptionController,
                     decoration: InputDecoration(
@@ -548,11 +572,15 @@ class _CommunityPageState extends State<CommunityPage> {
                       fillColor: Colors.grey.shade50,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade200),
+                        borderSide: BorderSide(color: Colors.red.shade200),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade200),
+                        borderSide: BorderSide(color: Colors.red.shade100),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.red.shade400, width: 2),
                       ),
                       contentPadding: const EdgeInsets.all(16),
                     ),
@@ -982,7 +1010,7 @@ class _DiscussionCardState extends State<_DiscussionCard> {
                   final result = await ApiService.likePost(
                     postId: widget.discussion['id'],
                     userId: widget.currentUserId!,
-                    userName: widget.currentUserName ?? 'Someone',
+                    userName: widget.currentUserName ?? 'community.anonymous'.tr,
                   );
                   if (!mounted) return;
                   if (result['status'] != 'ok') {

@@ -95,7 +95,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
     if (timestamp == null) return 'post.recently'.tr;
     try {
       final dt = DateTime.parse(timestamp);
-      return DateFormat('MMM d, h:mm a').format(dt);
+      return DateFormat.MMMd(AppTranslations.currentLocale.value).add_jm().format(dt);
     } catch (e) {
       return timestamp;
     }
@@ -113,7 +113,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
       final response = await ApiService.likePost(
         postId: widget.postId,
         userId: _currentUserId!,
-        userName: _currentUser?['name'] ?? 'Someone',
+        userName: _currentUser?['name'] ?? 'post.anonymous'.tr,
       );
       if (response['status'] == 'ok') {
         _fetchPostDetails(); // Refresh to update like count

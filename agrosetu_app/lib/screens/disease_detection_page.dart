@@ -260,7 +260,7 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
       final newDetection = {
         'disease': _detectedDisease,
         'confidence': '${_confidence?.toStringAsFixed(1)}%',
-        'date': 'Just now',
+        'date': 'community.just_now'.tr,
       };
       setState(() {
         _recentDetections.insert(0, newDetection);
@@ -378,7 +378,7 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
              mimeType: 'image/png', 
              name: 'Disease_Result_${DateTime.now().millisecondsSinceEpoch}.png'
            );
-           await Share.shareXFiles([xFile], text: 'Disease Detection Result');
+           await Share.shareXFiles([xFile], text: 'disease.share_text'.tr);
            _showErrorSnackBar('disease.download_triggered'.tr);
         } else {
           final result = await ImageGallerySaver.saveImage(
