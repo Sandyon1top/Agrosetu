@@ -1,5 +1,32 @@
 QUICK REFERENCE: AgroSetu AI Implementation
 
+╔══════════════════════════════════════════════════════════════════════════╗
+║  *** CURRENT STATE (authoritative) ***                                   ║
+║                                                                          ║
+║  This file describes the original prototype.  Use the facts below for    ║
+║  anything that conflicts with the older sections that follow.            ║
+║                                                                          ║
+║  Flask server         : 0.0.0.0:8000  (NOT 5000)                         ║
+║  Node.js backend      : 0.0.0.0:5001                                     ║
+║  Dev exposure         : Direct LAN IP — default 192.168.101.6,           ║
+║                         override at build time:                          ║
+║                           flutter run --dart-define=API_HOST=$(ipconfig  ║
+║                                  getifaddr en0)                          ║
+║                         ngrok is no longer used.                         ║
+║  Disease model        : PyTorch, 104 classes across 27+ crop families    ║
+║                         (Apple, Banana, BellPepper, Carrot, Cassava,     ║
+║                         Cherry, Chili, Coffee, Corn, Cucumber, Grape,    ║
+║                         Guava, Jamun, Jujube, Lemon, Mango, Orange,      ║
+║                         Peach, Pomegranate, Potato, Rice, Soybean,       ║
+║                         Strawberry, Sugarcane, Tea, Tomato, Wheat).      ║
+║                         Authoritative list lives in Flask/app.py:82-109  ║
+║                         and Flask/models/class_indices.json.             ║
+║  Model weight files   : .pt (PyTorch), loaded with torch.load().         ║
+║                         The .h5 references below are historical (Keras). ║
+║  Health check         : curl http://192.168.101.6:8000/health            ║
+║                                                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
 COMMANDS CHEAT SHEET
 ====================
 

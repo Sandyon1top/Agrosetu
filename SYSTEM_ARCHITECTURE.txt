@@ -1,7 +1,34 @@
 AGROSETU AI DISEASE DETECTION - SYSTEM ARCHITECTURE
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           DEPLOYMENT OVERVIEW                               │
+│                       *** CURRENT STATE (authoritative) ***                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  The diagrams further below describe the original 6-class / ngrok / Keras   │
+│  prototype.  The shipped system has evolved.  Trust the facts in this       │
+│  header over anything older further down.                                   │
+│                                                                             │
+│  Disease model        : PyTorch, 104 classes across 27+ crop families       │
+│                        (see _DISEASE_LIST in Flask/app.py:82-109).          │
+│  Models loaded        : MobileNetV2Scratch + EfficientNetB0Scratch +        │
+│                        CustomCNN — ensemble averaging in app.py.            │
+│  Model weight files   : .pt (PyTorch state_dict) under Flask/models/,       │
+│                        NOT .h5.  Loaded with torch.load().                  │
+│  Flask server         : 0.0.0.0:8000  (app.run on port 8000 — NOT 5000)    │
+│  Node.js backend      : 0.0.0.0:5001                                        │
+│  Dev exposure         : Direct LAN IP (default 192.168.101.6, overridable   │
+│                        with --dart-define=API_HOST=...). ngrok is no        │
+│                        longer used.                                         │
+│  Flutter entry screen : lib/screens/disease_detection_page.dart             │
+│                        (the *_new.dart variant referenced below no longer   │
+│                        exists — it was merged into the main file).          │
+│  Voice assistant      : Whisper (STT) + Groq LLaMA via backend, plus        │
+│                        on-device TTS playback.                              │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│             DEPLOYMENT OVERVIEW (historical prototype, below)               │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 DURING TRAINING (Step 1-4):
