@@ -48,7 +48,7 @@ class NotificationService {
 
       final response = await http.get(
         Uri.parse('$baseUrl/notifications/${user['id']}'),
-        headers: ApiService.getHeaders(),
+        headers: await ApiService.getAuthHeaders(),
       );
 
       if (response.statusCode == 200) {

@@ -411,7 +411,7 @@ class ApiService {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/community/posts'),
-        headers: getHeaders(),
+        headers: await getAuthHeaders(),
         body: jsonEncode({
           'title': title,
           'description': description,
@@ -558,7 +558,7 @@ class ApiService {
     try {
       final response = await http.delete(
         Uri.parse('$baseUrl/api/community/posts/$postId'),
-        headers: getHeaders(),
+        headers: await getAuthHeaders(),
         body: jsonEncode({
           'userId': userId,
         }),
@@ -930,7 +930,7 @@ class ApiService {
   static Future<Map<String, dynamic>> getUserSettings(String userId) async {
     try {
       final response = await http
-          .get(Uri.parse('$baseUrl/api/user/settings/$userId'), headers: getHeaders())
+          .get(Uri.parse('$baseUrl/api/user/settings/$userId'), headers: await getAuthHeaders())
           .timeout(const Duration(seconds: 10));
       final data = jsonDecode(response.body);
       if (response.statusCode == 200) {
@@ -961,7 +961,7 @@ class ApiService {
       final response = await http
           .put(
             Uri.parse('$baseUrl/api/user/settings'),
-            headers: getHeaders(),
+            headers: await getAuthHeaders(),
             body: jsonEncode(body),
           )
           .timeout(const Duration(seconds: 10));
@@ -984,7 +984,7 @@ class ApiService {
       final response = await http
           .post(
             Uri.parse('$baseUrl/api/user/change-password'),
-            headers: getHeaders(),
+            headers: await getAuthHeaders(),
             body: jsonEncode({
               'userId': userId,
               'currentPassword': currentPassword,
@@ -1011,7 +1011,7 @@ class ApiService {
       final response = await http
           .post(
             Uri.parse('$baseUrl/api/user/deactivate'),
-            headers: getHeaders(),
+            headers: await getAuthHeaders(),
             body: jsonEncode({'userId': userId}),
           )
           .timeout(const Duration(seconds: 15));
@@ -1061,7 +1061,7 @@ class ApiService {
       final response = await http
           .get(
             Uri.parse('$baseUrl/api/user/export-data/$userId'),
-            headers: getHeaders(),
+            headers: await getAuthHeaders(),
           )
           .timeout(const Duration(seconds: 30));
       final data = jsonDecode(response.body);
@@ -1185,7 +1185,7 @@ class ApiService {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/disease-history/sync'),
-        headers: getHeaders(),
+        headers: await getAuthHeaders(),
         body: jsonEncode({
           'userId': userId,
           'detections': detections,

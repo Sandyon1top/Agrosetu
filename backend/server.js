@@ -802,8 +802,11 @@ app.put("/api/user/update", authenticateToken, async (req, res) => {
 });
 
 // ====== USER SETTINGS / PREFERENCES ======
-app.get("/api/user/settings/:userId", async (req, res) => {
+app.get("/api/user/settings/:userId", authenticateToken, async (req, res) => {
   try {
+    if (String(req.user.userId) !== String(req.params.userId)) {
+      return res.status(403).json({ status: "error", message: "Cannot read another user's settings" });
+    }
     const user = await User.findById(req.params.userId).select('preferences');
     if (!user) return res.status(404).json({ status: "error", message: "User not found" });
     const prefs = user.preferences || {};
@@ -823,11 +826,14 @@ app.get("/api/user/settings/:userId", async (req, res) => {
   }
 });
 
-app.put("/api/user/settings", async (req, res) => {
+app.put("/api/user/settings", authenticateToken, async (req, res) => {
   try {
     const { userId, language, notificationsEnabled, profileVisibility, activityLogging, locationServicesEnabled } = req.body;
     if (!userId) {
       return res.status(400).json({ status: "error", message: "userId is required" });
+    }
+    if (String(req.user.userId) !== String(userId)) {
+      return res.status(403).json({ status: "error", message: "Cannot modify another user's settings" });
     }
     const update = {};
     if (language !== undefined) update['preferences.language'] = language;
@@ -846,11 +852,14 @@ app.put("/api/user/settings", async (req, res) => {
 });
 
 // ====== CHANGE PASSWORD (authenticated) ======
-app.post("/api/user/change-password", async (req, res) => {
+app.post("/api/user/change-password", authenticateToken, async (req, res) => {
   try {
     const { userId, currentPassword, newPassword } = req.body;
     if (!userId || !currentPassword || !newPassword) {
       return res.status(400).json({ status: "error", message: "userId, currentPassword and newPassword are required" });
+    }
+    if (String(req.user.userId) !== String(userId)) {
+      return res.status(403).json({ status: "error", message: "Cannot change another user's password" });
     }
     const passwordCheck = validatePassword(newPassword);
     if (!passwordCheck.isValid) {
@@ -919,9 +928,12 @@ app.post("/api/contact/send-message", async (req, res) => {
 });
 
 // ====== USER DATA EXPORT (Privacy: Download Your Data) ======
-app.get("/api/user/export-data/:userId", async (req, res) => {
+app.get("/api/user/export-data/:userId", authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
+    if (String(req.user.userId) !== String(userId)) {
+      return res.status(403).json({ status: "error", message: "Cannot export another user's data" });
+    }
     const user = await User.findById(userId).select('-password -verificationCode -verificationExpires');
     if (!user) return res.status(404).json({ status: "error", message: "User not found" });
 
@@ -1203,12 +1215,17 @@ app.get("/api/community/post-detail/:postId", async (req, res) => {
   }
 });
 
-app.post("/api/community/posts", async (req, res) => {
+app.post("/api/community/posts", authenticateToken, async (req, res) => {
   try {
-    const { title, description, category, author, image_data } = req.body;
+    const { title, description, category, image_data } = req.body;
+    // Author is derived from the JWT, not the request body — prevents
+    // impersonation where a logged-in user could post as someone else by
+    // sending an arbitrary `author` object.
+    const me = await User.findById(req.user.userId).select('name email');
+    if (!me) return res.status(401).json({ status: "error", message: "User not found" });
     const post = await Post.create({
       title, description, category, imageUrl: image_data,
-      author: { id: author.id, name: author.name, email: author.email },
+      author: { id: req.user.userId, name: me.name, email: me.email },
       likes: [], comments: [], solved: false
     });
     res.json({ status: "ok", message: "Post created", post });
@@ -1331,16 +1348,16 @@ app.post("/api/community/posts/:postId/comments/:commentId/replies", async (req,
   }
 });
 
-app.delete("/api/community/posts/:postId", async (req, res) => {
+app.delete("/api/community/posts/:postId", authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.userId;
     const post = await Post.findById(req.params.postId);
 
     if (!post) {
       return res.status(404).json({ status: "error", message: "Post not found" });
     }
 
-    if (post.author.id.toString() !== userId) {
+    if (post.author.id.toString() !== String(userId)) {
       return res.status(403).json({ status: "error", message: "Not authorized to delete this post" });
     }
 
@@ -1356,8 +1373,11 @@ app.delete("/api/community/posts/:postId", async (req, res) => {
 
 // ====== NOTIFICATION ENDPOINTS ======
 
-app.get("/api/notifications/:userId", async (req, res) => {
+app.get("/api/notifications/:userId", authenticateToken, async (req, res) => {
   try {
+    if (String(req.user.userId) !== String(req.params.userId)) {
+      return res.status(403).json({ status: "error", message: "Cannot read another user's notifications" });
+    }
     const notifications = await Notification.find({ recipientId: req.params.userId }).sort({ createdAt: -1 }).limit(20);
     res.json({ status: "ok", notifications });
   } catch (e) {
@@ -1366,11 +1386,14 @@ app.get("/api/notifications/:userId", async (req, res) => {
   }
 });
 
-app.post("/api/notifications/read", async (req, res) => {
+app.post("/api/notifications/read", authenticateToken, async (req, res) => {
   try {
     const { userId } = req.body;
     if (!userId) {
       return res.status(400).json({ status: "error", message: "userId is required" });
+    }
+    if (String(req.user.userId) !== String(userId)) {
+      return res.status(403).json({ status: "error", message: "Cannot modify another user's notifications" });
     }
     await Notification.updateMany(
       { recipientId: userId, read: false },
@@ -1417,7 +1440,7 @@ async function generateAudioBase64(text) {
   }
 }
 
-app.post("/api/voice/query", async (req, res) => {
+app.post("/api/voice/query", authenticateToken, async (req, res) => {
   try {
     const { query, userId } = req.body;
     if (!query) {
@@ -1481,7 +1504,7 @@ async function transcribeAudio(filePath) {
   return stdout.trim();
 }
 
-app.post("/api/voice/audio-query", upload.single("audio"), async (req, res) => {
+app.post("/api/voice/audio-query", authenticateToken, upload.single("audio"), async (req, res) => {
   let filePath = null;
   try {
     if (!req.file) return res.status(400).json({ status: "error", message: "No audio file uploaded" });
@@ -1525,11 +1548,14 @@ app.post("/api/voice/audio-query", upload.single("audio"), async (req, res) => {
   }
 });
 
-app.post("/api/user/deactivate", async (req, res) => {
+app.post("/api/user/deactivate", authenticateToken, async (req, res) => {
   try {
     const { userId } = req.body;
     if (!userId) {
       return res.status(400).json({ status: "error", message: "userId is required" });
+    }
+    if (String(req.user.userId) !== String(userId)) {
+      return res.status(403).json({ status: "error", message: "Cannot delete another user's account" });
     }
     const user = await User.findById(userId);
     if (!user) {
@@ -1931,8 +1957,11 @@ app.get("/api/admin/detections", requireAdmin, async (req, res) => {
 
 // ====== DISEASE HISTORY API ======
 
-app.get("/api/disease-history/:userId", async (req, res) => {
+app.get("/api/disease-history/:userId", authenticateToken, async (req, res) => {
   try {
+    if (String(req.user.userId) !== String(req.params.userId)) {
+      return res.status(403).json({ status: "error", message: "Cannot read another user's disease history" });
+    }
     const history = await DiseaseHistory.find({ userId: req.params.userId }).sort({ createdAt: -1 });
     res.json({ status: "ok", history });
   } catch (error) {
@@ -1941,11 +1970,14 @@ app.get("/api/disease-history/:userId", async (req, res) => {
   }
 });
 
-app.post("/api/disease-history/sync", async (req, res) => {
+app.post("/api/disease-history/sync", authenticateToken, async (req, res) => {
   try {
     const { userId, detections } = req.body;
     if (!userId || !detections || !Array.isArray(detections)) {
       return res.status(400).json({ status: "error", message: "Invalid payload" });
+    }
+    if (String(req.user.userId) !== String(userId)) {
+      return res.status(403).json({ status: "error", message: "Cannot sync another user's history" });
     }
 
     const savedRecords = [];
