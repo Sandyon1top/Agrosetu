@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:record/record.dart';
@@ -27,7 +26,6 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
   final AudioRecorder _audioRecorder = AudioRecorder();
   String? _recordingPath;
 
-  bool _speechEnabled = false;
   bool _isListening = false;
   bool _isLoading = false;
   bool _isSpeaking = false;
@@ -57,8 +55,18 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
   }
 
   Future<void> _initSpeech() async {
+    // The speech_to_text plugin's macOS / Windows / Linux backends call into
+    // Apple Speech / Win SAPI / unsupported stubs at initialize() time and
+    // can crash the whole process even when wrapped in try/catch (the failure
+    // is in native code, not Dart). The live-recording path uses the `record`
+    // package + server-side Whisper, so on-device STT is not needed at all on
+    // desktop. Skip initialization there.
+    if (!(Platform.isIOS || Platform.isAndroid)) {
+      debugPrint('[STT] Skipped on desktop platform — using server Whisper instead.');
+      return;
+    }
     try {
-      _speechEnabled = await _speechToText.initialize(
+      await _speechToText.initialize(
         onError: (error) {
           debugPrint('[STT] Error: ${error.errorMsg}');
           if (mounted) {
@@ -97,8 +105,15 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
 
   Future<void> _pickAndUploadAudio() async {
     try {
+      // FileType.audio on macOS greys out anything outside the system's
+      // built-in audio UTI list (mp3 / m4a / wav / aac / ogg / flac), so
+      // recordings in webm / opus / amr / extension-less files become
+      // unselectable. The backend pipes through Whisper+ffmpeg which
+      // accepts essentially any container, so widen the picker and let
+      // the server validate. Non-audio uploads return the friendly
+      // "Could not transcribe audio" message from the OO fix.
       FilePickerResult? result = await FilePicker.pickFiles(
-        type: FileType.audio,
+        type: FileType.any,
         allowMultiple: false,
         withData: true,
       );
@@ -249,24 +264,6 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  void _onSpeechResult(SpeechRecognitionResult result) {
-    setState(() {
-      if (result.finalResult) {
-        _recognizedText = result.recognizedWords;
-        _partialText = '';
-      } else {
-        _partialText = result.recognizedWords;
-      }
-    });
-
-    _silenceTimer?.cancel();
-    _silenceTimer = Timer(const Duration(seconds: 4), () {
-      if (_isListening && mounted) {
-        _stopListening();
-      }
-    });
   }
 
   Future<void> _submitQuery(String query) async {

@@ -41,5 +41,9 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>AgroSetu needs microphone access so you can ask the Voice Assistant farming questions out loud.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>AgroSetu transcribes your voice question so the assistant can answer.</string>
 </dict>
 </plist>
