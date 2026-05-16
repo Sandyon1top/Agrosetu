@@ -46,12 +46,20 @@ class ApiService {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
-    
+
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
-    
+
     return headers;
+  }
+
+  /// Auto-attaches `Authorization: Bearer <token>` from stored user session.
+  /// Use this for any endpoint protected by `authenticateToken` middleware
+  /// on the Node backend.
+  static Future<Map<String, String>> getAuthHeaders() async {
+    final token = await getToken();
+    return getHeaders(token: token);
   }
   
   // Login API
