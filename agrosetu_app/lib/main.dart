@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'l10n/app_translations.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -8,6 +9,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await UserService.initialize();
   await AppTranslations.initFromPrefs();
+  // Register `intl` symbol data for both languages we ship so screens can
+  // call `DateFormat.yMMMd(locale).format(dt)` and get localized month names
+  // ("मे" instead of "May") when the app is in Nepali.
+  await initializeDateFormatting('en');
+  await initializeDateFormatting('ne');
   runApp(const AgroSetuApp());
 }
 

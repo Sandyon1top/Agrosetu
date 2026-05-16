@@ -43,7 +43,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
       if (diff.inHours < 24) return '${diff.inHours}${'notif.hour_ago'.tr}';
       if (diff.inDays < 7) return '${diff.inDays}${'notif.day_ago'.tr}';
 
-      return DateFormat('MMM d, yyyy').format(dt);
+      return DateFormat.yMMMd(AppTranslations.currentLocale.value).format(dt);
     } catch (e) {
       return 'notif.unknown'.tr;
     }

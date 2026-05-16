@@ -7,6 +7,7 @@ import 'package:agrosetu_app/screens/notifications_page.dart';
 import 'package:agrosetu_app/screens/voice_assistant_screen.dart';
 import 'package:agrosetu_app/services/weather_service.dart';
 import 'package:agrosetu_app/l10n/app_translations.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/activity_service.dart';
@@ -14,7 +15,6 @@ import '../services/notification_service.dart';
 import '../services/user_service.dart';
 import 'activities_page.dart';
 import 'package:iconsax/iconsax.dart';
-import 'dart:ui';
 import 'package:fl_chart/fl_chart.dart';
 
 // ─── Color palette ───────────────────────────────────────────────────────────
@@ -28,11 +28,9 @@ class _C {
   static const greenDeep   = Color(0xFF153D07);   // market card (deeper)
   static const greenLight  = Color(0xFF5A9E36);   // nav accent, FAB, badges
   static const greenMid    = Color(0xFF2D6A1F);   // section headings on white
-  static const greenMetric = Color(0x33FFFFFF);   // metric tile on dark card
 
   // Accent
   static const amber       = Color(0xFFD4831A);   // market price & trend
-  static const blue        = Color(0xFF3A7FC1);   // kept nowhere—removed
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -541,7 +539,8 @@ class _HomeDashboardState extends State<HomeDashboard>
                     ),
                   ],
                 ),
-                Text('Monday, 12 Oct',
+                Text(
+                  DateFormat.MMMEd(AppTranslations.currentLocale.value).format(DateTime.now()),
                   style: GoogleFonts.poppins(color: Colors.white54, fontSize: 12),
                 ),
                 const SizedBox(height: 20),

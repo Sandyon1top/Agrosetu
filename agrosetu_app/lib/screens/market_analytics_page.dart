@@ -3,8 +3,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:intl/intl.dart';
 import '../l10n/app_translations.dart';
 import '../services/activity_service.dart';
+
+/// Localized 3-letter month abbreviation. Uses the user's current language so
+/// "May" becomes "मे" when the app is in Nepali.
+String _localizedMonth(int monthNumber) {
+  final m = ((monthNumber - 1) % 12) + 1;
+  return DateFormat.MMM(AppTranslations.currentLocale.value)
+      .format(DateTime(2024, m));
+}
 
 String _localizedSeason(String season) {
   switch (season) {
@@ -112,11 +121,6 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
     10: 'Post-Monsoon', 11: 'Post-Monsoon',
     12: 'Winter',
   };
-
-  static const List<String> _monthNames = [
-    '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ];
 
   // Season colours for UI
   static const Map<String, Color> _seasonColors = {
@@ -361,11 +365,11 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
             peakMonth = m;
           }
         });
-        peakMonthMap[name] = _monthNames[peakMonth];
+        peakMonthMap[name] = _localizedMonth(peakMonth);
 
         // Suggest planting month = 3 months before peak (approx grow cycle)
         final plantMonthIndex = ((peakMonth - 4) % 12) + 1;
-        plantMonthMap[name] = _monthNames[plantMonthIndex < 1 ? plantMonthIndex + 12 : plantMonthIndex];
+        plantMonthMap[name] = _localizedMonth(plantMonthIndex < 1 ? plantMonthIndex + 12 : plantMonthIndex);
 
         // Store monthly average prices for correlation chart
         final Map<int, double> monthlyAvg = {};
@@ -1218,7 +1222,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                                 const SizedBox(height: 4),
                                 // Month label
                                 Text(
-                                  _monthNames[month].substring(0, 1),
+                                  _localizedMonth(month).substring(0, 1),
                                   style: GoogleFonts.poppins(
                                       fontSize: 9,
                                       color: Colors.grey.shade500),
@@ -1235,7 +1239,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                   Row(
                     children: List.generate(12, (i) => Expanded(
                       child: Text(
-                        _monthNames[i + 1],
+                        _localizedMonth(i + 1),
                         textAlign: TextAlign.center,
                         style: GoogleFonts.poppins(
                             fontSize: 8, color: Colors.grey.shade400),
@@ -1778,8 +1782,8 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
 
     final maxForecast = forecastPrices.reduce((a, b) => a > b ? a : b);
     final bestForecastMonth = forecastPrices.indexOf(maxForecast);
-    final bestMonthName = _monthNames[
-        ((startMonth + bestForecastMonth - 1) % 12) + 1];
+    final bestMonthName = _localizedMonth(
+        ((startMonth + bestForecastMonth - 1) % 12) + 1);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -1836,7 +1840,7 @@ class _MarketAnalyticsPageState extends State<MarketAnalyticsPage> {
                 final price     = forecastPrices[i];
                 final normH     = maxForecast > 0 ? price / maxForecast : 0.0;
                 final monthIdx  = ((startMonth + i - 1) % 12) + 1;
-                final monthName = _monthNames[monthIdx];
+                final monthName = _localizedMonth(monthIdx);
                 final isBest    = i == bestForecastMonth;
 
                 return Expanded(
