@@ -614,22 +614,53 @@ class _CommunityPageState extends State<CommunityPage> {
                       ],
                     ),
                   
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final picker = ImagePicker();
-                      final image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
-                      if (image != null) {
-                        final bytes = await image.readAsBytes();
-                        setDialogState(() => dialogImageBytes = bytes);
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF2E7D32),
-                      side: const BorderSide(color: Color(0xFF2E7D32)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    icon: const Icon(Iconsax.image, size: 20),
-                    label: Text(dialogImageBytes == null ? 'community.add_photo'.tr : 'community.change_photo'.tr),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            // image_picker.pickImage(source: gallery) is mobile-only;
+                            // on macOS / Windows / Linux / web it no-ops. Route those
+                            // platforms through file_picker instead.
+                            final bool isDesktopOrWeb = kIsWeb ||
+                                defaultTargetPlatform == TargetPlatform.macOS ||
+                                defaultTargetPlatform == TargetPlatform.windows ||
+                                defaultTargetPlatform == TargetPlatform.linux;
+                            Uint8List bytes;
+                            if (isDesktopOrWeb) {
+                              final result = await FilePicker.pickFiles(
+                                type: FileType.image,
+                                allowMultiple: false,
+                                withData: true,
+                              );
+                              if (result == null || result.files.isEmpty) return;
+                              final picked = result.files.first.bytes;
+                              if (picked == null) return;
+                              bytes = picked;
+                            } else {
+                              final picker = ImagePicker();
+                              final image = await picker.pickImage(
+                                  source: ImageSource.gallery, imageQuality: 70);
+                              if (image == null) return;
+                              bytes = await image.readAsBytes();
+                            }
+                            setDialogState(() => dialogImageBytes = bytes);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.green.shade700,
+                            side: BorderSide(color: Colors.green.shade300),
+                            backgroundColor: Colors.green.shade50,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          icon: const Icon(Iconsax.image, size: 20),
+                          label: Text(
+                            (dialogImageBytes == null ? 'community.add_photo'.tr : 'community.change_photo'.tr) + ' (${'community.optional'.tr})',
+                            style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   
                   const SizedBox(height: 24),
@@ -884,20 +915,27 @@ class _DiscussionCardState extends State<_DiscussionCard> {
           const SizedBox(height: 12),
           
           // Image Preview (if exists)
-          if (_safeDecodeBase64(widget.discussion['imageUrl']) != null)
-            Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              height: 200,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                image: DecorationImage(
-                  image: MemoryImage(
-                      _safeDecodeBase64(widget.discussion['imageUrl'])!),
-                  fit: BoxFit.cover,
-                  onError: (_, __) {},
-                ),
-              ),
+          if (widget.discussion['imageUrl'] != null && widget.discussion['imageUrl'].toString().isNotEmpty)
+            Builder(
+              builder: (context) {
+                final imageData = _safeDecodeBase64(widget.discussion['imageUrl']);
+                if (imageData == null) return const SizedBox.shrink();
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: MemoryImage(imageData),
+                      fit: BoxFit.cover,
+                      onError: (e, stack) {
+                        debugPrint('[Community] Image error: $e');
+                      },
+                    ),
+                  ),
+                );
+              }
             ),
           
           // Stats
