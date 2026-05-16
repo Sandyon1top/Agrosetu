@@ -121,7 +121,7 @@ class NotificationService {
       if (user != null) {
         await http.post(
           Uri.parse('$baseUrl/notifications/read'),
-          headers: ApiService.getHeaders(),
+          headers: await ApiService.getAuthHeaders(),
           body: jsonEncode({'userId': user['id']}),
         );
       }
