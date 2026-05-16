@@ -14,16 +14,27 @@ class GradCAM:
         self.target_layer = target_layer
         self.gradients = None
         self.activations = None
-        
-        # Register hooks
-        self.target_layer.register_forward_hook(self.save_activation)
-        self.target_layer.register_full_backward_hook(self.save_gradient)
+
+        # Keep handles so callers can remove hooks after use — otherwise every
+        # /predict/visualize request leaks two hooks onto the shared target
+        # layer of the cached model.
+        self._fwd_handle = self.target_layer.register_forward_hook(self.save_activation)
+        self._bwd_handle = self.target_layer.register_full_backward_hook(self.save_gradient)
 
     def save_activation(self, module, input, output):
         self.activations = output
 
     def save_gradient(self, module, grad_input, grad_output):
         self.gradients = grad_output[0]
+
+    def remove_hooks(self):
+        """Detach forward + backward hooks. Safe to call multiple times."""
+        if self._fwd_handle is not None:
+            self._fwd_handle.remove()
+            self._fwd_handle = None
+        if self._bwd_handle is not None:
+            self._bwd_handle.remove()
+            self._bwd_handle = None
 
     def generate_heatmap(self, input_tensor, class_idx=None):
         # Forward pass

@@ -666,37 +666,60 @@ def predict_visualize():
         # For CustomCNN, index 8 is the last Conv2d layer
         target_layer = model.features[8]
         
+    cam_gen = None
     try:
         # 3. Process image
         pil = Image.open(io.BytesIO(img_bytes)).convert("RGB")
         input_tensor = DISEASE_TF(pil).unsqueeze(0).to(DEVICE)
-        
-        # 4. Generate Heatmap
-        # We use a separate local class instance to avoid hook conflicts
+
+        # 3b. Pick the target class for the heatmap.
+        # The app shows the user the ENSEMBLE prediction (average of all loaded
+        # models). If we let Grad-CAM default to EfficientNet-alone's top-1,
+        # the heatmap can highlight features for a different class than what
+        # the user is reading — making the visualization look "wrong".
+        # Compute the ensemble class here and pass it through.
+        target_class_idx = None
+        if LOADED_MODELS:
+            all_probs = []
+            with torch.no_grad():
+                for _name, _m in LOADED_MODELS.items():
+                    _idx, _conf, _probs = predict_with_model(_m, input_tensor)
+                    if _conf >= 25.0:
+                        all_probs.append(_probs)
+            if all_probs:
+                ensemble = np.mean(all_probs, axis=0)
+                target_class_idx = int(np.argmax(ensemble))
+
+        # 4. Generate Heatmap (aligned to the class the user actually sees)
         cam_gen = GradCAM(model, target_layer)
-        heatmap = cam_gen.generate_heatmap(input_tensor)
-        
+        heatmap = cam_gen.generate_heatmap(input_tensor, class_idx=target_class_idx)
+
         # 5. Overlay on original
         # PIL to CV2 BGR
         img_cv2 = cv2.cvtColor(np.array(pil), cv2.COLOR_RGB2BGR)
         img_cv2 = cv2.resize(img_cv2, (224, 224))
-        
+
         heatmap_resized = cv2.resize(heatmap, (224, 224))
         heatmap_colored = cv2.applyColorMap(np.uint8(255 * heatmap_resized), cv2.COLORMAP_JET)
-        
+
         superimposed = cv2.addWeighted(img_cv2, 0.6, heatmap_colored, 0.4, 0)
-        
+
         # 6. Return as Base64 string
         _, buffer = cv2.imencode(".jpg", superimposed)
         img_base64 = base64.b64encode(buffer).decode("utf-8")
-        
+
         return jsonify({
             "status": "ok",
             "model_used": model_name,
+            "target_class_idx": target_class_idx,
             "heatmap_base64": img_base64
         }), 200
     except Exception as e:
         return jsonify({"status": "error", "message": f"Grad-CAM Error: {str(e)}"}), 500
+    finally:
+        # Always detach hooks so they don't accumulate on the cached model.
+        if cam_gen is not None:
+            cam_gen.remove_hooks()
 
 
 # ── Health & info ──
