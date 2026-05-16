@@ -666,10 +666,13 @@ app.get("/api/weather/forecast", async (req, res) => {
 
 app.post("/signup", async (req, res) => {
   try {
-    const { name, identity, password } = req.body;
+    // Accept either `identity` or `email` for backwards/forwards compatibility
+    // (the Flutter signup screen sends `email`; admin/web clients send `identity`).
+    const { name, password } = req.body;
+    const identity = req.body.identity || req.body.email;
 
     if (!name || !identity || !password) {
-      return res.status(400).json({ status: "error", message: "Name, identity (email), and password are required" });
+      return res.status(400).json({ status: "error", message: "Name, email, and password are required" });
     }
 
     if (!identity.includes('@')) {
