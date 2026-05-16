@@ -23,7 +23,7 @@ class AdminShell extends StatefulWidget {
 class _AdminShellState extends State<AdminShell> {
   int _index = 0;
 
-  static const _C = _ShellColors();
+  static const _shellColors = _ShellColors();
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +44,7 @@ class _AdminShellState extends State<AdminShell> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: _C.green,
+                color: _shellColors.green,
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -91,7 +91,7 @@ class _AdminShellState extends State<AdminShell> {
         child: BottomNavigationBar(
           currentIndex: _index,
           onTap: (i) => setState(() => _index = i),
-          selectedItemColor: _C.green,
+          selectedItemColor: _shellColors.green,
           unselectedItemColor: Colors.grey.shade500,
           showUnselectedLabels: true,
           type: BottomNavigationBarType.fixed,
