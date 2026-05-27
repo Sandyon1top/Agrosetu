@@ -1,16 +1,35 @@
-# agrosetu_app
+# AgroSetu Flutter App
 
-A new Flutter project.
+Mobile client for the AgroSetu smart farming platform.
+
+## Requirements
+- Flutter 3.x
+- Dart 3.x
+- iOS 14+ / Android 8+
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+```bash
+flutter pub get
+flutter run --dart-define=API_HOST=<your-backend-ip>
+```
 
-A few resources to get you started if this is your first Flutter project:
+## Project Structure
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```
+lib/
+  screens/       # All UI screens (27 screens)
+  services/      # API, auth, weather, disease history services
+  widgets/       # Reusable UI components
+  l10n/          # English + Nepali translations
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Build
+
+```bash
+# Android APK
+flutter build apk --release --dart-define=API_HOST=<ip>
+
+# iOS
+flutter build ios --release
+```
