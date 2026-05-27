@@ -7,8 +7,6 @@ import 'package:intl/intl.dart';
 import '../l10n/app_translations.dart';
 import '../services/activity_service.dart';
 
-/// Localized 3-letter month abbreviation. Uses the user's current language so
-/// "May" becomes "मे" when the app is in Nepali.
 String _localizedMonth(int monthNumber) {
   final m = ((monthNumber - 1) % 12) + 1;
   return DateFormat.MMM(AppTranslations.currentLocale.value)

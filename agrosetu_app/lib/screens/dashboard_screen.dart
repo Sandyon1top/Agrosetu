@@ -17,24 +17,16 @@ import 'activities_page.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-// ─── Color palette ───────────────────────────────────────────────────────────
 class _C {
-  // Background & surface
-  static const bg          = Color(0xFFF5F5F0);   // warm white page bg
+  static const bg          = Color(0xFFF5F5F0);
   static const surface     = Colors.white;
-
-  // Green ramp (weather card, accent)
-  static const greenCard   = Color(0xFF1E5C0A);   // main dark green card
-  static const greenDeep   = Color(0xFF153D07);   // market card (deeper)
-  static const greenLight  = Color(0xFF5A9E36);   // nav accent, FAB, badges
-  static const greenMid    = Color(0xFF2D6A1F);   // section headings on white
-
-  // Accent
-  static const amber       = Color(0xFFD4831A);   // market price & trend
+  static const greenCard   = Color(0xFF1E5C0A);
+  static const greenDeep   = Color(0xFF153D07);
+  static const greenLight  = Color(0xFF5A9E36);
+  static const greenMid    = Color(0xFF2D6A1F);
+  static const amber       = Color(0xFFD4831A);
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
-// Main Dashboard with Navigation
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -112,7 +104,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// ─── Home Dashboard ───────────────────────────────────────────────────────────
 class HomeDashboard extends StatefulWidget {
   final Function(int)? onNavigate;
   const HomeDashboard({super.key, this.onNavigate});
@@ -127,6 +118,7 @@ class _HomeDashboardState extends State<HomeDashboard>
   bool _isLoadingWeather = true;
   int _unreadNotifications = 0;
   List<Map<String, dynamic>> _recentActivities = [];
+  double _featureUsage = 0.25;
 
   // Fade-in + slide-up controller
   late AnimationController _entryCtrl;
@@ -158,8 +150,18 @@ class _HomeDashboardState extends State<HomeDashboard>
   }
 
   Future<void> _loadActivities() async {
-    final items = await ActivityService.getRecentActivities(5);
-    setState(() => _recentActivities = items);
+    final all = await ActivityService.getAllActivities();
+    final types = all.map((a) => a['type'] as String).toSet();
+    double usage = 0.25; // base: logged in
+    if (types.contains('detection')) usage += 0.25;
+    if (types.contains('market')) usage += 0.25;
+    if (all.length >= 3) usage += 0.25;
+    final recent = all.toList()
+      ..sort((a, b) => DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])));
+    setState(() {
+      _recentActivities = recent.take(5).toList();
+      _featureUsage = usage;
+    });
   }
 
   Future<void> _loadNotificationCount() async {
@@ -430,7 +432,7 @@ class _HomeDashboardState extends State<HomeDashboard>
                     width: 72,
                     height: 72,
                     child: CircularProgressIndicator(
-                      value: 0.75,
+                      value: _featureUsage,
                       strokeWidth: 7,
                       backgroundColor: Colors.grey.shade100,
                       valueColor: const AlwaysStoppedAnimation<Color>(_C.greenLight),
@@ -438,7 +440,7 @@ class _HomeDashboardState extends State<HomeDashboard>
                   ),
                   Column(
                     children: [
-                      Text('75%',
+                      Text('${(_featureUsage * 100).toInt()}%',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,

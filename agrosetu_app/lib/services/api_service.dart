@@ -6,25 +6,19 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'env_config.dart';
 
-/// Backend selection enum for easy switching between targets.
 enum BackendTarget { localhost, emulator, ngrok, custom }
 
 class ApiService {
   static String baseUrl = EnvConfig.nodeBaseUrl;
 
-  // NOTE: `flaskBaseUrl` is configurable at runtime so you can switch
-  // easily between local, emulator and ngrok when testing on devices.
-  // Default (local machine running Flask):
   static String flaskBaseUrl = EnvConfig.flaskBaseUrl;
 
-  // Helper to change target backend quickly from code:
   static void setBackendTarget(BackendTarget target, {String? ngrokUrl, String? customUrl}) {
     switch (target) {
       case BackendTarget.localhost:
         flaskBaseUrl = EnvConfig.flaskBaseUrl;
         break;
       case BackendTarget.emulator:
-        // Android emulator special host mapping
         flaskBaseUrl = 'http://10.0.2.2:8000';
         break;
       case BackendTarget.ngrok:
@@ -40,7 +34,6 @@ class ApiService {
     }
   }
 
-  // Common headers
   static Map<String, String> getHeaders({String? token}) {
     final headers = {
       'Content-Type': 'application/json',
@@ -54,9 +47,6 @@ class ApiService {
     return headers;
   }
 
-  /// Auto-attaches `Authorization: Bearer <token>` from stored user session.
-  /// Use this for any endpoint protected by `authenticateToken` middleware
-  /// on the Node backend.
   static Future<Map<String, String>> getAuthHeaders() async {
     final token = await getToken();
     return getHeaders(token: token);
@@ -507,6 +497,21 @@ class ApiService {
         'status': 'error',
         'message': 'Network error: $e',
       };
+    }
+  }
+
+  static Future<Map<String, dynamic>> reportPost(String postId) async {
+    try {
+      final token = await getToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/community/posts/$postId/report'),
+        headers: getHeaders(token: token),
+      ).timeout(const Duration(seconds: 10));
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return {'status': 'ok', ...data};
+      return {'status': 'error', 'message': data['message'] ?? 'Report failed'};
+    } catch (e) {
+      return {'status': 'error', 'message': 'Network error: $e'};
     }
   }
 
@@ -1118,8 +1123,13 @@ class ApiService {
     return _adminDelete('/api/admin/users/$userId');
   }
 
-  static Future<Map<String, dynamic>> adminGetPosts({int page = 1, int limit = 15}) async {
-    return _adminGet('/api/admin/posts?page=$page&limit=$limit');
+  static Future<Map<String, dynamic>> adminGetPosts({int page = 1, int limit = 15, bool reportedOnly = false}) async {
+    final filter = reportedOnly ? '&reported=true' : '';
+    return _adminGet('/api/admin/posts?page=$page&limit=$limit$filter');
+  }
+
+  static Future<Map<String, dynamic>> adminClearReports(String postId) async {
+    return _adminPost('/api/admin/posts/$postId/clear-reports');
   }
 
   static Future<Map<String, dynamic>> adminDeletePost(String postId) async {

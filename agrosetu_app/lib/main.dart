@@ -68,7 +68,6 @@ class AgroSetuApp extends StatelessWidget {
   }
 }
 
-/// Shows a green splash screen, then routes to Dashboard or Login
 class _SplashRouter extends StatefulWidget {
   const _SplashRouter();
 

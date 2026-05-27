@@ -6,8 +6,6 @@ import 'api_service.dart';
 class DiseaseHistoryService {
   static const String _key = 'disease_history_cache';
 
-  /// Add a detection to the local history cache.
-  /// It automatically sets `synced: false`.
   static Future<void> addDetection(String disease, String confidence, List<String> solutions) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -27,17 +25,15 @@ class DiseaseHistoryService {
         'synced': false,
       };
 
-      history.insert(0, newDetection); // Newest first
+      history.insert(0, newDetection);
       await prefs.setString(_key, json.encode(history));
       
-      // Attempt to sync immediately
       _trySync(history);
     } catch (e) {
       debugPrint('Error saving detection history: $e');
     }
   }
 
-  /// Retrieves the local history. Optionally limits the amount.
   static Future<List<Map<String, dynamic>>> getLocalHistory() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -53,19 +49,20 @@ class DiseaseHistoryService {
     return [];
   }
 
-  /// Cloud synchronization. Tries to upload unsynced items to the cloud.
   static Future<void> _trySync(List<dynamic> currentHistory) async {
     try {
       final unsynced = currentHistory.where((item) => item['synced'] == false).toList();
       if (unsynced.isEmpty) return;
 
       final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getString('user_id');
-      if (userId == null) return; // User must be logged in
+      final userDataRaw = prefs.getString('user_data');
+      if (userDataRaw == null) return;
+      final userData = json.decode(userDataRaw) as Map<String, dynamic>;
+      final userId = userData['id'] as String?;
+      if (userId == null) return;
 
       final response = await ApiService.syncDiseaseHistory(userId, unsynced);
       if (response['status'] == 'ok') {
-        // Mark all as synced
         final updatedHistory = currentHistory.map((item) {
           if (unsynced.any((u) => u['id'] == item['id'])) {
             item['synced'] = true;
@@ -81,14 +78,11 @@ class DiseaseHistoryService {
     }
   }
 
-  /// Wipes the local detection cache. Used on logout / account switch so the
-  /// next user does not see the previous user's history on this device.
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
   }
 
-  /// Sync manually (call this on App Startup or when internet reconnects)
   static Future<void> syncPendingDetections() async {
     try {
       final prefs = await SharedPreferences.getInstance();

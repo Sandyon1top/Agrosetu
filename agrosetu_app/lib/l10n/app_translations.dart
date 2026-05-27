@@ -1,9 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../services/user_preferences_service.dart';
 
-/// Lightweight runtime localization. The whole app rebuilds when
-/// [currentLocale] changes (a `ValueListenableBuilder` in `main.dart` listens).
-/// To translate a string write `'profile.title'.tr`.
 class AppTranslations {
   static final ValueNotifier<String> currentLocale = ValueNotifier('en');
 

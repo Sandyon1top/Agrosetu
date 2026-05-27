@@ -9,7 +9,9 @@ import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, Tar
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:screenshot/screenshot.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:gal/gal.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import '../services/disease_history_service.dart';
 import 'dart:convert';
@@ -199,16 +201,21 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
           _errorMessage = null;
         });
 
-        await ActivityService.addActivity(
-          'detection',
-          '${'disease.detected_activity'.tr}$_detectedDisease (${_confidence?.toStringAsFixed(1)}%)',
-        );
+        final knownDisease = _detectedDisease != null &&
+            _detectedDisease != 'Unknown' &&
+            (_confidence ?? 0) > 0;
 
-        await DiseaseHistoryService.addDetection(
-          _detectedDisease ?? 'disease.unknown'.tr,
-          _confidence?.toStringAsFixed(1) ?? '0.0',
-          List<String>.from(_solutions ?? []),
-        );
+        if (knownDisease) {
+          await ActivityService.addActivity(
+            'detection',
+            '${'disease.detected_activity'.tr}$_detectedDisease (${_confidence?.toStringAsFixed(1)}%)',
+          );
+          await DiseaseHistoryService.addDetection(
+            _detectedDisease!,
+            _confidence!.toStringAsFixed(1),
+            List<String>.from(_solutions ?? []),
+          );
+        }
 
         _addToRecentDetections();
       } else {
@@ -381,15 +388,12 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
            await Share.shareXFiles([xFile], text: 'disease.share_text'.tr);
            _showErrorSnackBar('disease.download_triggered'.tr);
         } else {
-          final result = await ImageGallerySaver.saveImage(
-              imageBytes,
-              quality: 100,
-              name: "Disease_Result_${DateTime.now().millisecondsSinceEpoch}");
-          if (result['isSuccess'] == true) {
-            _showErrorSnackBar('disease.saved_gallery'.tr);
-          } else {
-            _showErrorSnackBar('disease.failed_save'.tr);
-          }
+          final tempDir = await getTemporaryDirectory();
+          final tempFile = File('${tempDir.path}/Disease_Result_${DateTime.now().millisecondsSinceEpoch}.png');
+          await tempFile.writeAsBytes(imageBytes);
+          await Gal.putImage(tempFile.path);
+          await tempFile.delete();
+          _showErrorSnackBar('disease.saved_gallery'.tr);
         }
       }
     } catch (e) {
@@ -1350,9 +1354,6 @@ class _DiseaseDetectionPageState extends State<DiseaseDetectionPage> {
   }
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// REUSABLE ACTION BUTTON WIDGET
-// ────────────────────────────────────────────────────────────────────────────
 class _ActionButton extends StatelessWidget {
   final String label;
   final IconData icon;

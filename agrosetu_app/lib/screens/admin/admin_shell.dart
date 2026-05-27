@@ -11,8 +11,6 @@ import 'admin_detections_page.dart';
 import 'admin_posts_page.dart';
 import 'admin_users_page.dart';
 
-/// Container for the admin panel — owns the inner tab navigation between
-/// Dashboard / Users / Posts / Detections.
 class AdminShell extends StatefulWidget {
   const AdminShell({super.key});
 

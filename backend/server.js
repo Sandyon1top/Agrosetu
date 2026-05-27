@@ -167,7 +167,8 @@ const PostSchema = new mongoose.Schema({
     },
   ],
   solved: { type: Boolean, default: false },
-  pinned: { type: Boolean, default: false }, // Admin-only: pin to top of feed
+  pinned: { type: Boolean, default: false },
+  reports: [{ userId: mongoose.Schema.Types.ObjectId, createdAt: { type: Date, default: Date.now } }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
@@ -1855,14 +1856,17 @@ app.get("/api/admin/posts", requireAdmin, async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page || "1", 10));
     const limit = Math.min(50, parseInt(req.query.limit || "20", 10));
+    const reportedOnly = req.query.reported === "true";
+
+    const query = reportedOnly ? { "reports.0": { $exists: true } } : {};
 
     const [items, total] = await Promise.all([
-      Post.find({})
+      Post.find(query)
         .sort({ pinned: -1, createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
-        .select("title description category author imageUrl likes comments solved pinned createdAt"),
-      Post.countDocuments({}),
+        .select("title description category author imageUrl likes comments solved pinned reports createdAt"),
+      Post.countDocuments(query),
     ]);
 
     res.json({
@@ -1881,6 +1885,7 @@ app.get("/api/admin/posts", requireAdmin, async (req, res) => {
         commentCount: (p.comments || []).length,
         solved: p.solved,
         pinned: p.pinned,
+        reportCount: (p.reports || []).length,
         createdAt: p.createdAt,
       })),
     });
@@ -1897,6 +1902,43 @@ app.delete("/api/admin/posts/:id", requireAdmin, async (req, res) => {
     res.json({ status: "ok", message: "Post deleted" });
   } catch (e) {
     res.status(500).json({ status: "error", message: "Delete failed" });
+  }
+});
+
+app.post("/api/community/posts/:postId/report", authenticateToken, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(postId))
+      return res.status(400).json({ status: "error", message: "Invalid post ID" });
+
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ status: "error", message: "Post not found" });
+
+    const alreadyReported = post.reports.some(r => r.userId.equals(userId));
+    if (alreadyReported)
+      return res.json({ status: "ok", message: "Already reported" });
+
+    post.reports.push({ userId });
+    await post.save();
+    res.json({ status: "ok", message: "Post reported" });
+  } catch (e) {
+    console.error("Report Post Error:", e);
+    res.status(500).json({ status: "error", message: "Report failed" });
+  }
+});
+
+app.post("/api/admin/posts/:id/clear-reports", requireAdmin, async (req, res) => {
+  try {
+    const p = await Post.findByIdAndUpdate(
+      req.params.id,
+      { $set: { reports: [] } },
+      { new: true }
+    );
+    if (!p) return res.status(404).json({ status: "error", message: "Post not found" });
+    res.json({ status: "ok", message: "Reports cleared" });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: "Clear reports failed" });
   }
 });
 

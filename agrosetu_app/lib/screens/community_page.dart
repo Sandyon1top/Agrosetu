@@ -525,7 +525,7 @@ class _CommunityPageState extends State<CommunityPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'community.title_label'.tr + ' *',
+                    '${'community.title_label'.tr} *',
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -556,7 +556,7 @@ class _CommunityPageState extends State<CommunityPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'community.desc_label'.tr + ' *',
+                    '${'community.desc_label'.tr} *',
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -683,7 +683,7 @@ class _CommunityPageState extends State<CommunityPage> {
                           ),
                           icon: const Icon(Iconsax.image, size: 20),
                           label: Text(
-                            (dialogImageBytes == null ? 'community.add_photo'.tr : 'community.change_photo'.tr) + ' (${'community.optional'.tr})',
+                            '${dialogImageBytes == null ? 'community.add_photo'.tr : 'community.change_photo'.tr} (${'community.optional'.tr})',
                             style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
                           ),
                         ),
@@ -775,10 +775,8 @@ class _DiscussionCard extends StatefulWidget {
 
 class _DiscussionCardState extends State<_DiscussionCard> {
   bool _isLiked = false;
+  bool _isReported = false;
 
-  /// Safely decodes a base64 image string. Returns null when the value is
-  /// missing, empty, or not valid base64 — so a corrupt post can never crash
-  /// the entire feed.
   Uint8List? _safeDecodeBase64(dynamic raw) {
     if (raw == null) return null;
     final str = raw.toString();
@@ -1045,6 +1043,59 @@ class _DiscussionCardState extends State<_DiscussionCard> {
                 ),
               ),
               const Spacer(),
+              GestureDetector(
+                onTap: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  if (widget.currentUserId == null) {
+                    messenger.showSnackBar(SnackBar(
+                      content: Text('community.login_to_like'.tr),
+                      backgroundColor: Colors.orange,
+                    ));
+                    return;
+                  }
+                  if (_isReported) return;
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text('Report Post',
+                          style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      content: Text(
+                          'Are you sure you want to report this post as inappropriate?',
+                          style: GoogleFonts.poppins(fontSize: 13)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text('Cancel',
+                              style: GoogleFonts.poppins(color: Colors.grey.shade700)),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: Text('Report',
+                              style: GoogleFonts.poppins(
+                                  color: Colors.white, fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed != true) return;
+                  final r = await ApiService.reportPost(widget.discussion['id'].toString());
+                  if (!mounted) return;
+                  if (r['status'] == 'ok') {
+                    setState(() => _isReported = true);
+                    messenger.showSnackBar(const SnackBar(
+                      content: Text('Post reported to admin.'),
+                      backgroundColor: Colors.green,
+                    ));
+                  }
+                },
+                child: Icon(
+                  _isReported ? Iconsax.flag : Iconsax.flag,
+                  size: 14,
+                  color: _isReported ? Colors.red.shade400 : Colors.grey.shade400,
+                ),
+              ),
+              const SizedBox(width: 12),
               Icon(
                 Iconsax.arrow_right_3,
                 size: 16,

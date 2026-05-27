@@ -9,8 +9,6 @@ class WeatherService {
   static const String _cacheKey = 'agro_weather_cache';
   static const String _forecastKey = 'agro_forecast_cache';
 
-  /// Fetches current weather. 
-  /// Priority: API -> If fails, returns Local Cache.
   static Future<Map<String, dynamic>> getCurrentWeather({String? query}) async {
     try {
       final url = query != null 
@@ -23,7 +21,6 @@ class WeatherService {
         final data = json.decode(response.body);
         final formattedData = _formatWeatherResponse(data, source: 'api');
         
-        // Save to cache for offline use
         await _saveToCache(_cacheKey, formattedData);
         return formattedData;
       } else {
@@ -35,7 +32,6 @@ class WeatherService {
     }
   }
 
-  /// Fetches 7-Day Forecast
   static Future<List<dynamic>> get7DayForecast({String? query}) async {
     try {
       final url = query != null 
@@ -47,7 +43,6 @@ class WeatherService {
       if (response.statusCode == 200) {
         final List forecastList = json.decode(response.body) as List;
         
-        // Cache the list
         await _saveToCache(_forecastKey, {'list': forecastList});
         return forecastList;
       } else {
@@ -60,7 +55,6 @@ class WeatherService {
     }
   }
 
-  /// Formats raw API data into the UI-friendly Map used in your Popup
   static Map<String, dynamic> _formatWeatherResponse(Map<String, dynamic> data, {required String source}) {
     final condition = data['condition'] ?? 'cloudy';
     return {

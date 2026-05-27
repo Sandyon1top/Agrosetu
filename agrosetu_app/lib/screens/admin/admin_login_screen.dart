@@ -7,13 +7,6 @@ import '../../services/api_service.dart';
 import '../../services/user_service.dart';
 import 'admin_shell.dart';
 
-/// Dedicated, strict admin login.
-///
-/// Hits POST /api/admin/login which only succeeds when the account has
-/// `isAdmin: true` AND `isActive: true` in MongoDB. Regular farmer accounts
-/// get a 403 from the server, never reach the AdminShell, never see admin
-/// data. We also rate-limit attempts client-side: 5 wrong tries → 60 second
-/// lockout to slow down credential stuffing.
 class AdminLoginScreen extends StatefulWidget {
   const AdminLoginScreen({super.key});
 

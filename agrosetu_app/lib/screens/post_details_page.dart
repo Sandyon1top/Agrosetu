@@ -25,9 +25,6 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
   final TextEditingController _commentController = TextEditingController();
   bool _isSubmittingComment = false;
 
-  /// Safe base64 decode for post images. Returns null when the value is
-  /// missing, empty, or not valid base64 — keeps a corrupt image from
-  /// crashing the entire post page.
   Uint8List? _safeDecodeBase64(dynamic raw) {
     if (raw == null) return null;
     final str = raw.toString();

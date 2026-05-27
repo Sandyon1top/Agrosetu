@@ -1,29 +1,21 @@
-// lib/services/social_auth_service.dart
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:agrosetu_app/services/api_service.dart';
 
 class SocialAuthService {
-  // Web OAuth client ID — serves as the "audience" that the Flask backend
-  // will verify ID tokens against. Must match GOOGLE_WEB_CLIENT_ID on server.
   static const String _webClientId =
       '666169833803-mdpcvgsfvt6r1itejpd0f4pjprncvk4u.apps.googleusercontent.com';
 
   static bool _initialized = false;
 
-  /// v7 requires GoogleSignIn.instance.initialize() before any auth call.
   static Future<void> _ensureInitialized() async {
     if (_initialized) return;
     await GoogleSignIn.instance.initialize(
-      // iOS: GIDClientID from Info.plist is used automatically.
-      // Android: client is matched via package name + SHA-1.
-      // serverClientId gives us an ID token audienced to our backend.
       serverClientId: _webClientId,
     );
     _initialized = true;
   }
 
-  /// Initiates Google Sign-In, sends the ID token to backend, returns response.
   static Future<Map<String, dynamic>> signInWithGoogle() async {
     try {
       await _ensureInitialized();
@@ -79,7 +71,6 @@ class SocialAuthService {
     }
   }
 
-  /// Signs the user out of Google on this device.
   static Future<void> signOut() async {
     try {
       await _ensureInitialized();

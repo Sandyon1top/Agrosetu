@@ -3,9 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 import 'user_service.dart';
 
-/// Owns the user-controllable toggles surfaced in Settings, Profile and
-/// Privacy & Security. Persists locally for instant UI restoration and
-/// fires a best-effort sync to MongoDB so preferences follow the account.
 class UserPreferencesService {
   static const _kLanguage = 'pref_language';
   static const _kNotifications = 'pref_notifications_enabled';
@@ -38,8 +35,6 @@ class UserPreferencesService {
     await prefs.setBool(_kLocationServices, p.locationServicesEnabled);
   }
 
-  /// Pulls remote preferences (if user is signed in) and reconciles with the
-  /// local cache. Remote wins when both exist. Safe to call on app start.
   static Future<UserPreferences> refreshFromBackend() async {
     final user = await UserService.getUser();
     final local = await load();
@@ -64,9 +59,6 @@ class UserPreferencesService {
     return merged;
   }
 
-  /// Updates one or more preferences locally and pushes to the backend.
-  /// Returns the new local snapshot. If the network call fails the local
-  /// change still persists (offline-first) and will be re-synced next time.
   static Future<UserPreferences> update({
     String? language,
     bool? notificationsEnabled,
@@ -102,8 +94,6 @@ class UserPreferencesService {
     return updated;
   }
 
-  /// Removes only preference keys; leaves auth/user data untouched. Used by
-  /// the "Clear Cache" action in Privacy & Security.
   static Future<void> clearCacheOnly() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kLanguage);

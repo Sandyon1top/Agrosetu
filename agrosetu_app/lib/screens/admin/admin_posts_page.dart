@@ -22,6 +22,7 @@ class _AdminPostsPageState extends State<AdminPostsPage> {
   final int _limit = 15;
   bool _loading = true;
   String? _error;
+  bool _reportedOnly = false;
 
   @override
   void initState() {
@@ -34,7 +35,7 @@ class _AdminPostsPageState extends State<AdminPostsPage> {
       _loading = true;
       _error = null;
     });
-    final r = await ApiService.adminGetPosts(page: _page, limit: _limit);
+    final r = await ApiService.adminGetPosts(page: _page, limit: _limit, reportedOnly: _reportedOnly);
     if (!mounted) return;
     if (r['status'] != 'ok') {
       setState(() {
@@ -60,6 +61,12 @@ class _AdminPostsPageState extends State<AdminPostsPage> {
     _toast(r['status'] == 'ok'
         ? (wasPinned ? 'admin.post_unpinned'.tr : 'admin.post_pinned'.tr)
         : 'admin.failed'.tr);
+    if (r['status'] == 'ok') _load();
+  }
+
+  Future<void> _clearReports(Map<String, dynamic> p) async {
+    final r = await ApiService.adminClearReports(p['id'].toString());
+    _toast(r['status'] == 'ok' ? 'admin.reports_cleared'.tr : 'admin.failed'.tr);
     if (r['status'] == 'ok') _load();
   }
 
@@ -106,6 +113,27 @@ class _AdminPostsPageState extends State<AdminPostsPage> {
     final pages = (_total == 0) ? 1 : ((_total + _limit - 1) ~/ _limit);
     return Column(
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Row(
+            children: [
+              FilterChip(
+                label: Text('🚨 Reported only',
+                    style: GoogleFonts.poppins(fontSize: 12)),
+                selected: _reportedOnly,
+                selectedColor: Colors.red.shade50,
+                checkmarkColor: Colors.red.shade700,
+                onSelected: (v) {
+                  setState(() {
+                    _reportedOnly = v;
+                    _page = 1;
+                  });
+                  _load();
+                },
+              ),
+            ],
+          ),
+        ),
         Expanded(child: _body()),
         if (!_loading && _error == null && _posts.isNotEmpty) _pager(pages),
       ],
@@ -145,6 +173,8 @@ class _AdminPostsPageState extends State<AdminPostsPage> {
   Widget _postCard(Map<String, dynamic> p) {
     final pinned = p['pinned'] == true;
     final solved = p['solved'] == true;
+    final reportCount = (p['reportCount'] ?? 0) as int;
+    final isReported = reportCount > 0;
     final author = p['author'] is Map ? Map<String, dynamic>.from(p['author']) : {};
     return Container(
       padding: const EdgeInsets.all(12),
@@ -184,6 +214,8 @@ class _AdminPostsPageState extends State<AdminPostsPage> {
                           _chip(p['category'].toString(), Colors.grey),
                         if (solved)
                           _chip('admin.solved_label'.tr, Colors.green),
+                        if (isReported)
+                          _chip('🚨 Reported ($reportCount)', Colors.red),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -232,6 +264,10 @@ class _AdminPostsPageState extends State<AdminPostsPage> {
                 () => _togglePin(p),
               ),
               const SizedBox(width: 6),
+              if (isReported) ...[
+                _btn('Clear', Colors.orange.shade700, () => _clearReports(p)),
+                const SizedBox(width: 6),
+              ],
               _btn(
                 'admin.action_delete'.tr,
                 Colors.red.shade700,

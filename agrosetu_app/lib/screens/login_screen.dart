@@ -56,11 +56,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// If the user about to be saved is different from the user previously
-  /// cached on this device, wipe per-user caches so the new user does not
-  /// inherit notifications / history / activities / preferences from the
-  /// previous user. Same-user re-login (e.g. token refresh) is a no-op and
-  /// preserves their offline data.
   Future<void> _wipeCachesIfDifferentUser(String newUserId) async {
     final prev = await UserService.getUser();
     final prevId = prev?['id']?.toString();
@@ -399,11 +394,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
   
-  /// Returns a stable per-device salt used to hash the offline password.
-  /// Generated once on first login and persisted; not derivable from the user's
-  /// password, so an attacker who reads SharedPreferences still cannot brute
-  /// force the original password without knowing the salt's storage location
-  /// AND running on the same device.
   Future<String> _getOrCreateOfflineSalt(SharedPreferences prefs) async {
     var salt = prefs.getString('offline_salt');
     if (salt != null && salt.isNotEmpty) return salt;
