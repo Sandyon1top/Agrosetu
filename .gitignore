@@ -14,3 +14,11 @@ Flask/myenv_py10/
 # IDE
 .vscode/
 agrosetu_app/android/build/
+agrosetu_app/build/
+agrosetu_app/.flutter-plugins
+agrosetu_app/.flutter-plugins-dependencies
+*.pptx
+*.log
+nohup.out
+Flask/server_log.txt
+Flask/nohup.out
