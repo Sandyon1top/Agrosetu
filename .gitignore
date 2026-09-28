@@ -22,3 +22,4 @@ agrosetu_app/.flutter-plugins-dependencies
 nohup.out
 Flask/server_log.txt
 Flask/nohup.out
+clean_clone/
