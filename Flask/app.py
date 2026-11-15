@@ -757,10 +757,13 @@ def server_error(e):
 # ──────────────────────────────────────────────
 #  STARTUP
 # ──────────────────────────────────────────────
+# Pre-load models at import time (needed for gunicorn)
+load_all_models()
+load_imagenet_validator()
+
 if __name__ == "__main__":
     print(f"Device : {DEVICE}")
     print(f"Classes: {NUM_CLASSES}")
-    load_all_models()
-    load_imagenet_validator()
-    print("Starting Flask on http://0.0.0.0:8000")
-    app.run(host="0.0.0.0", port=8000, debug=False)
+    port = int(os.environ.get("PORT", 8000))
+    print(f"Starting Flask on http://0.0.0.0:{port}")
+    app.run(host="0.0.0.0", port=port, debug=False)

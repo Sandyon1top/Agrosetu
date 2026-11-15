@@ -1,7 +1,12 @@
 import 'package:flutter/foundation.dart';
-import 'dart:io';
+import 'dart:io' show Platform;
 
 class EnvConfig {
+  // ── Production URLs (set at build time via --dart-define) ──
+  // For Render deployment:
+  //   flutter build web --dart-define=NODE_URL=https://agrosetu-backend.onrender.com
+  //                     --dart-define=FLASK_URL=https://agrosetu-ml.onrender.com
+
   static String get apiHost {
     const envHost = String.fromEnvironment('API_HOST');
     if (envHost.isNotEmpty) return envHost;
@@ -19,6 +24,15 @@ class EnvConfig {
   static const String flaskPort =
       String.fromEnvironment('FLASK_PORT', defaultValue: '8000');
 
-  static String get nodeBaseUrl => 'http://$apiHost:$nodePort';
-  static String get flaskBaseUrl => 'http://$apiHost:$flaskPort';
+  static String get nodeBaseUrl {
+    const envUrl = String.fromEnvironment('NODE_URL');
+    if (envUrl.isNotEmpty) return envUrl;
+    return 'http://$apiHost:$nodePort';
+  }
+
+  static String get flaskBaseUrl {
+    const envUrl = String.fromEnvironment('FLASK_URL');
+    if (envUrl.isNotEmpty) return envUrl;
+    return 'http://$apiHost:$flaskPort';
+  }
 }

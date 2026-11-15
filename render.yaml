@@ -1,0 +1,46 @@
+# Render Blueprint — deploy both services from one repo
+# Usage: Connect this repo at https://dashboard.render.com/blueprints
+# Render will automatically detect and deploy both services.
+
+services:
+  # ── Node.js Backend (Express + MongoDB) ──
+  - type: web
+    name: agrosetu-backend
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    region: oregon
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: MONGO_URI
+        sync: false  # Set manually in Render dashboard
+      - key: JWT_SECRET
+        sync: false
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GOOGLE_WEB_CLIENT_ID
+        sync: false
+      - key: GOOGLE_IOS_CLIENT_ID
+        sync: false
+
+  # ── Flask ML Backend (PyTorch + Disease Detection) ──
+  - type: web
+    name: agrosetu-ml
+    runtime: docker
+    dockerfilePath: Flask/Dockerfile
+    dockerContext: Flask
+    region: oregon
+    plan: free
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false  # Set manually in Render dashboard

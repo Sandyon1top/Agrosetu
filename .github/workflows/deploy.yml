@@ -41,7 +41,11 @@ jobs:
       - name: Build Flutter Web
         run: |
           cd agrosetu_app
-          flutter build web --release --base-href "/Agrosetu/" --no-tree-shake-icons
+          flutter build web --release \
+            --base-href "/Agrosetu/" \
+            --no-tree-shake-icons \
+            --dart-define=NODE_URL=https://agrosetu-backend.onrender.com \
+            --dart-define=FLASK_URL=https://agrosetu-ml.onrender.com
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

@@ -1,0 +1,7 @@
+node_modules/
+.env
+venv/
+myenv_py10/
+__pycache__/
+*.pyc
+uploads/
