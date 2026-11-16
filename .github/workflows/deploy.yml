@@ -44,7 +44,7 @@ jobs:
           flutter build web --release \
             --base-href "/Agrosetu/" \
             --no-tree-shake-icons \
-            --dart-define=NODE_URL=https://agrosetu-backend.onrender.com \
+            --dart-define=NODE_URL=https://agrosetu-backend-uvr5.onrender.com \
             --dart-define=FLASK_URL=https://agrosetu-ml.onrender.com
 
       - name: Setup Pages
